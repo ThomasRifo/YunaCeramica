@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\TallerController;
 use App\Http\Controllers\ProfileController;
+
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -14,9 +16,26 @@ Route::get('/', function () {
     ]);
 });
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::middleware(['auth', 'verified'])
+    ->prefix('dashboard')
+    ->name('dashboard.')  // 👉 Todos los nombres de rutas empiezan con "dashboard."
+    ->group(function () {
+        
+        // Ruta principal del dashboard
+        Route::get('/', function () {
+            return Inertia::render('Dashboard/Dashboard');
+        })->name('dashboard');
+        // Rutas de Talleres
+        Route::get('/talleres', [TallerController::class, 'index'])->name('talleres.index');    
+        Route::get('/talleres/create', [TallerController::class, 'create'])->name('talleres.create'); 
+        Route::post('/talleres', [TallerController::class, 'store'])->name('talleres.store');     
+        Route::get('/talleres/{id}/edit', [TallerController::class, 'edit'])->name('talleres.edit'); 
+        Route::put('/talleres/{id}', [TallerController::class, 'update'])->name('talleres.update'); 
+        Route::delete('/talleres/{id}', [TallerController::class, 'destroy'])->name('talleres.destroy'); 
+
+        
+        
+    });
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -24,4 +43,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+
+Route::fallback(function () {
+    return Inertia::render('Errors/404')->toResponse(request())->setStatusCode(404);
+});
 require __DIR__.'/auth.php';
