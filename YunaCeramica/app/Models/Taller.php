@@ -15,8 +15,9 @@ class Taller extends Model
     protected $fillable = [
         'idSubcategoria',
         'nombre',
-        'descripcion',
+        'descripcion', //CAMBIAR DESCRIPCION POR DETALLES
         'fecha',
+        'hora',
         'cupoMaximo',
         'precio',
         'ubicacion',
@@ -28,8 +29,17 @@ class Taller extends Model
     {
         return $this->belongsTo(Subcategoria::class, 'idSubcategoria');
     }
+
+    public function menus()
+{
+    return $this->belongsToMany(Menu::class, 'menu_taller', 'idTaller', 'idMenu');
+}
     public function imagenes()
     {
         return $this->hasMany(ImagenTaller::class, 'idTaller');
     }
+    public function tallerClientes()
+{
+    return $this->hasMany(TallerCliente::class, 'idTaller');
+}
 }

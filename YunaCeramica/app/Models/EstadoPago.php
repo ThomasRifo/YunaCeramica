@@ -11,7 +11,7 @@ class EstadoPago extends Model
 
     use HasFactory;
 
-    protected $table = 'estados_pago_taller';
+    protected $table = 'estados_pago';
 
     protected $fillable = ['nombre'];
 }

@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\TallerController;
 use App\Http\Controllers\ProfileController;
-
+use App\Http\Controllers\TallerClienteController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -29,11 +29,13 @@ Route::middleware(['auth', 'verified'])
         Route::get('/talleres', [TallerController::class, 'index'])->name('talleres.index');    
         Route::get('/talleres/create', [TallerController::class, 'create'])->name('talleres.create'); 
         Route::post('/talleres', [TallerController::class, 'store'])->name('talleres.store');     
-        Route::get('/talleres/{id}/edit', [TallerController::class, 'edit'])->name('talleres.edit'); 
-        Route::put('/talleres/{id}', [TallerController::class, 'update'])->name('talleres.update'); 
+        Route::get('/talleres/{id}/edit', [TallerController::class, 'edit'])->name('talleres.edit');
+    Route::put('/talleres/{id}', [TallerController::class, 'update'])->name('talleres.update');
         Route::delete('/talleres/{id}', [TallerController::class, 'destroy'])->name('talleres.destroy'); 
+        Route::put('/talleres/{id}/eliminar', [TallerController::class, 'desactivar'])->name('talleres.eliminar');
+        Route::get('/talleres/{id}', [TallerController::class, 'view'])->name('talleres.view');    
+        Route::put('/taller-cliente/{id}/actualizar-pago', [TallerClienteController::class, 'actualizarPago'])->name('taller.actualizarPago');
 
-        
         
     });
 

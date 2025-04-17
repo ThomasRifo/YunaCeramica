@@ -12,13 +12,16 @@ import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
 import CategoryIcon from "@mui/icons-material/Category";
 import ConstructionIcon from "@mui/icons-material/Construction";
 import SellIcon from "@mui/icons-material/Sell";
-
+import HeaderSection from "@/Components/HeaderSection";
 import { Link } from "@inertiajs/react";
 import { AppProvider } from "@toolpad/core/AppProvider";
 import { DashboardLayout as ToolpadDashboardLayout } from "@toolpad/core/DashboardLayout";
 import { PageContainer } from "@toolpad/core/PageContainer";
 import useInertiaRouter from "./InertiaRouterAdapter";
 import UserMenu from "@/Components/UserMenu";
+import WebIcon from '@mui/icons-material/Web';
+import { usePage, Link as InertiaLink } from '@inertiajs/react';
+import BreadcrumbsNavigation from "@/Components/BreadcrumbsNavigation";
 
 const NAVIGATION = [
   { kind: "header", title: "Main items" },
@@ -47,6 +50,7 @@ const NAVIGATION = [
       { segment: "../logout", title: "Logout", icon: <CategoryIcon /> },
     ],
   },
+  { segment: "dashboard/web", title: "Paginas", icon: <WebIcon /> },
 ];
 
 // 🔁 Creamos una función para crear el theme según el modo
@@ -81,6 +85,7 @@ function InnerLayout({ children, router, toggleColorMode }) {
     >
       <ToolpadDashboardLayout
         maxWidth="xl"
+        
         slots={{
           toolbarAccount: () => (
             <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "0.5rem" }}>
@@ -92,9 +97,10 @@ function InnerLayout({ children, router, toggleColorMode }) {
           ),
         }}
       >
-        <PageContainer maxWidth="xl" className="w-auto h-auto">
-          {children}
-        </PageContainer>
+<PageContainer maxWidth="xl" className="w-auto h-auto">
+  <HeaderSection className="p-0"/>
+  {children}
+</PageContainer>
       </ToolpadDashboardLayout>
     </AppProvider>
   );

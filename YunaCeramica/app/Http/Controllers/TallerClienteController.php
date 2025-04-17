@@ -62,4 +62,13 @@ class TallerClienteController extends Controller
     {
         //
     }
+    public function actualizarPago($id)
+{
+    $tc = TallerCliente::findOrFail($id);
+    $tc->idEstadoPago = 1; // pagado
+    $tc->save();
+
+    return redirect()->route('dashboard.talleres.view', $tc->idTaller)
+    ->with('success', 'Pago actualizado correctamente.');
+}
 }

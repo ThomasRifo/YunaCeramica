@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('nombre');
             $table->text('descripcion')->nullable();
             $table->date('fecha');
+            //AGREGAR TIME DE HORARIO
             $table->integer('cupoMaximo');
             $table->float('precio', 10, 2);
             $table->string('ubicacion');

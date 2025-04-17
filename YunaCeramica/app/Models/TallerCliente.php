@@ -33,6 +33,9 @@ class TallerCliente extends Model
     {   
         return $this->belongsTo(EstadoPago::class, 'idEstadoPago');
     }
-
+    public function acompaniantes()
+{
+    return $this->hasMany(Acompaniante::class, 'idTallerCliente');
+}
 
 }
