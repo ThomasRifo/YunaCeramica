@@ -2,18 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Producto;
+use App\Models\TallerMenu;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 
-class ProductoController extends Controller
+class TallerMenuController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        return Inertia::render('Productos');
+        //
     }
 
     /**
@@ -35,7 +34,7 @@ class ProductoController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Producto $producto)
+    public function show(TallerMenu $tallerMenu)
     {
         //
     }
@@ -43,7 +42,7 @@ class ProductoController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Producto $producto)
+    public function edit(TallerMenu $tallerMenu)
     {
         //
     }
@@ -51,7 +50,7 @@ class ProductoController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Producto $producto)
+    public function update(Request $request, TallerMenu $tallerMenu)
     {
         //
     }
@@ -59,7 +58,7 @@ class ProductoController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Producto $producto)
+    public function destroy(TallerMenu $tallerMenu)
     {
         //
     }

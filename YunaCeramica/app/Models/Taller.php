@@ -31,9 +31,9 @@ class Taller extends Model
     }
 
     public function menus()
-{
-    return $this->belongsToMany(Menu::class, 'menu_taller', 'idTaller', 'idMenu');
-}
+    {
+        return $this->belongsToMany(Menu::class, 'taller_menus', 'idTaller', 'idMenu');
+    }
     public function imagenes()
     {
         return $this->hasMany(ImagenTaller::class, 'idTaller');
@@ -42,4 +42,5 @@ class Taller extends Model
 {
     return $this->hasMany(TallerCliente::class, 'idTaller');
 }
+
 }

@@ -4,10 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Acompaniante;
+use App\Models\Menu;
 use App\Models\Subcategoria;
 use Illuminate\Http\Request;
 use App\Models\Taller;
 use App\Models\TallerCliente;
+use Illuminate\Container\Attributes\Log;
+use Illuminate\Support\Facades\Log as FacadesLog;
 use Inertia\Inertia;
 
 class TallerController extends Controller
@@ -37,36 +40,75 @@ class TallerController extends Controller
 
     public function create()
     {
-        return inertia('Dashboard/Talleres/Create');
+        // Solo subcategorías que pertenezcan a la categoría Talleres
+        $subcategorias = Subcategoria::where('idCategoria', 2)->get();
+        $menu = Menu::all();
+    
+        return inertia('Dashboard/Talleres/Create', [
+            'subcategorias' => $subcategorias,
+            'menus' => $menu,
+        ]);
     }
-
+    
     public function store(Request $request)
     {
-        $request->validate([
-            'nombre' => 'required|string|max:255',
-            // otros campos
+
+        // Validación de los datos de entrada
+        $validated = $request->validate([
+            'nombre'         => 'required|string|max:255',
+            'descripcion'    => 'nullable|string',
+            'fecha'          => 'required|date',
+            'hora'           => 'required|date_format:H:i',
+            'precio'         => 'required|numeric|min:0',
+            'cupoMaximo'     => 'required|integer|min:1',
+            'ubicacion'      => 'required|string|max:255',
+            'idSubcategoria' => 'required|exists:subcategorias,id',
+            'menus' => 'nullable|array',
+            'menus.*' => 'nullable|integer|exists:menus,id',
         ]);
 
-        Taller::create($request->all());
+        $taller = Taller::create([
+            'nombre' => $validated['nombre'],
+            'descripcion' => $validated['descripcion'],
+            'fecha' => $validated['fecha'],
+            'hora' => $validated['hora'],
+            'precio' => $validated['precio'],
+            'cupoMaximo' => $validated['cupoMaximo'],
+            'ubicacion' => $validated['ubicacion'],
+            'idSubcategoria' => $validated['idSubcategoria'],
+        ]);
 
+        $taller->menus()->sync($validated['menus']);
+    
+        // Sincronizar los menús con el taller, si es que se seleccionaron
+        if (isset($validated['menus']) && count($validated['menus']) > 0) {
+            $taller->menus()->sync($validated['menus']);
+        }
+    
+        // Redirigir con un mensaje de éxito
         return redirect()->route('dashboard.talleres.index')->with('success', 'Taller creado correctamente.');
     }
+    
 
     public function edit($id)
-{
-    $taller = Taller::findOrFail($id);
-    $subcategorias = Subcategoria::where('idCategoria', 2)->get(['id', 'nombre']);
-    return Inertia::render('Dashboard/Talleres/Edit', [
-        'taller' => $taller,
-        'subcategorias' => $subcategorias,
-        'title' => 'Editar Taller',
-        'breadcrumbs' => [
-            ['label' => 'Dashboard', 'href' => '/dashboard'],
-            ['label' => 'Talleres', 'href' => '/dashboard/talleres'],
-            ['label' => 'Editar taller'], // sin href si es el actual
-        ],
-    ]);
-}
+    {
+        $taller = Taller::with('menus:id')->findOrFail($id);
+        $subcategorias = Subcategoria::where('idCategoria', 2)->get(['id', 'nombre']);
+        $menus = Menu::all(['id', 'nombre']); // o los campos que quieras mostrar en el select
+    
+        return Inertia::render('Dashboard/Talleres/Edit', [
+            'taller' => $taller,
+            'subcategorias' => $subcategorias,
+            'menus' => $menus,
+            'selectedMenus' => $taller->menus->pluck('id'),
+            'title' => 'Editar Taller',
+            'breadcrumbs' => [
+                ['label' => 'Dashboard', 'href' => '/dashboard'],
+                ['label' => 'Talleres', 'href' => '/dashboard/talleres'],
+                ['label' => 'Editar taller'],
+            ],
+        ]);
+    }
 
 public function update(Request $request, $id)
 {
@@ -76,14 +118,20 @@ public function update(Request $request, $id)
         'nombre'         => 'required|string|max:255',
         'descripcion'    => 'nullable|string',
         'fecha'          => 'required|date_format:Y-m-d',
-        'hora'           => 'required',
+        'hora'           => 'required|date_format:H:i',
         'precio'         => 'required|numeric',
         'cupoMaximo'     => 'required|integer|min:0',
         'ubicacion'      => 'required|string|max:255',
         'idSubcategoria' => 'required|exists:subcategorias,id',
+        'menus'          => 'nullable|array',
+        'menus.*'        => 'exists:menus,id',
     ]);
 
     $taller->update($validated);
+
+    if ($request->has('menus')) {
+        $taller->menus()->sync($validated['menus'] ?? []);
+    }
 
     return redirect()->route('dashboard.talleres.index')->with('success', 'Taller actualizado correctamente');
 }
@@ -124,26 +172,40 @@ public function view($id)
         'tallerClientes.menu',
         'tallerClientes.estadoPago',
         'tallerClientes.cliente',
-        'tallerClientes.acompaniantes.menu'])->findOrFail($id);
+        'tallerClientes.acompaniantes.menu'
+    ])->findOrFail($id);
+
     // 🔹 TallerClientes con User (cliente), Menu elegido, Estado de pago
     $tallerClientes = TallerCliente::with(['cliente', 'menu', 'estadoPago'])
         ->where('idTaller', $id)
-        ->get();
+        ->get(['id', 'idTaller', 'idCliente', 'idMenu', 'idEstadoPago', 'pagoGrupal', 'cantPersonas', 'referido']);
 
     // 🔹 Acompañantes de clientes con pago grupal
-    $acompaniantes = Acompaniante::with('menu') // trae también el menú elegido por el acompañante
+    $acompaniantes = Acompaniante::with('menu')
         ->whereIn('idTallerCliente', function ($query) use ($id) {
             $query->select('id')
                   ->from('taller_clientes')
                   ->where('idTaller', $id)
                   ->where('pagoGrupal', true);
         })
-        ->get();
+        ->get(['id', 'idTallerCliente', 'nombre', 'apellido', 'telefono', 'email', 'idMenu']);
 
     return Inertia::render('Dashboard/Talleres/View', [
         'taller' => $taller,
         'tallerClientes' => $tallerClientes,
         'acompaniantes' => $acompaniantes,
+    ]);
+}
+
+
+public function talleresClient()
+{
+    $talleres = Taller::where('activo', true)
+        ->orderBy('fecha', 'asc')
+        ->get(['id', 'nombre', 'descripcion', 'fecha', 'hora', 'ubicacion', 'precio']);
+
+    return Inertia::render('Talleres/Index', [
+        'talleres' => $talleres,
     ]);
 }
 }

@@ -1,57 +1,87 @@
-import { Link } from '@inertiajs/react';
-import { useState } from 'react';
+import { useEffect, useState } from "react";
+import { Link } from "@inertiajs/react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Menu } from "lucide-react"; // Ícono de menú hamburguesa de shadcn/lucide
+import { usePage } from "@inertiajs/react";
 
 export default function NavbarClient({ children }) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 0);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
     <>
-      <nav className="bg-white border-b border-gray-200 shadow-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <Link href="/" className="text-xl font-bold text-gray-800">
-                Yuna Cerámica
-              </Link>
-            </div>
-            <div className="hidden md:flex items-center space-x-6">
-              <Link href="/productos" className="text-gray-600 hover:text-gray-900">
-                Productos
-              </Link>
-              <Link href="/talleres" className="text-gray-600 hover:text-gray-900">
-                Talleres
-              </Link>
-              <Link href="/contacto" className="text-gray-600 hover:text-gray-900">
-                Contacto
-              </Link>
-            </div>
-            <div className="flex items-center md:hidden">
-              <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="text-gray-600 hover:text-gray-900 focus:outline-none"
-              >
-                ☰
-              </button>
-            </div>
+      <header
+        className={cn(
+          "fixed w-full z-50 transition-all duration-300",
+          scrolled ? "bg-customGray shadow-sm" : "bg-inherit"
+        )}
+      >
+        <nav
+          className={cn(
+            " flex justify-between px-12 max-w-screen transition-colors duration-300  font-[\"Helvetica Neue\", Arial, sans-serif] ",
+            scrolled ? "text-white" : "text-white"
+            
+          )}
+          style={{ fontFamily: '"Helvetica Neue", Arial, sans-serif' }}
+        >
+          {/* Logo */}
+          <Link href="/" className="py-4">
+            <img
+              src= " ../../../../storage/imagenesFijas/yunalogowhite.png"
+              className="object-contain max-h-12 sm:max-h-20 md:max-h-16"
+              alt="Yuna Cerámica"
+            />
+          </Link>
+
+          {/* Desktop Nav Items */}
+          <div className="text-base hidden md:flex place-items-center gap-14 py-4 px-4">
+            <Link   href="/">Home</Link>
+            <Link      className={cn(
+    "relative transition-all duration-300  after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-full after:origin-center after:scale-x-0 after:bg-white after:transition-transform after:duration-300",
+    route().current('productos') && "after:scale-x-100"
+  )}
+ href="/productos">Productos</Link>
+            <Link className={cn(
+    "relative transition-all duration-300  after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-full after:origin-center after:scale-x-0 after:bg-white after:transition-transform after:duration-300",
+    route().current('talleres') && "after:scale-x-100"
+  )} href="/talleres">Talleres</Link>
+            <Link href="/contacto">Contacto</Link>
+            <Link href="/login">Iniciar sesión</Link>
           </div>
-        </div>
-        {isOpen && (
-          <div className="md:hidden px-2 pb-3 space-y-1">
-            <Link href="/productos" className="block text-gray-600 hover:text-gray-900">
-              Productos
-            </Link>
-            <Link href="/talleres" className="block text-gray-600 hover:text-gray-900">
-              Talleres
-            </Link>
-            <Link href="/contacto" className="block text-gray-600 hover:text-gray-900">
-              Contacto
-            </Link>
+
+          {/* Mobile Menu Icon */}
+          <button
+            className="md:hidden p-2"
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-label="Toggle menu"
+          >
+            <Menu size={28} />
+          </button>
+        </nav>
+
+        {/* Mobile Menu */}
+        {menuOpen && (
+          <div className="md:hidden bg-customGray text-white flex flex-col px-4 py-4 space-y-4 text-lg">
+            <Link href="/" onClick={() => setMenuOpen(false)}>Home</Link>
+            <Link href="/productos" onClick={() => setMenuOpen(false)}>Productos</Link>
+            <Link href="/talleres" onClick={() => setMenuOpen(false)}>Talleres</Link>
+            <Link href="/contacto" onClick={() => setMenuOpen(false)}>Contacto</Link>
+            <Link href="/login" onClick={() => setMenuOpen(false)}>Iniciar sesión</Link>
           </div>
         )}
-      </nav>
+      </header>
 
-      {/* Acá se renderiza el contenido de la página */}
-      <main className="pt-6 px-4">{children}</main>
+      {/* Offset para que el contenido no quede tapado por el navbar fijo */}
+      <div className="">
+        {children}
+      </div>
     </>
   );
 }

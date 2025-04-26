@@ -167,6 +167,7 @@ export default function TalleresIndex({ talleres = [] }) {
       <div className="py-12 max-w-screen-2xl h-auto ml-0">
         <div className=" w-4/5 justify-end flex mx-auto pb-8 ">
           <Button
+          onClick={() => router.visit(route('dashboard.talleres.create'))}
             variant={theme.palette.mode === "dark" ? "outlined" : "contained"}
             endIcon={<Add />}
             sx={{

@@ -13,4 +13,9 @@ class Menu extends Model
 
 
     protected $fillable = ['nombre'];
+
+    public function talleres()
+    {
+        return $this->belongsToMany(Taller::class, 'taller_menus', 'idMenu', 'idTaller');
+    }
 }

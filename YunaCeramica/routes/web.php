@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\TallerController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TallerClienteController;
@@ -15,6 +16,11 @@ Route::get('/', function () {
         'phpVersion' => PHP_VERSION,
     ]);
 });
+
+Route::get('/productos', [ProductoController::class, 'index'])->name('productos');
+
+Route::get('/talleres', [TallerController::class, 'talleresClient'])->name('talleres');
+
 
 Route::middleware(['auth', 'verified'])
     ->prefix('dashboard')
@@ -44,6 +50,8 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
+
+
 
 
 Route::fallback(function () {

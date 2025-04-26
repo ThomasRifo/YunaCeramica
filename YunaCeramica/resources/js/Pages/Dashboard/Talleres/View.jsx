@@ -23,6 +23,10 @@ export default function View({ taller, tallerClientes, acompaniantes }) {
   const theme = useTheme();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [selectedParticipant, setSelectedParticipant] = useState(null);
+  const pagos = 0;
+  // Agrupar por referidos
+const grupos = {};
+
 
   const acompByCliente = acompaniantes.reduce((acc, a) => {
     if (!acc[a.idTallerCliente]) acc[a.idTallerCliente] = [];
@@ -31,9 +35,19 @@ export default function View({ taller, tallerClientes, acompaniantes }) {
   }, {});
 
   let rows = [];
+  let totalRecaudado = 0;
+
+tallerClientes.forEach((tc) => {
+  if (tc.estado_pago?.id === 1) {
+    totalRecaudado += tc.cantPersonas * taller.precio;
+  } else if (tc.estado_pago?.id === 2) {
+    totalRecaudado += tc.cantPersonas * (taller.precio / 2);
+  }
+});
   let groupId = 0;
 
   tallerClientes.forEach((tc) => {
+
     groupId++;
     const baseRow = {
       id: `tc-${tc.id}`,
@@ -119,9 +133,50 @@ export default function View({ taller, tallerClientes, acompaniantes }) {
     },
   ];
 
+  tallerClientes.forEach(tc => {
+    const referido = tc.referido || `individual-${tc.id}`; // si no tiene referido, lo consideramos individual
+    if (!grupos[referido]) grupos[referido] = [];
+    grupos[referido].push({
+      nombre: tc.cliente?.name,
+      apellido: tc.cliente?.apellido,
+      menu: tc.menu?.nombre,
+    });
+  
+    // Si tiene acompañantes, sumarlos al grupo
+    if (tc.pagoGrupal && acompByCliente[tc.id]) {
+      acompByCliente[tc.id].forEach(a => {
+        grupos[referido].push({
+          nombre: a.nombre,
+          apellido: a.apellido,
+          menu: a.menu?.nombre,
+        });
+      });
+    }
+  });
+  
+  // Generar resumen de grupos por tamaño
+  const resumenGrupos = {};
+  Object.values(grupos).forEach(grupo => {
+    const tam = grupo.length;
+    if (!resumenGrupos[tam]) resumenGrupos[tam] = 0;
+    resumenGrupos[tam]++;
+  });
+  
+  // Contar cantidad de menús
+  const resumenMenus = {};
+  Object.values(grupos).forEach(grupo => {
+    grupo.forEach(persona => {
+      const menu = persona.menu || 'Sin seleccionar';
+      if (!resumenMenus[menu]) resumenMenus[menu] = 0;
+      resumenMenus[menu]++;
+    });
+  });
+
+  
+
   return (
     <>
-      <Head title={`Taller - ${taller.titulo}`} />
+      <Head title={`Taller - ${taller.nombre}`} />
 
       <Box sx={{ mb: 2 }}>
         <Breadcrumbs aria-label="breadcrumb">
@@ -131,7 +186,7 @@ export default function View({ taller, tallerClientes, acompaniantes }) {
           <Link underline="hover" color="inherit" href="/dashboard/talleres">
             Talleres
           </Link>
-          <Typography color="text.primary">{taller.titulo}</Typography>
+          <Typography color="text.primary">{taller.nombre}</Typography>
         </Breadcrumbs>
       </Box>
 
@@ -146,9 +201,32 @@ export default function View({ taller, tallerClientes, acompaniantes }) {
           <Typography>Ubicación: {taller.ubicacion}</Typography>
           <Typography>Capacidad: {taller.cupoMaximo}</Typography>
           <Typography>Descripción: {taller.descripcion}</Typography>
+          <Typography>Precio: ${taller.precio}</Typography>
+          <Typography>Total recaudado: ${totalRecaudado.toLocaleString('es-AR')}</Typography>
+          
         </CardContent>
       </Card>
+      <Card sx={{ mb: 4 }}>
+  <CardContent>
+    <Typography variant="h6">Resumen de Grupos</Typography>
+    {Object.entries(resumenGrupos).map(([tam, cantidad]) => (
+      <Typography key={tam}>
+        Grupos de {tam}: {cantidad}
+      </Typography>
+    ))}
+  </CardContent>
+</Card>
 
+<Card sx={{ mb: 4 }}>
+  <CardContent>
+    <Typography variant="h6">Resumen de Menús</Typography>
+    {Object.entries(resumenMenus).map(([menu, cantidad]) => (
+      <Typography key={menu}>
+        {menu}: {cantidad}
+      </Typography>
+    ))}
+  </CardContent>
+</Card>
       <Typography variant="h5" gutterBottom>Participantes</Typography>
 
       <Paper sx={{ height: 600, width: '100%' }}>
@@ -165,7 +243,7 @@ export default function View({ taller, tallerClientes, acompaniantes }) {
               backgroundColor: theme.palette.mode === 'dark' ? '#1e1e1e' : '#fff',
             },
             '& .grupo-odd': {
-              backgroundColor: theme.palette.mode === 'dark' ? '#2a2a2a' : '#ffe6ef',
+              backgroundColor: theme.palette.mode === 'dark' ? '#2a2a2a' : '#f7bcd8',
             },
             '& .MuiDataGrid-columnHeaders': {
               borderTop: '2px solid',
