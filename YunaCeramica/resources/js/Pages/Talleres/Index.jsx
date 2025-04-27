@@ -5,8 +5,9 @@ import { Link } from '@inertiajs/react';
  
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { cn } from '@/lib/utils';
+import ReviewsSection from '@/Components/ReviewsSection';
 
-export default function TalleresIndex() {
+export default function TalleresIndex({reviews} ) {
   return (
     <div className="min-h-screen">
       {/* Imagen de portada */}
@@ -26,9 +27,9 @@ export default function TalleresIndex() {
       </div>
 
       {/* Secciones Cerámica & Café / Gin */}
-      <div className='mx-auto max-w-7xl h-screen '>
+      <section className='mx-auto max-w-7xl '>
         <h2 className='text-center font-semibold text-2xl md:text-4xl pt-8 md:pt-14 md:pb-8'>Elegí tu experiencia</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 px-4 py-8  ">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 px-4 sm:px-16 py-8  ">
         {/* Cerámica y Café */}
         <Link href="talleres-ceramica-y-cafe" className="group">
           <AspectRatio ratio={2 / 1.8} className="relative rounded-xl overflow-hidden shadow-lg ">
@@ -57,7 +58,11 @@ export default function TalleresIndex() {
           </AspectRatio>
         </Link>
       </div>
-      </div>
+      </section>
+
+      <section>
+      <ReviewsSection reviews={reviews} />
+      </section>
     </div>
   );
 }

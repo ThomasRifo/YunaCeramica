@@ -31,7 +31,7 @@ export default function NavbarClient({ children }) {
           )}
           style={{ fontFamily: '"Helvetica Neue", Arial, sans-serif' }}
         >
-          {/* Logo */}
+          
           <Link href="/" className="py-4">
             <img
               src= " ../../../../storage/imagenesFijas/yunalogowhite.png"
@@ -40,7 +40,7 @@ export default function NavbarClient({ children }) {
             />
           </Link>
 
-          {/* Desktop Nav Items */}
+          
           <div className="text-base hidden md:flex place-items-center gap-14 py-4 px-4">
             <Link   href="/">Home</Link>
             <Link      className={cn(
@@ -78,7 +78,6 @@ export default function NavbarClient({ children }) {
         )}
       </header>
 
-      {/* Offset para que el contenido no quede tapado por el navbar fijo */}
       <div className="">
         {children}
       </div>

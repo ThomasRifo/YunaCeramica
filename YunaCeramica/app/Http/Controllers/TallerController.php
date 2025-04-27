@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Acompaniante;
 use App\Models\Menu;
+use App\Models\Reviews;
 use App\Models\Subcategoria;
 use Illuminate\Http\Request;
 use App\Models\Taller;
@@ -200,12 +201,18 @@ public function view($id)
 
 public function talleresClient()
 {
+    $reviews = Reviews::where('habilitada', 1)
+    ->whereNotNull('fecha_publicacion')
+    ->orderBy('fecha_publicacion', 'desc')
+    ->take(20) // Trae solo las 10 más nuevas
+    ->get();
     $talleres = Taller::where('activo', true)
         ->orderBy('fecha', 'asc')
         ->get(['id', 'nombre', 'descripcion', 'fecha', 'hora', 'ubicacion', 'precio']);
 
     return Inertia::render('Talleres/Index', [
         'talleres' => $talleres,
+        'reviews' => $reviews,
     ]);
 }
 }
