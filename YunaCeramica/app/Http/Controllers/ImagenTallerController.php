@@ -2,64 +2,58 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Controller;
 use App\Models\ImagenTaller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 
 class ImagenTallerController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        return Inertia::render('Dashboard/Paginas/Talleres/Index');
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function edit($slug)
     {
-        //
+        $imagenes = ImagenTaller::where('slug', $slug)
+                    ->orderBy('orden')
+                    ->get();
+
+        return Inertia::render('Dashboard/Paginas/Talleres/EditImagenes', [
+            'slug' => $slug,
+            'imagenes' => $imagenes,
+        ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
+    public function update(Request $request, $slug)
+{
+    $imagenesInput = $request->input('imagenes', []);
+
+    foreach ($imagenesInput as $index => $imgData) {
+        $imagenTaller = ImagenTaller::findOrFail($imgData['id']);
+
+        // Subir nueva imagen si se envió
+        if ($request->hasFile("imagenes.$index.nueva_imagen")) {
+            $file = $request->file("imagenes.$index.nueva_imagen");
+
+            if ($imagenTaller->urlImagen) {
+                Storage::disk('public')->delete('talleres/' . $imagenTaller->urlImagen);
+            }
+
+            $filename = $slug . '-' . now()->format('YmdHis') . '-' . $index . '.' . $file->extension();
+            $path = $file->storeAs('talleres', $filename, 'public');
+
+            $imagenTaller->urlImagen = basename($path);
+        }
+
+        $imagenTaller->texto = $imgData['texto'] ?? '';
+        $imagenTaller->save();
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(ImagenTaller $imagenTaller)
-    {
-        //
-    }
+    return redirect()->back()->with('success', 'Imágenes y textos actualizados correctamente.');
+}
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(ImagenTaller $imagenTaller)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, ImagenTaller $imagenTaller)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(ImagenTaller $imagenTaller)
-    {
-        //
-    }
+    
 }

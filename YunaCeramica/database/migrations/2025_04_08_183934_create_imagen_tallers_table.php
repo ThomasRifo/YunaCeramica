@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('imagenes_taller', function (Blueprint $table) {
             $table->id();
             $table->string('urlImagen');
+            $table->text('texto')->nullable();
             $table->integer('orden')->default(0);
             $table->timestamps();
         });

@@ -36,12 +36,12 @@ export default function ReviewCarousel({ reviews }) {
       </Swiper>
 
       {/* Flechas */}
-      <div className="absolute -left-4 top-1/2 transform -translate-y-1/2 z-10">
+      <div className="absolute -left-1 top-1/2 transform -translate-y-1/2 z-10">
         <button className="swiper-prev text-gray-500 hover:text-gray-700 transition">
           <ChevronLeft size={30} />
         </button>
       </div>
-      <div className="absolute -right-4 top-1/2 transform -translate-y-1/2 z-10">
+      <div className="absolute -right-1 top-1/2 transform -translate-y-1/2 z-10">
         <button className="swiper-next text-gray-500 hover:text-gray-700 transition">
           <ChevronRight size={30} />
         </button>

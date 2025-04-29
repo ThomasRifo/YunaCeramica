@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\TallerController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ImagenTallerController;
 use App\Http\Controllers\TallerClienteController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -21,12 +22,23 @@ Route::get('/productos', [ProductoController::class, 'index'])->name('productos'
 
 Route::get('/talleres', [TallerController::class, 'talleresClient'])->name('talleres');
 
+Route::get('/talleres-ceramica-y-gin', [TallerController::class, 'tallerView']);
+Route::get('/talleres-ceramica-y-cafe', [TallerController::class, 'tallerView']);
+
 
 Route::middleware(['auth', 'verified'])
     ->prefix('dashboard')
-    ->name('dashboard.')  // 👉 Todos los nombres de rutas empiezan con "dashboard."
+    ->name('dashboard.')  
     ->group(function () {
         
+        Route::prefix('/paginas/talleres')
+        ->name('paginas.')
+        ->group(function () {
+            Route::get('/', [ImagenTallerController::class, 'index'])->name('talleres.index'); 
+            Route::get('{slug}/editar', [ImagenTallerController::class, 'edit'])->name('talleres.imagenes.edit');
+            Route::put('{slug}/actualizar', [ImagenTallerController::class, 'update'])->name('talleres.imagenes.update');
+        });
+
         // Ruta principal del dashboard
         Route::get('/', function () {
             return Inertia::render('Dashboard/Dashboard');

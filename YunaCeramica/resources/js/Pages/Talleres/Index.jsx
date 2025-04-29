@@ -1,6 +1,6 @@
 // resources/js/Pages/Talleres/Index.jsx
 
-import { Link } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 
  
 import { AspectRatio } from "@/components/ui/aspect-ratio"
@@ -9,13 +9,14 @@ import ReviewsSection from '@/Components/ReviewsSection';
 
 export default function TalleresIndex({reviews} ) {
   return (
+    <>
+    <Head title="Talleres" />
     <div className="min-h-screen">
       {/* Imagen de portada */}
       <div className="relative h-[51.5vh] w-full">
-      <video autoplay loop muted className="object-cover w-full h-full" alt="Portada talleres">
-  <source src="https://lapintoramica.com/wp-content/uploads/2024/03/VIDEO-BANNER-FULL-SCREEN-WITHOUT-TEXT-2.mp4" type="video/mp4" />
-  <source src="https://lapintoramica.com/wp-content/uploads/2024/03/VIDEO-BANNER-FULL-SCREEN-WITHOUT-TEXT-2.webm" type="video/webm" />
-  <source src="https://lapintoramica.com/wp-content/uploads/2024/03/VIDEO-BANNER-FULL-SCREEN-WITHOUT-TEXT-2.ogg" type="video/ogg" />
+      <video autoplay="autoplay" loop muted className="object-cover  object-[63%_1%] w-full h-full" alt="Portada talleres">
+  <source src="../../../../storage/Videos/portada.mp4" type="video/mp4" />
+
   Tu navegador no soporta el formato de video.
 </video>
         <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center  text-white text-center px-4">
@@ -26,11 +27,11 @@ export default function TalleresIndex({reviews} ) {
         </div>
       </div>
 
-      {/* Secciones Cerámica & Café / Gin */}
+      
       <section className='mx-auto max-w-7xl '>
         <h2 className='text-center font-semibold text-2xl md:text-4xl pt-8 md:pt-14 md:pb-8'>Elegí tu experiencia</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 px-4 sm:px-16 py-8  ">
-        {/* Cerámica y Café */}
+       
         <Link href="talleres-ceramica-y-cafe" className="group">
           <AspectRatio ratio={2 / 1.8} className="relative rounded-xl overflow-hidden shadow-lg ">
             <img
@@ -44,7 +45,7 @@ export default function TalleresIndex({reviews} ) {
           </AspectRatio>
         </Link>
 
-        {/* Cerámica y Gin */}
+        
         <Link href="/talleres-ceramica-y-gin" className="group">
           <AspectRatio ratio={2 / 1.8} className="relative rounded-xl overflow-hidden shadow-lg">
             <img
@@ -64,5 +65,6 @@ export default function TalleresIndex({reviews} ) {
       <ReviewsSection reviews={reviews} />
       </section>
     </div>
+    </>
   );
 }

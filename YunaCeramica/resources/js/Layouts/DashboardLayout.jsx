@@ -50,7 +50,10 @@ const NAVIGATION = [
       { segment: "../logout", title: "Logout", icon: <CategoryIcon /> },
     ],
   },
-  { segment: "dashboard/web", title: "Paginas", icon: <WebIcon /> },
+  { segment: "dashboard/paginas", title: "Paginas", icon: <WebIcon  />, children: [
+    { segment: "talleres", title: "Talleres", icon: <DescriptionIcon /> },
+    { segment: "../logout", title: "Logout", icon: <CategoryIcon /> },
+  ],  },
 ];
 
 // 🔁 Creamos una función para crear el theme según el modo

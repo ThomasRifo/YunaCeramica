@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Acompaniante;
+use App\Models\ImagenTaller;
 use App\Models\Menu;
 use App\Models\Reviews;
 use App\Models\Subcategoria;
@@ -215,4 +216,47 @@ public function talleresClient()
         'reviews' => $reviews,
     ]);
 }
+
+
+public function tallerView()
+{
+    // Obtenemos la parte final de la URL
+    $url = request()->path();
+
+    // Definimos ID de subcategoría basado en la URL
+    $subcategoriaId = null;
+    $slug = null;
+
+    if ($url === 'talleres-ceramica-y-gin') {
+        $subcategoriaId = 1;
+        $slug = 'ceramica-y-gin';
+    } elseif ($url === 'talleres-ceramica-y-cafe') {
+        $subcategoriaId = 2;
+        $slug = 'ceramica-y-cafe';
+    } else {
+        abort(404, 'Taller no encontrado');
+    }
+
+    // Buscamos el taller más reciente que cumpla condiciones
+    $taller = Taller::where('activo', true)
+        ->where('idSubcategoria', $subcategoriaId)
+        ->orderBy('created_at', 'desc')
+        ->first();
+
+    if (!$taller) {
+        abort(404, 'Taller no disponible');
+    }
+
+    // Traemos las imágenes asociadas al slug
+    $imagenes = ImagenTaller::where('slug', $slug)
+        ->orderBy('orden')
+        ->get();
+
+    return Inertia::render('Talleres/TallerView', [
+        'taller' => $taller,
+        'imagenes' => $imagenes,
+    ]);
+}
+
+
 }
