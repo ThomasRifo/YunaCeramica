@@ -238,7 +238,8 @@ public function tallerView()
     }
 
     // Buscamos el taller más reciente que cumpla condiciones
-    $taller = Taller::where('activo', true)
+    $taller = Taller::with('subcategoria')
+    ->where('activo', true)
         ->where('idSubcategoria', $subcategoriaId)
         ->orderBy('created_at', 'desc')
         ->first();
@@ -255,8 +256,26 @@ public function tallerView()
     return Inertia::render('Talleres/TallerView', [
         'taller' => $taller,
         'imagenes' => $imagenes,
+        'slug' => $slug,
     ]);
 }
+public function formInscripcion($slug)
+{
+    
+    $taller = Taller::with(['menus', 'subcategoria'])
+    ->where('activo', true)
+    ->orderBy('created_at', 'desc')
+        ->whereHas('subcategoria', function ($query) use ($slug) {
+            $query->where('url', $slug);
+        })
+        ->firstOrFail();
+
+    return Inertia::render('Talleres/FormInscripcion', [
+        'taller' => $taller,
+    ]);
+}
+
+
 
 
 }

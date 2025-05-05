@@ -4,6 +4,7 @@ use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\TallerController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ImagenTallerController;
+use App\Http\Controllers\PagoController;
 use App\Http\Controllers\TallerClienteController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -24,6 +25,15 @@ Route::get('/talleres', [TallerController::class, 'talleresClient'])->name('tall
 
 Route::get('/talleres-ceramica-y-gin', [TallerController::class, 'tallerView']);
 Route::get('/talleres-ceramica-y-cafe', [TallerController::class, 'tallerView']);
+Route::get('/talleres-{slug}-inscripcion', [TallerController::class, 'formInscripcion'])
+    ->where('slug', '[A-Za-z0-9\-]+')
+    ->name('taller.inscripcion');
+
+
+
+
+
+
 
 
 Route::middleware(['auth', 'verified'])
@@ -63,6 +73,13 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+
+
+Route::post('/pagar-taller', [PagoController::class, 'pagarTaller'])->middleware('auth');
+
+Route::get('/pago-success', fn() => Inertia::render('Pagos/Success'))->name('pago.success');
+Route::get('/pago-failure', fn() => Inertia::render('Pagos/Failure'))->name('pago.failure');
+Route::get('/pago-pending', fn() => Inertia::render('Pagos/Pending'))->name('pago.pending');
 
 
 

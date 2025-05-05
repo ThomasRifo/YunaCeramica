@@ -1,65 +1,38 @@
 <?php
 
+// app/Http/Controllers/MercadoPagoController.php
+
 namespace App\Http\Controllers;
 
-use App\Models\MetodoPago;
 use Illuminate\Http\Request;
+use MercadoPago\SDK;
+use MercadoPago\Preference;
+use MercadoPago\Item;
 
-class MetodoPagoController extends Controller
+class MercadoPagoController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function crearPreferencia(Request $request)
     {
-        //
-    }
+        // Inicializá el SDK con tu access token
+        SDK::setAccessToken(env('MP_ACCESS_TOKEN'));
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
+        $data = $request->validate([
+            'title' => 'required|string',
+            'quantity' => 'required|integer|min:1',
+            'unit_price' => 'required|numeric|min:0',
+        ]);
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
+        $item = new Item();
+        $item->title = $data['title'];
+        $item->quantity = $data['quantity'];
+        $item->unit_price = $data['unit_price'];
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(MetodoPago $metodoPago)
-    {
-        //
-    }
+        $preference = new Preference();
+        $preference->items = [$item];
+        $preference->save();
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(MetodoPago $metodoPago)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, MetodoPago $metodoPago)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(MetodoPago $metodoPago)
-    {
-        //
+        return response()->json([
+            'preferenceId' => $preference->id,
+        ]);
     }
 }

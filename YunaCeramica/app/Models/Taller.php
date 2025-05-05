@@ -43,4 +43,5 @@ class Taller extends Model
     return $this->hasMany(TallerCliente::class, 'idTaller');
 }
 
+
 }

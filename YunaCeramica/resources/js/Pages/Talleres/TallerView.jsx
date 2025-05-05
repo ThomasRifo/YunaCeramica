@@ -4,8 +4,11 @@ import PiecesCarousel from "@/Components/Taller/PiecesCarousel";
 import LocationMap from "@/Components/Taller/LocationMap";
 import { Head, Link } from "@inertiajs/react";
 import { Calendar, Clock, MapPin, DollarSign  } from "lucide-react";
+import MercadoPagoButton from "@/Components/MercadoPagoButton";
 
 export default function TallerView({ taller, imagenes }) {
+
+  console.log(taller.subcategoria.url);
 
   const precios = (
     <div className="mt-6 space-y-2 text-gray-800">
@@ -82,12 +85,17 @@ export default function TallerView({ taller, imagenes }) {
           viewport={{ once: true, amount: 0.4 }}
           transition={{ duration: 0.8, delay: 0.4 }}
         >
-          <Link
-            href={`/talleres-inscripcion-${taller.slug}`}
-            className="inline-block w-3/4 bg-rose-300 hover:bg-rose-400 text-white font-semibold py-3 px-6 rounded-lg transition text-2xl"
-          >
-            Quiero inscribirme!
-          </Link>
+          {taller.idSubcategoria && (
+<Link
+href={`/talleres-${taller.subcategoria.url}-inscripcion`}
+  className="inline-block w-3/4 bg-rose-300 hover:bg-rose-400 text-white font-semibold py-3 px-6 rounded-lg transition text-2xl"
+>
+  Quiero inscribirme!
+
+</Link>
+          )}
+
+
         </motion.div>
 
         {/* Carrusel de piezas */}

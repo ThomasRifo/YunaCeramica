@@ -6,12 +6,12 @@ import { Menu } from "lucide-react";
 
 export default function NavbarClient({ children }) {
   const [scrolled, setScrolled] = useState(false);
-  const { url } = usePage(); // <-- 🚀 Capturamos la URL de Inertia dinámicamente
+  const { url } = usePage(); 
   const [menuOpen, setMenuOpen] = useState(false);
 const isTalleres = url.startsWith('/talleres') || url.startsWith('/talleres-');
 
 
-  const shouldStartGray = ['/talleres-ceramica-y-gin', '/talleres-ceramica-y-cafe', '/talleres-ceramica-y-cafe#ubicacion','/talleres-ceramica-y-gin#ubicacion' ].includes(url);
+  const inherit = ['/talleres' ].includes(url);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 0);
@@ -19,7 +19,7 @@ const isTalleres = url.startsWith('/talleres') || url.startsWith('/talleres-');
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const isGray = scrolled || shouldStartGray; // 🚀 Si scrolleaste o si debería empezar gris
+  const isGray = scrolled || !inherit; 
 
   return (
     <>
