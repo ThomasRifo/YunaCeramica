@@ -32,7 +32,9 @@ class Taller extends Model
 
     public function menus()
     {
-        return $this->belongsToMany(Menu::class, 'taller_menus', 'idTaller', 'idMenu');
+        return $this->belongsToMany(Menu::class, 'taller_menus', 'idTaller', 'idMenu')
+        ->withPivot('html') 
+        ->withTimestamps();
     }
     public function imagenes()
     {

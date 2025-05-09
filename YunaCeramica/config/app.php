@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Support\ServiceProvider;
+
 return [
 
     /*
@@ -52,7 +54,7 @@ return [
     |
     */
 
-    'url' => env('APP_URL', 'http://localhost'),
+    'url' => env('APP_URL', 'https://17e9-2802-8012-74f0-e001-ad7f-53bd-f02a-646f.ngrok-free.app'),
 
     /*
     |--------------------------------------------------------------------------
@@ -122,5 +124,21 @@ return [
         'driver' => env('APP_MAINTENANCE_DRIVER', 'file'),
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
+
+    /*
+     * Application Service Providers...
+     */
+    'providers' => ServiceProvider::defaultProviders()->merge([
+        /*
+         * Package Service Providers...
+         */
+
+        /*
+         * Application Service Providers...
+         */
+        App\Providers\AppServiceProvider::class,
+
+        App\Providers\RouteServiceProvider::class,
+    ])->toArray(),
 
 ];

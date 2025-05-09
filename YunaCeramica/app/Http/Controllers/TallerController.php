@@ -14,6 +14,7 @@ use App\Models\TallerCliente;
 use Illuminate\Container\Attributes\Log;
 use Illuminate\Support\Facades\Log as FacadesLog;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\DB;
 
 class TallerController extends Controller
 {
@@ -94,7 +95,9 @@ class TallerController extends Controller
 
     public function edit($id)
     {
-        $taller = Taller::with('menus:id')->findOrFail($id);
+        $taller = Taller::with(['menus' => function($query) {
+            $query->select('menus.id', 'menus.nombre')->withPivot('html');
+        }])->findOrFail($id);
         $subcategorias = Subcategoria::where('idCategoria', 2)->get(['id', 'nombre']);
         $menus = Menu::all(['id', 'nombre']); // o los campos que quieras mostrar en el select
     
@@ -112,31 +115,35 @@ class TallerController extends Controller
         ]);
     }
 
-public function update(Request $request, $id)
-{
-    $taller = Taller::findOrFail($id);
-
-    $validated = $request->validate([
-        'nombre'         => 'required|string|max:255',
-        'descripcion'    => 'nullable|string',
-        'fecha'          => 'required|date_format:Y-m-d',
-        'hora'           => 'required|date_format:H:i',
-        'precio'         => 'required|numeric',
-        'cupoMaximo'     => 'required|integer|min:0',
-        'ubicacion'      => 'required|string|max:255',
-        'idSubcategoria' => 'required|exists:subcategorias,id',
-        'menus'          => 'nullable|array',
-        'menus.*'        => 'exists:menus,id',
-    ]);
-
-    $taller->update($validated);
-
-    if ($request->has('menus')) {
-        $taller->menus()->sync($validated['menus'] ?? []);
+    public function update(Request $request, $id)
+    {
+        $taller = Taller::findOrFail($id);
+    
+        $validated = $request->validate([
+            'nombre'         => 'required|string|max:255',
+            'descripcion'    => 'nullable|string',
+            'fecha'          => 'required|date_format:Y-m-d',
+            'hora'           => 'required|date_format:H:i',
+            'precio'         => 'required|numeric',
+            'cupoMaximo'     => 'required|integer|min:0',
+            'ubicacion'      => 'required|string|max:255',
+            'idSubcategoria' => 'required|exists:subcategorias,id',
+            'menus'          => 'nullable|array',
+            'menus.*'        => 'exists:menus,id',
+        ]);
+    
+        // Generar y agregar el slug
+    
+        // Actualizar taller
+        $taller->update($validated);
+    
+        // Sincronizar menús
+        if ($request->has('menus')) {
+            $taller->menus()->sync($validated['menus'] ?? []);
+        }
+    
+        return redirect()->route('dashboard.talleres.index')->with('success', 'Taller actualizado correctamente');
     }
-
-    return redirect()->route('dashboard.talleres.index')->with('success', 'Taller actualizado correctamente');
-}
 
     public function destroy($id)
     {
@@ -174,28 +181,28 @@ public function view($id)
         'tallerClientes.menu',
         'tallerClientes.estadoPago',
         'tallerClientes.cliente',
-        'tallerClientes.acompaniantes.menu'
+        'tallerClientes.acompaniantes.menu',
+        'tallerClientes.metodoPago'
     ])->findOrFail($id);
 
-    // 🔹 TallerClientes con User (cliente), Menu elegido, Estado de pago
-    $tallerClientes = TallerCliente::with(['cliente', 'menu', 'estadoPago'])
+    // Traer todos los tallerClientes con sus relaciones
+    $tallerClientes = TallerCliente::with(['menu', 'estadoPago', 'acompaniantes.menu', 'metodoPago'])
         ->where('idTaller', $id)
-        ->get(['id', 'idTaller', 'idCliente', 'idMenu', 'idEstadoPago', 'pagoGrupal', 'cantPersonas', 'referido']);
+        ->get();
 
-    // 🔹 Acompañantes de clientes con pago grupal
-    $acompaniantes = Acompaniante::with('menu')
-        ->whereIn('idTallerCliente', function ($query) use ($id) {
-            $query->select('id')
-                  ->from('taller_clientes')
-                  ->where('idTaller', $id)
-                  ->where('pagoGrupal', true);
-        })
-        ->get(['id', 'idTallerCliente', 'nombre', 'apellido', 'telefono', 'email', 'idMenu']);
+    // Separar en pagados/parciales y pendientes
+    $tallerClientesPagados = $tallerClientes->filter(function($tc) {
+        return in_array($tc->idEstadoPago, [2, 3]); // 2 = pago parcial, 3 = pagado
+    })->values()->all();
+
+    $tallerClientesPendientes = $tallerClientes->filter(function($tc) {
+        return $tc->idEstadoPago === 1; // 1 = pendiente
+    })->values()->all();
 
     return Inertia::render('Dashboard/Talleres/View', [
         'taller' => $taller,
-        'tallerClientes' => $tallerClientes,
-        'acompaniantes' => $acompaniantes,
+        'tallerClientesPagados' => $tallerClientesPagados,
+        'tallerClientesPendientes' => $tallerClientesPendientes,
     ]);
 }
 
@@ -261,14 +268,18 @@ public function tallerView()
 }
 public function formInscripcion($slug)
 {
-    
-    $taller = Taller::with(['menus', 'subcategoria'])
+    $taller = Taller::with([
+        'menus' => function ($query) {
+            $query->withPivot('html');
+        },
+        'subcategoria'
+    ])
     ->where('activo', true)
     ->orderBy('created_at', 'desc')
-        ->whereHas('subcategoria', function ($query) use ($slug) {
-            $query->where('url', $slug);
-        })
-        ->firstOrFail();
+    ->whereHas('subcategoria', function ($query) use ($slug) {
+        $query->where('url', $slug);
+    })
+    ->firstOrFail();
 
     return Inertia::render('Talleres/FormInscripcion', [
         'taller' => $taller,
@@ -277,5 +288,69 @@ public function formInscripcion($slug)
 
 
 
+public function updateMenusHtml(Request $request, $id)
+{
+   
 
+
+        $taller = Taller::findOrFail($id);
+
+        $request->validate([
+            'menus' => 'required|array',
+            'menus.*.id' => 'required|exists:menus,id',
+            'menus.*.html' => 'nullable|string',
+        ]);
+
+       
+
+        foreach ($request->menus as $menu) {
+           
+            
+            $taller->menus()->updateExistingPivot($menu['id'], [
+                'html' => $menu['html'] ?? '',
+            ]);
+        }
+
+        return response()->json(['message' => 'Contenido de menús actualizado correctamente.']);
+ 
+        return response()->json(['error' => 'Error al actualizar los menús: ' . $e->getMessage()], 500);
+    }
+
+    /**
+     * Actualiza el estado de pago de varios taller_clientes a la vez.
+     */
+    public function actualizarEstadosPagoMasivo(Request $request)
+    {
+        $data = $request->validate([
+            'cambios' => 'required|array',
+            'cambios.*.id' => 'required|integer|exists:taller_clientes,id',
+            'cambios.*.nuevoEstado' => 'required|integer|exists:estados_pago,id',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $resultados = [];
+            foreach ($data['cambios'] as $cambio) {
+                $tc = \App\Models\TallerCliente::find($cambio['id']);
+                if ($tc) {
+                    $tc->idEstadoPago = $cambio['nuevoEstado'];
+                    $tc->save();
+                    $resultados[] = [
+                        'id' => $tc->id,
+                        'nombre' => $tc->nombre_cliente,
+                        'apellido' => $tc->apellido_cliente,
+                        'email' => $tc->email_cliente,
+                        'nuevoEstado' => $tc->idEstadoPago,
+                    ];
+                }
+            }
+            DB::commit();
+            return response()->json(['success' => true, 'resultados' => $resultados]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
 }
+
+

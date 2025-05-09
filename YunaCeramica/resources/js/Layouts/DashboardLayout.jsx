@@ -52,7 +52,7 @@ const NAVIGATION = [
   },
   { segment: "dashboard/paginas", title: "Paginas", icon: <WebIcon  />, children: [
     { segment: "talleres", title: "Talleres", icon: <DescriptionIcon /> },
-    { segment: "../logout", title: "Logout", icon: <CategoryIcon /> },
+    { segment: "menu", title: "Menu", icon: <CategoryIcon /> },
   ],  },
 ];
 

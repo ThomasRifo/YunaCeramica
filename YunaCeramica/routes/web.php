@@ -4,6 +4,7 @@ use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\TallerController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ImagenTallerController;
+use App\Http\Controllers\MercadoPagoController;
 use App\Http\Controllers\PagoController;
 use App\Http\Controllers\TallerClienteController;
 use Illuminate\Foundation\Application;
@@ -16,7 +17,7 @@ Route::get('/', function () {
         'canRegister' => Route::has('register'),
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
-    ]);
+    ])->name('home');
 });
 
 Route::get('/productos', [ProductoController::class, 'index'])->name('productos');
@@ -59,6 +60,9 @@ Route::middleware(['auth', 'verified'])
         Route::post('/talleres', [TallerController::class, 'store'])->name('talleres.store');     
         Route::get('/talleres/{id}/edit', [TallerController::class, 'edit'])->name('talleres.edit');
     Route::put('/talleres/{id}', [TallerController::class, 'update'])->name('talleres.update');
+    Route::put('/talleres/{id}/menus-html', [TallerController::class, 'updateMenusHtml'])->name('talleres.updateMenusHtml');
+
+
         Route::delete('/talleres/{id}', [TallerController::class, 'destroy'])->name('talleres.destroy'); 
         Route::put('/talleres/{id}/eliminar', [TallerController::class, 'desactivar'])->name('talleres.eliminar');
         Route::get('/talleres/{id}', [TallerController::class, 'view'])->name('talleres.view');    
@@ -66,6 +70,8 @@ Route::middleware(['auth', 'verified'])
 
         
     });
+
+Route::post('/dashboard/talleres/actualizar-estados-pago', [TallerController::class, 'actualizarEstadosPagoMasivo'])->name('dashboard.talleres.actualizarEstadosPagoMasivo');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -75,7 +81,6 @@ Route::middleware('auth')->group(function () {
 
 
 
-Route::post('/pagar-taller', [PagoController::class, 'pagarTaller'])->middleware('auth');
 
 Route::get('/pago-success', fn() => Inertia::render('Pagos/Success'))->name('pago.success');
 Route::get('/pago-failure', fn() => Inertia::render('Pagos/Failure'))->name('pago.failure');

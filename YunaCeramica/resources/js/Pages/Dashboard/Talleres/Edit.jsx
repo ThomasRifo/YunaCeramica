@@ -2,17 +2,20 @@
 
 import * as React from 'react';
 import { router, useForm } from '@inertiajs/react';
-import { Box, TextField, Button, Typography, FilledInput, InputAdornment, OutlinedInput, FormControl, FormHelperText, Select, MenuItem, Link } from '@mui/material';
+import { Box, TextField, Button, Typography, FilledInput, InputAdornment, OutlinedInput, FormControl, FormHelperText, Select, MenuItem, Link, Grid } from '@mui/material';
 import InputLabel from '@/Components/InputLabel';
 import dayjs from 'dayjs';
 import { useTheme } from "@mui/material/styles";
 import Breadcrumbs from '@mui/material/Breadcrumbs';
+import MenuSelector from '@/Components/MenuSelector';
 import { AppProvider } from "@toolpad/core/AppProvider";
 import useInertiaRouter from "../../../Layouts/InertiaRouterAdapter";
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
+import axios from 'axios';
 
 
-export default function Edit({ taller, subcategorias }) {
-  console.log('Subcategorias:', subcategorias);
+export default function Edit({ taller, subcategorias, menus }) {
   const router = useInertiaRouter();
   const { data, setData, put, processing, errors } = useForm({
     nombre: taller.nombre || '',
@@ -23,11 +26,60 @@ export default function Edit({ taller, subcategorias }) {
     descripcion: taller.descripcion || '',
     ubicacion: taller.ubicacion || '',
     idSubcategoria: taller.idSubcategoria || '',
+    menus: taller.menus?.map(menu => menu.id) || [],
   });
 
+  const [menuHtmls, setMenuHtmls] = React.useState(() => {
+    const initialHtmls = {};
+    taller.menus.forEach(menu => {
+      initialHtmls[menu.id] = menu.pivot?.html || '';
+    });
+    return initialHtmls;
+  });
+  
+  const handleMenuHtmlChange = (menuId, value) => {
+    setMenuHtmls(prev => ({ ...prev, [menuId]: value }));
+  };
+  
+  const handleUpdateMenuHtmls = () => {
+    const menusData = [];
+    for (const [id, html] of Object.entries(menuHtmls)) {
+      menusData.push({
+        id: parseInt(id),
+        html: html || ''
+      });
+    }
+
+    console.log('Datos a enviar:', menusData);
+
+    axios.put(route('dashboard.talleres.updateMenusHtml', taller.id), {
+      menus: menusData
+    })
+    .then(response => {
+      console.log('Menús actualizados correctamente');
+      // Opcional: mostrar mensaje de éxito
+    })
+    .catch(error => {
+      console.error('Error al actualizar menús:', error);
+      // Opcional: mostrar mensaje de error
+    });
+  };
   const handleSubmit = (e) => {
     e.preventDefault();
-    put(route('dashboard.talleres.update' , taller.id));
+  
+
+    const payload = {
+      ...data,
+      menuIds: data.menus,  
+    };
+    if (data.hora && !data.hora.includes(':')) {
+      const parsed = dayjs(data.hora).format('HH:mm');
+      setData('hora', parsed);
+    }
+    put(route('dashboard.talleres.update', taller.id), {
+      preserveScroll: true,
+      data: payload,
+    });
   };
 
    const theme = useTheme();
@@ -160,7 +212,14 @@ export default function Edit({ taller, subcategorias }) {
   </FormHelperText>
 </FormControl>
 
-
+<MenuSelector
+  menus={menus}  // todos los menús disponibles
+  selectedMenus={menus.filter(menu => data.menus.includes(menu.id))}  // los objetos completos de los menús seleccionados
+  onChange={(newMenuObjects) => {
+    const menuIds = newMenuObjects.map(menu => menu.id); // solo IDs
+    setData('menus', menuIds);
+  }}
+/>
       <TextField
         fullWidth
         label="Ubicación"
@@ -175,7 +234,7 @@ export default function Edit({ taller, subcategorias }) {
 
 
 
-<Box mt={3}>
+<Box mt={3} className="mb-10">
   <Button
     type="submit"
     variant={theme.palette.mode === "dark" ? "outlined" : "contained"}
@@ -196,6 +255,35 @@ export default function Edit({ taller, subcategorias }) {
         </Button>
       </Box>
     </Box>
+    <Box mt={4} className="mb-10" >
+  <Typography variant="h6" gutterBottom>Contenido HTML de cada Menú</Typography>
+  <Grid container spacing={2}>
+  {taller.menus.map(menu => (
+    <Grid item xs={12} sm={6} md={4} key={menu.id} className="w-1/4 p-1 mb-20">
+      <Typography variant="subtitle2" gutterBottom>
+        {menu.nombre || `Menú ${menu.id}`}
+      </Typography>
+      <ReactQuill
+        theme="snow"
+        value={menuHtmls[menu.id] || ''}
+        onChange={(value) => handleMenuHtmlChange(menu.id, value)}
+        style={{ height: 200 }}
+      />
+    </Grid>
+  ))}
+</Grid>
+
+
+  <Button
+    onClick={handleUpdateMenuHtmls}
+    variant="outlined"
+    color="secondary"
+    sx={{ mt: 2 }}
+  >
+    Guardar Contenido de Menús
+  </Button>
+</Box>
+
     </>
   );
 }

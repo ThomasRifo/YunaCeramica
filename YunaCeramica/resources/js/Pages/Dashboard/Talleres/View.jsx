@@ -15,58 +15,78 @@ import {
   DialogContentText,
   DialogTitle,
   useTheme,
+  Select,
+  MenuItem,
+  FormControl,
+  LinearProgress,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import dayjs from 'dayjs';
 
-export default function View({ taller, tallerClientes, acompaniantes }) {
+export default function View({ taller, tallerClientesPagados, tallerClientesPendientes }) {
   const theme = useTheme();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [selectedParticipant, setSelectedParticipant] = useState(null);
+  const [updatePagoOpen, setUpdatePagoOpen] = useState(false);
+  const [selectedPendiente, setSelectedPendiente] = useState(null);
   const pagos = 0;
-  // Agrupar por referidos
-const grupos = {};
+  const grupos = {};
+  const resumenGrupos = {};
+  const resumenMenus = {};
+  let totalRecaudado = 0;
+  const [estadoEdicion, setEstadoEdicion] = useState({});
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [cambiosAConfirmar, setCambiosAConfirmar] = useState([]);
+  const [guardando, setGuardando] = useState(false);
+  const [resultados, setResultados] = useState([]);
 
-
-  const acompByCliente = acompaniantes.reduce((acc, a) => {
-    if (!acc[a.idTallerCliente]) acc[a.idTallerCliente] = [];
-    acc[a.idTallerCliente].push(a);
+  // Crear el objeto acompByCliente usando los acompañantes de cada tallerCliente
+  const acompByCliente = tallerClientesPagados.reduce((acc, tc) => {
+    if (tc.acompaniantes && tc.acompaniantes.length > 0) {
+      acc[tc.id] = tc.acompaniantes;
+    }
     return acc;
   }, {});
 
   let rows = [];
-  let totalRecaudado = 0;
 
-tallerClientes.forEach((tc) => {
-  if (tc.estado_pago?.id === 1) {
-    totalRecaudado += tc.cantPersonas * taller.precio;
-  } else if (tc.estado_pago?.id === 2) {
-    totalRecaudado += tc.cantPersonas * (taller.precio / 2);
-  }
-});
+  tallerClientesPagados.forEach((tc) => {
+    if (tc.estado_pago?.id === 3) {
+      totalRecaudado += tc.cantPersonas * taller.precio;
+    } else if (tc.estado_pago?.id === 2) {
+      totalRecaudado += tc.cantPersonas * (taller.precio / 2);
+    }
+  });
+
   let groupId = 0;
 
-  tallerClientes.forEach((tc) => {
-
+  tallerClientesPagados.forEach((tc) => {
     groupId++;
     const baseRow = {
       id: `tc-${tc.id}`,
       realId: tc.id,
       tipo: 'cliente',
-      nombre: tc.cliente?.name,
-      apellido: tc.cliente?.apellido,
+      nombre: tc.nombre_cliente || tc.cliente?.name,
+      apellido: tc.apellido_cliente || tc.cliente?.apellido,
       estadoPago: tc.estado_pago?.nombre,
       estadoPagoId: tc.estado_pago?.id,
       menu: tc.menu?.nombre || 'Sin seleccionar',
-      email: tc.cliente?.email,
-      telefono: tc.cliente?.telefono,
+      email: tc.email_cliente || tc.cliente?.email,
+      telefono: tc.telefono_cliente || tc.cliente?.telefono,
+      metodoPago: tc.metodo_pago?.nombre || 'No especificado',
       group: groupId,
       clienteId: tc.id,
     };
     rows.push(baseRow);
 
-    if (tc.pagoGrupal && acompByCliente[tc.id]) {
-      acompByCliente[tc.id].forEach((a) => {
+    if (tc.acompaniantes && tc.acompaniantes.length > 0) {
+      tc.acompaniantes.forEach((a) => {
         rows.push({
           id: `ac-${a.id}`,
           tipo: 'acompaniante',
@@ -77,6 +97,7 @@ tallerClientes.forEach((tc) => {
           menu: a.menu?.nombre || 'Sin seleccionar',
           email: a.email,
           telefono: a.telefono,
+          metodoPago: tc.metodo_pago?.nombre || 'No especificado',
           group: groupId,
           clienteId: tc.id,
         });
@@ -84,48 +105,63 @@ tallerClientes.forEach((tc) => {
     }
   });
 
-  const handleUpdatePago = () => {
-    if (!selectedParticipant) return;
+  const handleUpdatePago = (nuevoEstado) => {
+    if (!selectedPendiente) return;
   
     router.put(
-      route('dashboard.taller.actualizarPago', selectedParticipant.realId),
-      {},
+      route('dashboard.taller.actualizarPago', selectedPendiente.realId),
+      { nuevoEstado },
       {
         preserveScroll: true,
-        onSuccess: () => setOpen(false),
+        onSuccess: () => {
+          setUpdatePagoOpen(false);
+          setSelectedPendiente(null);
+        },
       }
     );
-  
-    setConfirmOpen(false);
   };
 
-  const columns = [
+  // Columnas para la tabla de pagados/parciales
+  const columnsPagados = [
+    { field: 'numero', headerName: '#', width: 60 },
     { field: 'nombre', headerName: 'Nombre', flex: 1 },
     { field: 'apellido', headerName: 'Apellido', flex: 1 },
     { field: 'estadoPago', headerName: 'Estado de pago', flex: 1 },
     { field: 'menu', headerName: 'Menú', flex: 1 },
     { field: 'email', headerName: 'Email', flex: 1 },
     { field: 'telefono', headerName: 'Teléfono', flex: 1 },
+    { field: 'metodoPago', headerName: 'Método de pago', flex: 1 },
+  ];
+
+  // Columnas para la tabla de pendientes (agrego método de pago y select de estado)
+  const columnsPendientes = [
+    { field: 'nombre', headerName: 'Nombre', flex: 1 },
+    { field: 'apellido', headerName: 'Apellido', flex: 1 },
+    { field: 'estadoPago', headerName: 'Estado de pago', flex: 1 },
+    { field: 'menu', headerName: 'Menú', flex: 1 },
+    { field: 'email', headerName: 'Email', flex: 1 },
+    { field: 'telefono', headerName: 'Teléfono', flex: 1 },
+    { field: 'metodoPago', headerName: 'Método de pago', flex: 1 },
     {
-      field: 'acciones',
-      headerName: 'Acciones',
+      field: 'nuevoEstado',
+      headerName: 'Nuevo estado',
       flex: 1,
       renderCell: (params) => {
-        if (
-          params.row.tipo === 'cliente' &&
-          params.row.estadoPagoId === 2
-        ) {
+        if (params.row.tipo === 'cliente') {
           return (
-            <Button
-              variant="outlined"
-              size="small"
-              onClick={() => {
-                setSelectedParticipant(params.row);
-                setConfirmOpen(true);
-              }}
-            >
-              Actualizar pago
-            </Button>
+            <FormControl fullWidth size="small">
+              <Select
+                value={estadoEdicion[params.row.realId] ?? ''}
+                displayEmpty
+                onChange={e => {
+                  setEstadoEdicion(prev => ({ ...prev, [params.row.realId]: e.target.value }));
+                }}
+              >
+                <MenuItem value="">Sin cambio</MenuItem>
+                <MenuItem value={2}>Pago Parcial</MenuItem>
+                <MenuItem value={3}>Pagado</MenuItem>
+              </Select>
+            </FormControl>
           );
         }
         return null;
@@ -133,7 +169,7 @@ tallerClientes.forEach((tc) => {
     },
   ];
 
-  tallerClientes.forEach(tc => {
+  tallerClientesPagados.forEach(tc => {
     const referido = tc.referido || `individual-${tc.id}`; // si no tiene referido, lo consideramos individual
     if (!grupos[referido]) grupos[referido] = [];
     grupos[referido].push({
@@ -143,8 +179,8 @@ tallerClientes.forEach((tc) => {
     });
   
     // Si tiene acompañantes, sumarlos al grupo
-    if (tc.pagoGrupal && acompByCliente[tc.id]) {
-      acompByCliente[tc.id].forEach(a => {
+    if (tc.acompaniantes && tc.acompaniantes.length > 0) {
+      tc.acompaniantes.forEach(a => {
         grupos[referido].push({
           nombre: a.nombre,
           apellido: a.apellido,
@@ -154,25 +190,158 @@ tallerClientes.forEach((tc) => {
     }
   });
   
-  // Generar resumen de grupos por tamaño
-  const resumenGrupos = {};
-  Object.values(grupos).forEach(grupo => {
-    const tam = grupo.length;
+  // Generar filas para pagados/parciales con numeración correlativa
+  const rowsPagados = [];
+  let groupIdPagados = 0;
+  let numeroCorrelativo = 1;
+  tallerClientesPagados.forEach((tc) => {
+    groupIdPagados++;
+    const baseRow = {
+      numero: numeroCorrelativo++,
+      id: `tc-${tc.id}`,
+      realId: tc.id,
+      tipo: 'cliente',
+      nombre: tc.nombre_cliente || tc.cliente?.name,
+      apellido: tc.apellido_cliente || tc.cliente?.apellido,
+      estadoPago: tc.estado_pago?.nombre,
+      estadoPagoId: tc.estado_pago?.id,
+      menu: tc.menu?.nombre || 'Sin seleccionar',
+      email: tc.email_cliente || tc.cliente?.email,
+      telefono: tc.telefono_cliente || tc.cliente?.telefono,
+      metodoPago: tc.metodo_pago?.nombre || 'No especificado',
+      group: groupIdPagados,
+      clienteId: tc.id,
+    };
+    rowsPagados.push(baseRow);
+    if (tc.acompaniantes && tc.acompaniantes.length > 0) {
+      tc.acompaniantes.forEach((a) => {
+        rowsPagados.push({
+          numero: numeroCorrelativo++,
+          id: `ac-${a.id}`,
+          tipo: 'acompaniante',
+          nombre: a.nombre,
+          apellido: a.apellido,
+          estadoPago: tc.estado_pago?.nombre,
+          estadoPagoId: tc.estado_pago?.id,
+          menu: a.menu?.nombre || 'Sin seleccionar',
+          email: a.email,
+          telefono: a.telefono,
+          metodoPago: tc.metodo_pago?.nombre || 'No especificado',
+          group: groupIdPagados,
+          clienteId: tc.id,
+        });
+      });
+    }
+    // Calcular total recaudado
+    if (tc.estado_pago?.id === 2) {
+      totalRecaudado += tc.cantPersonas * (taller.precio / 2);
+    } else if (tc.estado_pago?.id === 3) {
+      totalRecaudado += tc.cantPersonas * taller.precio;
+    }
+    // Resumen de mesas (grupos)
+    const tam = 1 + (tc.acompaniantes ? tc.acompaniantes.length : 0);
     if (!resumenGrupos[tam]) resumenGrupos[tam] = 0;
     resumenGrupos[tam]++;
   });
-  
-  // Contar cantidad de menús
-  const resumenMenus = {};
-  Object.values(grupos).forEach(grupo => {
-    grupo.forEach(persona => {
-      const menu = persona.menu || 'Sin seleccionar';
-      if (!resumenMenus[menu]) resumenMenus[menu] = 0;
-      resumenMenus[menu]++;
-    });
+  // Resumen de menús
+  rowsPagados.forEach(row => {
+    const menu = row.menu || 'Sin seleccionar';
+    if (!resumenMenus[menu]) resumenMenus[menu] = 0;
+    resumenMenus[menu]++;
   });
 
-  
+  // Calcular cantidad de participantes confirmados (pagados o parciales)
+  const cantidadConfirmados = rowsPagados.length;
+
+  // Botón para guardar todos los cambios
+  const handleGuardarCambios = () => {
+    // Filtrar solo los cambios válidos (clientes con nuevo estado seleccionado)
+    const cambios = Object.entries(estadoEdicion)
+      .filter(([id, nuevoEstado]) => nuevoEstado && Number(nuevoEstado) !== 0)
+      .map(([id, nuevoEstado]) => {
+        const cliente = tallerClientesPendientes.find(tc => tc.id === Number(id));
+        return {
+          id: Number(id),
+          nuevoEstado: Number(nuevoEstado),
+          nombre: cliente?.nombre_cliente || cliente?.cliente?.name,
+          apellido: cliente?.apellido_cliente || cliente?.cliente?.apellido,
+          email: cliente?.email_cliente || cliente?.cliente?.email,
+        };
+      });
+    setCambiosAConfirmar(cambios);
+    setConfirmDialogOpen(true);
+  };
+
+  const handleConfirmarCambios = async () => {
+    setGuardando(true);
+    try {
+      const response = await fetch(route('dashboard.talleres.actualizarEstadosPagoMasivo'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        },
+        body: JSON.stringify({
+          cambios: cambiosAConfirmar.map(c => ({ id: c.id, nuevoEstado: c.nuevoEstado })),
+        }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setResultados(data.resultados);
+        setConfirmDialogOpen(false);
+        setEstadoEdicion({});
+        // Opcional: recargar la página o actualizar los datos localmente
+        window.location.reload();
+      } else {
+        alert('Error al guardar los cambios: ' + (data.error || 'Error desconocido'));
+      }
+    } catch (e) {
+      alert('Error al guardar los cambios: ' + e.message);
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  // Generar filas para pendientes
+  const rowsPendientes = [];
+  let groupIdPendientes = 0;
+  tallerClientesPendientes.forEach((tc) => {
+    groupIdPendientes++;
+    const baseRow = {
+      id: `tc-${tc.id}`,
+      realId: tc.id,
+      tipo: 'cliente',
+      nombre: tc.nombre_cliente || tc.cliente?.name,
+      apellido: tc.apellido_cliente || tc.cliente?.apellido,
+      estadoPago: tc.estado_pago?.nombre,
+      estadoPagoId: tc.estado_pago?.id,
+      menu: tc.menu?.nombre || 'Sin seleccionar',
+      email: tc.email_cliente || tc.cliente?.email,
+      telefono: tc.telefono_cliente || tc.cliente?.telefono,
+      metodoPago: tc.metodo_pago?.nombre || 'No especificado',
+      group: groupIdPendientes,
+      clienteId: tc.id,
+    };
+    rowsPendientes.push(baseRow);
+    if (tc.acompaniantes && tc.acompaniantes.length > 0) {
+      tc.acompaniantes.forEach((a) => {
+        rowsPendientes.push({
+          id: `ac-${a.id}`,
+          tipo: 'acompaniante',
+          nombre: a.nombre,
+          apellido: a.apellido,
+          estadoPago: tc.estado_pago?.nombre,
+          estadoPagoId: tc.estado_pago?.id,
+          menu: a.menu?.nombre || 'Sin seleccionar',
+          email: a.email,
+          telefono: a.telefono,
+          metodoPago: tc.metodo_pago?.nombre || 'No especificado',
+          group: groupIdPendientes,
+          clienteId: tc.id,
+        });
+      });
+    }
+  });
 
   return (
     <>
@@ -190,49 +359,93 @@ tallerClientes.forEach((tc) => {
         </Breadcrumbs>
       </Box>
 
-      <Typography variant="h4" gutterBottom>
-        {taller.nombre}
-      </Typography>
+ 
 
-      <Card sx={{ mb: 4 }}>
-        <CardContent>
-          <Typography variant="h6">Información general</Typography>
-          <Typography>Fecha: {dayjs(taller.fecha).format('DD-MM-YYYY')}</Typography>
-          <Typography>Ubicación: {taller.ubicacion}</Typography>
-          <Typography>Capacidad: {taller.cupoMaximo}</Typography>
-          <Typography>Descripción: {taller.descripcion}</Typography>
-          <Typography>Precio: ${taller.precio}</Typography>
-          <Typography>Total recaudado: ${totalRecaudado.toLocaleString('es-AR')}</Typography>
-          
-        </CardContent>
-      </Card>
-      <Card sx={{ mb: 4 }}>
-  <CardContent>
-    <Typography variant="h6">Resumen de Grupos</Typography>
-    {Object.entries(resumenGrupos).map(([tam, cantidad]) => (
-      <Typography key={tam}>
-        Grupos de {tam}: {cantidad}
-      </Typography>
-    ))}
-  </CardContent>
-</Card>
+      <Box sx={{ mb: 2 }}>
+        <Typography sx={{ mb: 4 }} variant="h4" gutterBottom>{taller.nombre}</Typography>
+        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 2 }}>
+          <Card sx={{ minWidth: 180, flex: 1 }}>
+            <CardContent>
+              <Typography variant="subtitle">Fecha: {dayjs(taller.fecha).format('DD-MM-YYYY')}</Typography><br></br>
+              
+              <Typography variant="subtitle">Ubicación: {taller.ubicacion}</Typography><br></br>
+              <Typography variant="subtitle">Precio: ${taller.precio.toLocaleString('es-AR')} </Typography>
+        
+            </CardContent>
+          </Card>
+          <Card sx={{ minWidth: 180, flex: 1 }}>
+            <CardContent>
+              <Typography sx={{ fontSize: '1.3rem' }}>Inscriptos</Typography>
+              <Typography>{cantidadConfirmados} / {taller.cupoMaximo}</Typography>
+              <LinearProgress variant="determinate" value={Math.min(100, (cantidadConfirmados / taller.cupoMaximo) * 100)} sx={{ height: 10, borderRadius: 5, mt: 1 }} />
+            </CardContent>
+          </Card>
+          <Card sx={{ minWidth: 180, flex: 1 }}>
+            <CardContent>
+              <Typography sx={{ fontSize: '1.3rem' }}>Total recaudado</Typography>
+              <Typography sx={{ fontSize: '1.3rem' }}>${totalRecaudado.toLocaleString('es-AR')}</Typography>
+            </CardContent>
+          </Card>
+        </Box>
+        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 2 }}>
+          <Card sx={{ minWidth: 220, flex: 1 }}>
+            <CardContent>
+              <Typography variant="subtitle2">Mesas</Typography>
+              <TableContainer component={Paper} sx={{ boxShadow:'none'}}>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Tamaño</TableCell>
+                      <TableCell>Cantidad</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {Object.entries(resumenGrupos).map(([tam, cantidad]) => (
+                      cantidad > 0 && (
+                        <TableRow key={tam}>
+                          <TableCell>{tam === '1' ? 'Individual' : tam === '2' ? 'Doble' : tam === '3' ? 'Triple' : `${tam} personas`}</TableCell>
+                          <TableCell>{cantidad}</TableCell>
+                        </TableRow>
+                      )
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </CardContent>
+          </Card>
+          <Card sx={{ minWidth: 220, flex: 1 }}>
+            <CardContent>
+              <Typography variant="subtitle2">Menús</Typography>
+              <TableContainer component={Paper} sx={{ boxShadow:'none'}}>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Menú</TableCell>
+                      <TableCell>Cantidad</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {Object.entries(resumenMenus).map(([menu, cantidad]) => (
+                      cantidad > 0 && (
+                        <TableRow key={menu}>
+                          <TableCell>{menu}</TableCell>
+                          <TableCell>{cantidad}</TableCell>
+                        </TableRow>
+                      )
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </CardContent>
+          </Card>
+        </Box>
+      </Box>
 
-<Card sx={{ mb: 4 }}>
-  <CardContent>
-    <Typography variant="h6">Resumen de Menús</Typography>
-    {Object.entries(resumenMenus).map(([menu, cantidad]) => (
-      <Typography key={menu}>
-        {menu}: {cantidad}
-      </Typography>
-    ))}
-  </CardContent>
-</Card>
-      <Typography variant="h5" gutterBottom>Participantes</Typography>
-
-      <Paper sx={{ height: 600, width: '100%' }}>
+      <Typography variant="h5" gutterBottom> Confirmados</Typography>
+      <Paper sx={{ height: 400, width: '100%', mb: 4 }}>
         <DataGrid
-          rows={rows}
-          columns={columns}
+          rows={rowsPagados}
+          columns={columnsPagados}
           getRowClassName={(params) =>
             params.row.group % 2 === 0 ? 'grupo-even' : 'grupo-odd'
           }
@@ -254,31 +467,66 @@ tallerClientes.forEach((tc) => {
               top: 0,
               zIndex: 1,
             },
-            '& .MuiDataGrid-columnHeader': {
-              px: 2,
-            },
-            '& .MuiDataGrid-cell': {
-              px: 2,
-            },
           }}
         />
       </Paper>
 
-      {/* Diálogo de confirmación */}
-      <Dialog
-        open={confirmOpen}
-        onClose={() => setConfirmOpen(false)}
+      <Typography variant="h5" gutterBottom>Pendientes de Pago</Typography>
+      <Paper sx={{ height: 400, width: '100%', mb: 2 }}>
+        <DataGrid
+          rows={rowsPendientes}
+          columns={columnsPendientes}
+          getRowClassName={(params) =>
+            params.row.group % 2 === 0 ? 'grupo-even' : 'grupo-odd'
+          }
+          hideFooterPagination
+          sx={{
+            border: 0,
+            '& .grupo-even': {
+              backgroundColor: theme.palette.mode === 'dark' ? '#1e1e1e' : '#fff',
+            },
+            '& .grupo-odd': {
+              backgroundColor: theme.palette.mode === 'dark' ? '#2a2a2a' : '#f7bcd8',
+            },
+            '& .MuiDataGrid-columnHeaders': {
+              borderTop: '2px solid',
+              borderBottom: '2px solid',
+              borderColor: theme.palette.divider,
+              backgroundColor: theme.palette.background.paper,
+              position: 'sticky',
+              top: 0,
+              zIndex: 1,
+            },
+          }}
+        />
+      </Paper>
+      <Button
+        variant="contained"
+        color="primary"
+        disabled={Object.values(estadoEdicion).filter(e => e && Number(e) !== 0).length === 0 || guardando}
+        onClick={handleGuardarCambios}
       >
-        <DialogTitle>Actualizar estado de pago</DialogTitle>
+        Guardar cambios
+      </Button>
+
+      {/* Diálogo de confirmación masiva */}
+      <Dialog open={confirmDialogOpen} onClose={() => setConfirmDialogOpen(false)}>
+        <DialogTitle>Confirmar cambios de estado de pago</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            ¿Estás seguro que deseas actualizar el estado de pago de{' '}
-            <strong>{selectedParticipant?.nombre} {selectedParticipant?.apellido}</strong> a <strong>Pagado</strong>?
+            ¿Confirmas los siguientes cambios?
           </DialogContentText>
+          <ul>
+            {cambiosAConfirmar.map((c, idx) => (
+              <li key={c.id}>
+                Cambiar a <strong>{c.nombre} {c.apellido}</strong> ({c.email}) a <strong>{c.nuevoEstado === 2 ? 'Pago Parcial' : 'Pagado'}</strong>
+              </li>
+            ))}
+          </ul>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfirmOpen(false)}>Cancelar</Button>
-          <Button onClick={handleUpdatePago} variant="contained" color="primary">
+          <Button onClick={() => setConfirmDialogOpen(false)} disabled={guardando}>Cancelar</Button>
+          <Button onClick={handleConfirmarCambios} color="primary" variant="contained" disabled={guardando}>
             Confirmar
           </Button>
         </DialogActions>

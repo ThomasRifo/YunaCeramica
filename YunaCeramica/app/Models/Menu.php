@@ -12,7 +12,7 @@ class Menu extends Model
     use HasFactory;
 
 
-    protected $fillable = ['nombre'];
+    protected $fillable = ['nombre', 'html'];
 
     public function talleres()
     {

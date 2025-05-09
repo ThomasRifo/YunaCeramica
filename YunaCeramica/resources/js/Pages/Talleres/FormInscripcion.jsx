@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Head } from "@inertiajs/react";
+import { Head, router } from "@inertiajs/react";
 import {
     Banknote,
     Calendar,
@@ -21,11 +21,13 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/Components/ui/select";
+import CardMenu from "@/Components/Taller/CardMenu";
 dayjs.extend(customParseFormat);
 
 export default function FormInscripcion({ taller }) {
     const [cantidadPersonas, setCantidadPersonas] = useState(1);
     const [metodoPago, setMetodoPago] = useState("reserva");
+    const [isLoadingMercadoPago, setIsLoadingMercadoPago] = useState(false);
     const [datosCliente, setDatosCliente] = useState({
         nombre: "",
         apellido: "",
@@ -66,6 +68,77 @@ export default function FormInscripcion({ taller }) {
               ? precioBase * cantidadPersonas
               : Math.round((precioBase / 2) * cantidadPersonas);
 
+    const handlePagoMercadoPago = async () => {
+        if (!datosCliente.nombre || !datosCliente.apellido || !datosCliente.email || !datosCliente.menu) {
+            alert("Por favor, completa tus datos (nombre, apellido, email) y selecciona un menú antes de continuar.");
+            return;
+        }
+        for (const acompanante of acompanantes) {
+            if (!acompanante.nombre || !acompanante.apellido || !acompanante.menu) {
+                alert("Por favor, completa los datos de todos los acompañantes (nombre, apellido y menú).");
+                return;
+            }
+        }
+
+        setIsLoadingMercadoPago(true);
+
+        const payload = {
+            tallerId: taller.id,
+            titulo: taller.nombre,
+            descripcion: `Inscripción al taller: ${taller.nombre} (${cantidadPersonas} persona(s))`,
+            cantidad: cantidadPersonas,
+            precioUnitario: precioTarjeta,
+            datos_cliente: { 
+                nombre: datosCliente.nombre,
+                apellido: datosCliente.apellido,
+                email: datosCliente.email,
+                telefono: datosCliente.telefono,
+            },
+            participantes: [
+                {
+                    nombre: datosCliente.nombre,
+                    apellido: datosCliente.apellido,
+                    email: datosCliente.email,
+                    telefono: datosCliente.telefono,
+                    menu_id: datosCliente.menu,
+                },
+                ...acompanantes.map(a => ({
+                    nombre: a.nombre,
+                    apellido: a.apellido,
+                    email: a.email,
+                    telefono: a.telefono,
+                    menu_id: a.menu,
+                }))
+            ]
+        };
+
+        try {
+            const response = await fetch('/api/mercadopago/create-preference', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const responseData = await response.json();
+
+            if (response.ok && responseData?.mercadopago?.init_point) {
+                window.location.href = responseData.mercadopago.init_point;
+            } else {
+                console.error("Error al crear preferencia de MP. Respuesta:", responseData);
+                const errorMessage = responseData?.message || responseData?.mercadopago?.message || "Hubo un problema al iniciar el pago (respuesta inválida del servidor).";
+                alert(errorMessage);
+            }
+        } catch (error) {
+            console.error("Error en la petición fetch a create-preference:", error);
+            alert("Ocurrió un error de red o al procesar la solicitud. Por favor, intenta de nuevo.");
+        } finally {
+            setIsLoadingMercadoPago(false);
+        }
+    };
+
     return (
         <div className="max-w-5xl mx-auto px-4 py-36">
             <Head title={`Inscripción - ${taller?.nombre}`} />
@@ -87,43 +160,45 @@ export default function FormInscripcion({ taller }) {
             <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {/* Reserva */}
                 <div className="bg-gray-300 rounded-xl p-4 shadow flex flex-col items-center text-center">
-                    <Banknote className="w-10 h-10 text-green-600 mb-2" />
+                    <Landmark className="w-10 h-10 text-black mb-2" />
                     <h3 className="font-semibold text-gray-700 text-xl mb-1">
-                        Reserva
+                        Transferencia
                     </h3>
+                    <strong>Señá tu lugar</strong>
                     <p className="text-gray-800 text-base">
                         <strong className="font-extrabold text-lg">
                             ${precioReserva.toLocaleString("es-AR")}
                         </strong>{" "}
-                        por persona (solo transferencia)
+                        por persona
                     </p>
                 </div>
 
                 {/* Transferencia total */}
                 <div className="bg-gray-300 rounded-xl p-4 shadow flex flex-col items-center text-center">
-                    <Landmark className="w-10 h-10 text-blue-600 mb-2" />
+                    <Landmark className="w-10 h-10 text-black mb-2" />
                     <h3 className="font-semibold text-gray-700 text-xl mb-1">
                         Transferencia
                     </h3>
+                    <strong>Aboná la totalidad</strong>
                     <p className="text-gray-800 text-base">
                         <strong className="font-extrabold text-lg">
                             ${precioBase.toLocaleString("es-AR")}
                         </strong>{" "}
-                        por persona (total)
+                        por persona
                     </p>
                 </div>
 
                 {/* Tarjeta */}
                 <div className="bg-gray-300 rounded-xl p-4 shadow flex flex-col items-center text-center">
-                    <CreditCard className="w-10 h-10 text-purple-600 mb-2" />
+                    <CreditCard className="w-10 h-10 text-black mb-2" />
                     <h3 className="font-semibold text-gray-700 mb-1 text-xl">
-                        Tarjeta
+                        Tarjeta / MercadoPago
                     </h3>
+                    <strong>Aboná la totalidad</strong>
                     <p className="text-gray-800 text-base">
                         <strong className="font-extrabold text-lg">
-                            ${precioTarjeta.toLocaleString("es-AR")}
+                            ${(precioTarjeta * cantidadPersonas).toLocaleString("es-AR")}
                         </strong>{" "}
-                        por persona
                     </p>
                 </div>
             </div>
@@ -170,6 +245,7 @@ export default function FormInscripcion({ taller }) {
                         <Input
                             className="h-12"
                             placeholder="Email"
+                            type="email"
                             value={datosCliente.email}
                             onChange={(e) =>
                                 setDatosCliente({
@@ -181,6 +257,7 @@ export default function FormInscripcion({ taller }) {
                         <Input
                             className="h-12"
                             placeholder="Teléfono"
+                            type="tel"
                             value={datosCliente.telefono}
                             onChange={(e) =>
                                 setDatosCliente({
@@ -190,26 +267,28 @@ export default function FormInscripcion({ taller }) {
                             }
                         />
 
-                        <Select
-                            value={datosCliente.menu}
-                            onValueChange={(value) =>
-                                setDatosCliente({
-                                    ...datosCliente,
-                                    menu: value,
-                                })
-                            }
-                        >
-                            <SelectTrigger className="h-12">
-                                <SelectValue placeholder="Seleccioná un menú" />
-                            </SelectTrigger>
-                            <SelectContent>
+                        <div className="space-y-4 mt-4 mx-auto w-full">
+                            <Label className="text-lg">Elegí tu menú:</Label>
+                            <div className="grid sm:grid-cols-2 md:grid-cols-3  gap-4 mt-2 ">
                                 {taller.menus.map((menu) => (
-                                    <SelectItem key={menu.id} value={menu.id}>
-                                        {menu.nombre}
-                                    </SelectItem>
+                                    <div
+                                        key={menu.id}
+                                        className="prose"
+                                    >
+                                        <CardMenu
+                                            menu={menu}
+                                            seleccionado={datosCliente.menu === String(menu.id)}
+                                            onSelect={(id) => {
+                                                setDatosCliente({
+                                                    ...datosCliente,
+                                                    menu: String(id),
+                                                });
+                                            }}
+                                        />
+                                    </div>
                                 ))}
-                            </SelectContent>
-                        </Select>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -242,6 +321,7 @@ export default function FormInscripcion({ taller }) {
                             <Input
                                 className="h-12"
                                 placeholder="Email"
+                                type="email"
                                 value={a.email}
                                 onChange={(e) => {
                                     const nuevos = [...acompanantes];
@@ -252,6 +332,7 @@ export default function FormInscripcion({ taller }) {
                             <Input
                                 className="h-12"
                                 placeholder="Teléfono"
+                                type="tel"
                                 value={a.telefono}
                                 onChange={(e) => {
                                     const nuevos = [...acompanantes];
@@ -259,34 +340,29 @@ export default function FormInscripcion({ taller }) {
                                     setAcompanantes(nuevos);
                                 }}
                             />
-                            <Select
-                                value={a.menu}
-                                onValueChange={(value) => {
-                                    const nuevos = [...acompanantes];
-                                    nuevos[i].menu = value;
-                                    setAcompanantes(nuevos);
-                                }}
-                            >
-                                <SelectTrigger className="h-12">
-                                    <SelectValue placeholder="Seleccioná un menú" />
-                                </SelectTrigger>
-                                <SelectContent>
+                            <div className="space-y-4 mt-4">
+                                <Label className="text-lg">Elegí un menú para el acompañante {i+1}:</Label>
+                                <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 mt-2">
                                     {taller.menus.map((menu) => (
-                                        <SelectItem
+                                        <CardMenu
                                             key={menu.id}
-                                            value={menu.id}
-                                        >
-                                            {menu.nombre}
-                                        </SelectItem>
+                                            menu={menu}
+                                            seleccionado={a.menu === String(menu.id)}
+                                            onSelect={(id) => {
+                                                const nuevosAcompanantes = [...acompanantes];
+                                                nuevosAcompanantes[i].menu = String(id);
+                                                setAcompanantes(nuevosAcompanantes);
+                                            }}
+                                        />
                                     ))}
-                                </SelectContent>
-                            </Select>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 ))}
 
-                <div className="mt-8 space-y-2">
-                    <Label>Método de pago:</Label>
+                <div className="pt-8 space-y-2 text-center">
+                    <Label className="text-2xl">Método de pago:</Label>
                     <div className="grid gap-2">
                         <Button
                             className="h-12"
@@ -314,26 +390,30 @@ export default function FormInscripcion({ taller }) {
                             }
                             onClick={() => setMetodoPago("tarjeta")}
                         >
-                            Total con tarjeta ($
+                            Total con Tarjeta / MercadoPago ($
                             {(precioTarjeta * cantidadPersonas).toLocaleString("es-AR")})
                         </Button>
                     </div>
                 </div>
 
-                <p className="mt-4 text-lg">
+                <p className="mt-4 text-lg text-center">
                     Total a pagar: <strong>${total.toLocaleString("es-AR")}</strong>
                 </p>
 
                 {metodoPago === "tarjeta" ? (
-                    <Button className="w-full mt-4 px-6 h-14">
-                        Pagar con tarjeta
+                    <Button
+                        className="w-full mt-4 px-6 h-14"
+                        onClick={handlePagoMercadoPago}
+                        disabled={isLoadingMercadoPago || !datosCliente.nombre || !datosCliente.apellido || !datosCliente.email || !datosCliente.menu }
+                    >
+                        {isLoadingMercadoPago ? "Procesando..." : "Pagar con MercadoPago"}
                     </Button>
                 ) : (
                     <a
                         href={`https://wa.me/5492994160728?text=${encodeURIComponent(
                             `Hola! Quiero reservar para el taller "${taller.nombre}", somos ${cantidadPersonas} personas.`,
                         )}`}
-                        className="w-full mt-4 bg-green-500 text-white  px-6 rounded-lg text-center py-4 block h-14"
+                        className="w-full mt-4 bg-green-500 text-white font-semibold px-6 rounded-lg text-center py-4 block h-14 hover:bg-green-600 transition-colors"
                     >
                         Datos para abonar (WhatsApp)
                     </a>
