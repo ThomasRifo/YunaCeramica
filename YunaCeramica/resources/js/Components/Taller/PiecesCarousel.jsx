@@ -3,7 +3,7 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import { Navigation } from 'swiper/modules';
 import { motion } from 'framer-motion';
-import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { AspectRatio } from "@/Components/ui/aspect-ratio";
 
 export default function PiecesCarousel({ images }) {
   return (

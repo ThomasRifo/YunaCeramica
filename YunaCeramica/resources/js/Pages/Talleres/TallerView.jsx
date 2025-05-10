@@ -5,6 +5,8 @@ import LocationMap from "@/Components/Taller/LocationMap";
 import { Head, Link } from "@inertiajs/react";
 import { Calendar, Clock, MapPin, DollarSign  } from "lucide-react";
 import MercadoPagoButton from "@/Components/MercadoPagoButton";
+import { Button } from '@/Components/ui/button';
+import { Dialog, DialogContent, DialogTrigger } from '@/Components/ui/dialog';
 
 export default function TallerView({ taller, imagenes }) {
 

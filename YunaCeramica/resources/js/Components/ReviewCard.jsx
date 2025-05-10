@@ -1,8 +1,9 @@
 import { Star } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/Components/ui/button';
 import { useState } from 'react';
 import dayjs from "dayjs";
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTrigger } from '@/Components/ui/dialog';
+import { AspectRatio } from "@/Components/ui/aspect-ratio";
 
 export default function ReviewCard({ review }) {
   const [open, setOpen] = useState(false);

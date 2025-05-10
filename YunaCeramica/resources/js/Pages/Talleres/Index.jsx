@@ -3,7 +3,7 @@
 import { Head, Link } from '@inertiajs/react';
 
  
-import { AspectRatio } from "@/components/ui/aspect-ratio"
+import { AspectRatio } from "@/Components/ui/aspect-ratio"
 import { cn } from '@/lib/utils';
 import ReviewsSection from '@/Components/ReviewsSection';
 

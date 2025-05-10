@@ -1,7 +1,7 @@
 // components/MercadoPagoButton.jsx
 import { useState } from "react";
 import axios from "axios";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/Components/ui/button";
 
 export default function MercadoPagoButton({ title, price, quantity = 1, email }) {
   const [loading, setLoading] = useState(false);

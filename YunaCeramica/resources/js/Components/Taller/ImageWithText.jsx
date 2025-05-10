@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { AspectRatio } from "@/Components/ui/aspect-ratio";
 
 export default function ImageWithText({ image, title, description, extraContent }) {
     return (
