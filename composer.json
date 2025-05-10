@@ -1,0 +1,8 @@
+{
+    "require": {
+        "inertiajs/inertia-laravel": "^2.0"
+    },
+    "require-dev": {
+        "laravel/breeze": "^2.3"
+    }
+}
