@@ -13,7 +13,13 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // Crear usuario de prueba
+        User::create([
+            'name' => 'Test User',
+            'apellido' => 'Test Apellido',
+            'email' => 'test@example.com',
+            'password' => bcrypt('password'),
+        ])->assignRole('admin');
     
         $this->call([
             EstadosPagoSeeder::class,
@@ -22,7 +28,6 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,  
             SubcategoriasSeeder::class,
             MetodosPagoSeeder::class,
-
         ]);
     }
 }
