@@ -25,6 +25,23 @@ class ProfileController extends Controller
     }
 
     /**
+     * Display the user's profile page with all sections.
+     */
+    public function show(Request $request): Response
+    {
+        $user = $request->user();
+        
+        return Inertia::render('Perfil', [
+            'auth' => [
+                'user' => $user
+            ],
+            'user' => $user,
+            'talleres' => $user->talleres()->with('taller')->get(),
+            'compras' => $user->compras()->with('producto')->get(),
+        ]);
+    }
+
+    /**
      * Update the user's profile information.
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
@@ -37,7 +54,7 @@ class ProfileController extends Controller
 
         $request->user()->save();
 
-        return Redirect::route('profile.edit')->with('status', 'success');
+        return Redirect::route('profile.show')->with('status', 'success');
     }
 
     /**
@@ -59,5 +76,35 @@ class ProfileController extends Controller
         $request->session()->regenerateToken();
 
         return Redirect::to('/');
+    }
+
+    /**
+     * Show user's workshops.
+     */
+    public function talleres(Request $request): Response
+    {
+        $talleres = $request->user()->talleres()
+            ->with('taller')
+            ->latest()
+            ->paginate(10);
+
+        return Inertia::render('Profile/Talleres', [
+            'talleres' => $talleres,
+        ]);
+    }
+
+    /**
+     * Show user's purchases.
+     */
+    public function compras(Request $request): Response
+    {
+        $compras = $request->user()->compras()
+            ->with('producto')
+            ->latest()
+            ->paginate(10);
+
+        return Inertia::render('Profile/Compras', [
+            'compras' => $compras,
+        ]);
     }
 }

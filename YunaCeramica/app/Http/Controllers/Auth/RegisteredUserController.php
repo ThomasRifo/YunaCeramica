@@ -44,12 +44,12 @@ class RegisteredUserController extends Controller
             'apellido' => $request->apellido,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-        ]);
+        ])->assignRole('cliente');;
 
         event(new Registered($user));
 
         Auth::login($user);
 
-        return redirect(route('dashboard.dashboard', absolute: false));
+        return redirect(route('talleres', absolute: false));
     }
 }

@@ -17,7 +17,7 @@ Route::get('/', function () {
         'canRegister' => Route::has('register'),
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
-    ])->name('home');
+    ]);
 });
 
 Route::get('/productos', [ProductoController::class, 'index'])->name('productos');
@@ -30,14 +30,17 @@ Route::get('/talleres-{slug}-inscripcion', [TallerController::class, 'formInscri
     ->where('slug', '[A-Za-z0-9\-]+')
     ->name('taller.inscripcion');
 
+Route::middleware(['auth'])->group(function () {
+    // Rutas de perfil
+    Route::get('/perfil', [ProfileController::class, 'show'])->name('profile.show');
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/perfil/talleres', [ProfileController::class, 'talleres'])->name('profile.talleres');
+    Route::get('/perfil/compras', [ProfileController::class, 'compras'])->name('profile.compras');
+});
 
-
-
-
-
-
-
-Route::middleware(['auth', 'verified'])
+Route::middleware(['auth', 'verified', 'role:admin'])
     ->prefix('dashboard')
     ->name('dashboard.')  
     ->group(function () {
