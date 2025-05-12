@@ -42,5 +42,4 @@ class PagoController extends Controller
 
     return response()->json(['init_point' => $preference->init_point]);
 }
-}
-*/
+}*/

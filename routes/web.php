@@ -71,7 +71,8 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         Route::get('/talleres/{id}', [TallerController::class, 'view'])->name('talleres.view');    
         Route::put('/taller-cliente/{id}/actualizar-pago', [TallerClienteController::class, 'actualizarPago'])->name('taller.actualizarPago');
 
-        
+        Route::get('/archivos', [App\Http\Controllers\ArchivosController::class, 'index'])->name('archivos.index');
+        Route::post('/archivos/upload', [App\Http\Controllers\ArchivosController::class, 'upload'])->name('archivos.upload');
     });
 
 Route::post('/dashboard/talleres/actualizar-estados-pago', [TallerController::class, 'actualizarEstadosPagoMasivo'])->name('dashboard.talleres.actualizarEstadosPagoMasivo');

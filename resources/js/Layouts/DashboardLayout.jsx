@@ -22,6 +22,7 @@ import UserMenu from "@/Components/UserMenu";
 import WebIcon from '@mui/icons-material/Web';
 import { usePage, Link as InertiaLink } from '@inertiajs/react';
 import BreadcrumbsNavigation from "@/Components/BreadcrumbsNavigation";
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 
 const NAVIGATION = [
   { kind: "header", title: "Main items" },
@@ -53,6 +54,7 @@ const NAVIGATION = [
   { segment: "dashboard/paginas", title: "Paginas", icon: <WebIcon  />, children: [
     { segment: "talleres", title: "Talleres", icon: <DescriptionIcon /> },
     { segment: "menu", title: "Menu", icon: <CategoryIcon /> },
+    { segment: "archivos", title: "Subir Archivos", icon: <CloudUploadIcon /> },
   ],  },
 ];
 
