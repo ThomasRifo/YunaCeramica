@@ -7,6 +7,7 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 import DashboardLayout from './Layouts/DashboardLayout';
 import NavbarClient from './Layouts/NavbarClient';
+import { Ziggy } from './ziggy';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Yuna Cerámica';
 
