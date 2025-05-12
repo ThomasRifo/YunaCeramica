@@ -27,7 +27,8 @@ export default function ReviewCard({ review }) {
         <div>
           <h3 className="font-bold text-lg">{review.nombre} {review.apellido}</h3>
           <p className="text-sm text-gray-500 mb-2">{review.taller} - {fecha}</p>
-          <div className="flex mb-2">{stars}</div>
+          {//<div className="flex mb-2">{stars}</div> Todavía no las incluímos
+          }
           <p className="mt-8 text-gray-700 text-base leading-relaxed">
             {previewText}
           </p>
@@ -41,7 +42,9 @@ export default function ReviewCard({ review }) {
               <DialogContent className="max-w-lg">
                 <h3 className="text-xl font-bold">{review.nombre} {review.apellido}</h3>
                 <p className="text-gray-500 text-sm">{review.taller}</p>
-                <div className="flex my-2">{stars}</div>
+                {/*<div className="flex my-2">{stars}</div>  Por el momento no se muestra la valoración,
+                */
+                }
                 <p className="text-gray-700">{review.mensaje}</p>
               </DialogContent>
             </Dialog>

@@ -14,7 +14,7 @@ export default function TalleresIndex({reviews} ) {
     <div className="min-h-screen">
       {/* Imagen de portada */}
       <div className="relative h-[51.5vh] w-full">
-      <video autoplay="autoplay" loop muted className="object-cover  object-[63%_1%] w-full h-full" alt="Portada talleres">
+      <video autoPlay="autoplay" loop muted className="object-cover  object-[63%_1%] w-full h-full" alt="Portada talleres">
   <source src="../../../../storage/Videos/portada.mp4" type="video/mp4" />
 
   Tu navegador no soporta el formato de video.

@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('idMenu')->constrained('menus')->onDelete('restrict');
             $table->foreignId('idTaller')->constrained('talleres')->onDelete('cascade');
+            $table->string('html');
             $table->timestamps();
         });
     }

@@ -12,7 +12,7 @@ export default function NavbarClient({ children }) {
     const isTalleres =
         url.startsWith("/talleres") || url.startsWith("/talleres-");
     const user = usePage().props.auth.user;
-    console.log(user);
+
     const inherit = ["/talleres"].includes(url);
 
     useEffect(() => {
