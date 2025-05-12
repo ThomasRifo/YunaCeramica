@@ -14,16 +14,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Crear usuario de prueba
-        User::create([
-            'name' => 'Test User',
-            'apellido' => 'Test Apellido',
-            'email' => 'test@example.com',
-            'email_verified_at' => now(),
-            'password' => bcrypt('password'),
-            'remember_token' => Str::random(10),
-        ])->assignRole('admin');
-    
+
         $this->call([
             EstadosPagoSeeder::class,
             EstadosPedidoSeeder::class,
