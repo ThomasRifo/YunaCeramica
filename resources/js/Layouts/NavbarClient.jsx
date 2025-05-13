@@ -42,7 +42,7 @@ export default function NavbarClient({ children }) {
                 >
                     <Link href="/" className="py-4">
                         <img
-                            src="../../../../storage/imagenesFijas/yunalogowhite.png"
+                            src="../../../../storage/uploads/yunalogowhite.webp"
                             className="object-contain max-h-12 sm:max-h-20 md:max-h-16"
                             alt="Yuna Cerámica"
                         />

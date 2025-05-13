@@ -90,7 +90,7 @@ export default function TallerView({ taller, imagenes }) {
           {taller.idSubcategoria && (
 <Link
 href={`/talleres-${taller.subcategoria.url}-inscripcion`}
-  className="inline-block w-3/4 bg-rose-300 hover:bg-rose-400 text-white font-semibold py-3 px-6 rounded-lg transition text-2xl"
+  className="inline-block w-3/4 bg-black hover:bg-gray-700 text-white font-semibold py-3 px-6 rounded-lg transition text-2xl"
 >
   Quiero inscribirme!
 

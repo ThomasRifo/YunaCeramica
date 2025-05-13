@@ -15,7 +15,7 @@ export default function TalleresIndex({reviews} ) {
       {/* Imagen de portada */}
       <div className="relative h-[51.5vh] w-full">
       <video autoPlay="autoplay" loop muted className="object-cover  object-[63%_1%] w-full h-full" alt="Portada talleres">
-  <source src="../../../../storage/Videos/portada.mp4" type="video/mp4" />
+  <source src="../../../../storage/uploads/portada.webm" type="video/webm" />
 
   Tu navegador no soporta el formato de video.
 </video>
@@ -35,7 +35,7 @@ export default function TalleresIndex({reviews} ) {
         <Link href="talleres-ceramica-y-cafe" className="group">
           <AspectRatio ratio={2 / 1.8} className="relative rounded-xl overflow-hidden shadow-lg ">
             <img
-              src="../../../../storage/imagenesFijas/IMG_0219.png" 
+              src="../../../../storage/uploads/ceramica-y-cafe.webp" 
               alt="Cerámica y Café"
               className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
             />
@@ -49,7 +49,7 @@ export default function TalleresIndex({reviews} ) {
         <Link href="/talleres-ceramica-y-gin" className="group">
           <AspectRatio ratio={2 / 1.8} className="relative rounded-xl overflow-hidden shadow-lg">
             <img
-              src="../../../../storage/imagenesFijas/IMG_0122.jpg"
+              src="../../../../storage/uploads/ceramica-y-gin.webp"
               alt="Cerámica y Gin"
               className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
             />
