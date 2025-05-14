@@ -68,6 +68,7 @@ class MercadoPagoController extends Controller
         DB::beginTransaction(); // Iniciar transacción
 
         try {
+            $taller = Taller::findOrFail($validatedData['tallerId']);
             // Datos para la preferencia de MP
             $preference_request_data = [
                 'items' => [
@@ -86,9 +87,9 @@ class MercadoPagoController extends Controller
                     'email' => $validatedData['datos_cliente']['email'],
                 ],
                 'back_urls' => [
-                    'success' => url(route('pago.success', [], false)),
-                    'failure' => url(route('pago.failure', [], false)),
-                    'pending' => url(route('pago.pending', [], false)),
+                    'success' => url('/talleres-' . $taller->subcategoria->url . '?pago=success'),
+                    'failure' => url('/talleres-' . $taller->subcategoria->url . '-inscripcion?pago=failure'),
+                    'pending' => url('/talleres-' . $taller->subcategoria->url . '-inscripcion?pago=pending'),
                 ],
                 'auto_return' => 'approved',
                 'notification_url' => route('mercadopago.notifications'),
@@ -143,7 +144,6 @@ class MercadoPagoController extends Controller
             }
 
             // Actualizar cupo del taller
-            $taller = Taller::find($validatedData['tallerId']);
             if ($taller) {
                 if ($taller->cantInscriptos + $validatedData['cantidad'] > $taller->cupoMaximo) {
                     DB::rollBack();

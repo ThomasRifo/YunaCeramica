@@ -7,6 +7,7 @@ use App\Http\Controllers\ImagenTallerController;
 use App\Http\Controllers\MercadoPagoController;
 use App\Http\Controllers\PagoController;
 use App\Http\Controllers\TallerClienteController;
+use App\Http\Controllers\NewsletterController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -97,5 +98,10 @@ Route::fallback(function () {
 });
 
 Route::post('/talleres/transferencia', [TallerController::class, 'procesarTransferencia'])->name('talleres.transferencia');
+
+// Rutas del Newsletter
+Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('newsletter.subscribe');
+Route::get('/newsletter/verify/{token}', [NewsletterController::class, 'verify'])->name('newsletter.verify');
+Route::get('/newsletter/unsubscribe/{token}', [NewsletterController::class, 'unsubscribe'])->name('newsletter.unsubscribe');
 
 require __DIR__.'/auth.php';

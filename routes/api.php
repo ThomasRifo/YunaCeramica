@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MercadoPagoController;
+use App\Http\Controllers\CaptchaController;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,5 +23,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 // Rutas de MercadoPago
 Route::post('/mercadopago/create-preference', [MercadoPagoController::class, 'createPreference'])->name('mercadopago.createPreference');
 Route::post('/mercadopago/notifications', [MercadoPagoController::class, 'handleNotification'])->name('mercadopago.notifications');
+
+// Rutas de Captcha
+Route::post('/validar-captcha', [CaptchaController::class, 'validarCaptcha']);
 
 // Aquí puedes agregar más rutas de tu API si es necesario

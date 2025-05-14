@@ -8,6 +8,8 @@ import { createRoot } from 'react-dom/client';
 import DashboardLayout from './Layouts/DashboardLayout';
 import NavbarClient from './Layouts/NavbarClient';
 import { Ziggy } from './ziggy';
+import Footer from './Components/Footer';
+import { Toaster } from "@/Components/ui/toaster";
 
 const appName = import.meta.env.VITE_APP_NAME || 'Yuna Cerámica';
 
@@ -22,7 +24,13 @@ createInertiaApp({
       module.default.layout = (page) =>
         isDashboard
           ? <DashboardLayout>{page}</DashboardLayout>
-          : <NavbarClient>{page}</NavbarClient>;
+          : (
+            <>
+              <NavbarClient>{page}</NavbarClient>
+              <Footer />
+              <Toaster />
+            </>
+          );
 
       return module;
     });

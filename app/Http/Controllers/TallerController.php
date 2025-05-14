@@ -241,29 +241,24 @@ public function talleresClient()
         'ceramicaYGinFuturos' => $ceramicaYGinFuturos
     ];
 
-    // Verificar cupos llenos
-    if ($ceramicaYCafeFuturos) {
-        $tallerCafe = Taller::where('activo', true)
-            ->where('idSubcategoria', 2)
-            ->where('fecha', '>', now())
-            ->orderBy('fecha', 'asc')
-            ->first();
-        
-        if ($tallerCafe && $tallerCafe->cantInscriptos >= $tallerCafe->cupoMaximo) {
-            $estadoTalleres['ceramicaYCafe'] = 'cupo_lleno';
-        }
+    // Verificar cupos llenos para Cerámica y Café
+    $tallerCafe = Taller::where('activo', true)
+        ->where('idSubcategoria', 2)
+        ->orderBy('created_at', 'desc')
+        ->first();
+    
+    if ($tallerCafe && $tallerCafe->cantInscriptos >= $tallerCafe->cupoMaximo) {
+        $estadoTalleres['ceramicaYCafe'] = 'cupo_lleno';
     }
 
-    if ($ceramicaYGinFuturos) {
-        $tallerGin = Taller::where('activo', true)
-            ->where('idSubcategoria', 1)
-            ->where('fecha', '>', now())
-            ->orderBy('fecha', 'asc')
-            ->first();
-        
-        if ($tallerGin && $tallerGin->cantInscriptos >= $tallerGin->cupoMaximo) {
-            $estadoTalleres['ceramicaYGin'] = 'cupo_lleno';
-        }
+    // Verificar cupos llenos para Cerámica y Gin
+    $tallerGin = Taller::where('activo', true)
+        ->where('idSubcategoria', 1)
+        ->orderBy('created_at', 'desc')
+        ->first();
+    
+    if ($tallerGin && $tallerGin->cantInscriptos >= $tallerGin->cupoMaximo) {
+        $estadoTalleres['ceramicaYGin'] = 'cupo_lleno';
     }
 
     return Inertia::render('Talleres/Index', [

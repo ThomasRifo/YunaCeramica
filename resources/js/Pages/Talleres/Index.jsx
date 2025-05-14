@@ -2,12 +2,11 @@
 
 import { Head, Link } from '@inertiajs/react';
 
- 
 import { AspectRatio } from "@/Components/ui/aspect-ratio"
 import { cn } from '@/lib/utils';
 import ReviewsSection from '@/Components/ReviewsSection';
 
-export default function TalleresIndex({reviews} ) {
+export default function TalleresIndex({ reviews, talleres }) {
   return (
     <>
     <Head title="Talleres" />
@@ -18,7 +17,6 @@ export default function TalleresIndex({reviews} ) {
         <source src="/storage/uploads/Portada.webm" type="video/webm" />
         <source src="/storage/uploads/Portada.mp4" type="video/mp4" />
         Tu navegador no soporta el formato de video.
-
       </video>
         <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center  text-white text-center px-4">
           <h1 className="text-5xl pt-16 md:text-6xl font-bold">Workshop de Cerámica</h1>
@@ -33,32 +31,87 @@ export default function TalleresIndex({reviews} ) {
         <h2 className='text-center font-semibold text-2xl md:text-4xl pt-8 md:pt-14 md:pb-8'>Elegí tu experiencia</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 px-4 sm:px-16 py-8  ">
        
-        <Link href="talleres-ceramica-y-cafe" className="group">
-          <AspectRatio ratio={2 / 1.8} className="relative rounded-xl overflow-hidden shadow-lg ">
-            <img
-              src="/storage/uploads/ceramica-y-cafe.webp" 
-              alt="Cerámica y Café"
-              className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
-            />
-            <div className="absolute inset-0 bg-black/30 flex p-10 justify-center items-center">
-              <h3 className="text-white text-end text-4xl md:text-6xl font-semibold">CERÁMICA <br></br> & CAFÉ</h3>
-            </div>
-          </AspectRatio>
-        </Link>
+        {talleres?.ceramicaYCafeFuturos ? (
+          <Link href="talleres-ceramica-y-cafe" className="group relative">
+            <AspectRatio ratio={2 / 1.8} className="relative rounded-xl overflow-hidden shadow-lg ">
+              <img
+                src="/storage/uploads/ceramica-y-cafe.webp" 
+                alt="Cerámica y Café"
+                className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-black/30 flex p-10 justify-center items-center">
+                <h3 className="text-white text-end text-4xl md:text-6xl font-semibold">CERÁMICA <br></br> & CAFÉ</h3>
+              </div>
+              {talleres?.ceramicaYCafe === 'cupo_lleno' && (
+                <div className="absolute inset-0 bg-white/50 flex p-8 items-end justify-center">
+                  <div className="text-center bg-black/70 rounded-xl md:p-4 p-3 md:mb-20 mb-6 w-full">
+                    <span className="text-white md:text-4xl  text-3xl font-normal">COMPLETO</span>
+                  </div>
+                </div>
+              )}
+            </AspectRatio>
+          </Link>
+        ) : (
+          <div className="group relative">
+            <AspectRatio ratio={2 / 1.8} className="relative rounded-xl overflow-hidden shadow-lg">
+              <img
+                src="/storage/uploads/ceramica-y-cafe.webp" 
+                alt="Cerámica y Café"
+                className="object-cover w-full h-full"
+              />
+              <div className="absolute inset-0 bg-black/30 flex p-10 justify-center items-center">
+                <h3 className="text-white text-end text-4xl md:text-6xl font-semibold">CERÁMICA <br></br> & CAFÉ</h3>
+              </div>
+              <div className="absolute inset-0 bg-white/50 flex p-8 items-end justify-center">
+              <div className="text-center bg-black/70 rounded-xl md:p-4 p-3 md:mb-20 mb-6 w-full">
+                    <span className="text-white md:text-4xl text-3xl font-normal">PROXIMAMENTE</span>
+                  </div>
+              </div>
+            </AspectRatio>
+          </div>
+        )}
 
-        
-        <Link href="/talleres-ceramica-y-gin" className="group">
-          <AspectRatio ratio={2 / 1.8} className="relative rounded-xl overflow-hidden shadow-lg">
-            <img
-              src="/storage/uploads/ceramica-y-gin.webp"
-              alt="Cerámica y Gin"
-              className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
-            />
-            <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-              <h2 className="text-white text-end text-4xl md:text-6xl font-semibold">CERÁMICA <br></br> & GIN</h2>
-            </div>
-          </AspectRatio>
-        </Link>
+        {talleres?.ceramicaYGinFuturos ? (
+          <Link href="/talleres-ceramica-y-gin" className="group relative">
+            <AspectRatio ratio={2 / 1.8} className="relative rounded-xl overflow-hidden shadow-lg">
+              <img
+                src="/storage/uploads/ceramica-y-gin.webp"
+                alt="Cerámica y Gin"
+                className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                <h2 className="text-white text-end text-4xl md:text-6xl font-semibold">CERÁMICA <br></br> & GIN</h2>
+              </div>
+              {talleres?.ceramicaYGin === 'cupo_lleno' && (
+                <div className="absolute inset-0 bg-white/50 flex p-8 items-end justify-center">
+                  <div className="text-center bg-black/70 rounded-xl md:p-4 p-3 md:mb-20 mb-6 w-full">
+                  <span className="text-white md:text-4xl text-3xl font-normal">COMPLETO</span>
+                  </div>
+                </div>
+              )}
+            </AspectRatio>
+          </Link>
+        ) : (
+          <div className="group relative">
+            <AspectRatio ratio={2 / 1.8} className="relative rounded-xl overflow-hidden shadow-lg">
+              <img
+                src="/storage/uploads/ceramica-y-gin.webp"
+                alt="Cerámica y Gin"
+                className="object-cover w-full h-full"
+              />
+              <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                <h2 className="text-white text-end text-4xl md:text-6xl font-semibold">CERÁMICA <br></br> & GIN</h2>
+              </div>
+
+              <div className="absolute inset-0 bg-white/50 flex p-8 items-end justify-center">
+              <div className="text-center bg-black/70 rounded-xl md:p-4 p-3 md:mb-20 mb-6 w-full">
+                    <span className="text-white md:text-4xl text-3xl font-normal">PROXIMAMENTE</span>
+                  </div>
+                </div>
+             
+            </AspectRatio>
+          </div>
+        )}
       </div>
       </section>
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Head, router } from "@inertiajs/react";
 import {
     Banknote,
@@ -8,6 +8,7 @@ import {
     DollarSign,
     Landmark,
     MapPin,
+    XCircle,
 } from "lucide-react";
 import { Input } from "@/Components/ui/input";
 import dayjs from "dayjs";
@@ -22,9 +23,16 @@ import {
     SelectValue,
 } from "@/Components/ui/select";
 import CardMenu from "@/Components/Taller/CardMenu";
+import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent } from "@/Components/ui/dialog";
+import ReCAPTCHA from "react-google-recaptcha";
 dayjs.extend(customParseFormat);
 
+const recaptchaV3Key = "6LeWbjorAAAAAN1iTNC1iDlAzdGhuqJ9RKKVW0lN";
+const recaptchaV2Key = "6LfRcDorAAAAADXRjzq75JFZVZk_hS_coEOQ2CNV";
+
 export default function FormInscripcion({ taller }) {
+    const { toast } = useToast();
     const [cantidadPersonas, setCantidadPersonas] = useState(1);
     const [metodoPago, setMetodoPago] = useState("reserva");
     const [isLoadingMercadoPago, setIsLoadingMercadoPago] = useState(false);
@@ -37,6 +45,21 @@ export default function FormInscripcion({ taller }) {
     });
 
     const [acompanantes, setAcompanantes] = useState([]);
+    const [showFailure, setShowFailure] = useState(false);
+    const [showPending, setShowPending] = useState(false);
+
+    const [showV2, setShowV2] = useState(false);
+    const [v2Token, setV2Token] = useState("");
+    const [accionPendiente, setAccionPendiente] = useState(null);
+    const recaptchaV2Ref = useRef();
+
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get("pago") === "failure") setShowFailure(true);
+            if (params.get("pago") === "pending") setShowPending(true);
+        }
+    }, []);
 
     const handleCantidadChange = (e) => {
         const nuevaCantidad = parseInt(e.target.value);
@@ -70,12 +93,20 @@ export default function FormInscripcion({ taller }) {
 
     const handlePagoMercadoPago = async () => {
         if (!datosCliente.nombre || !datosCliente.apellido || !datosCliente.email || !datosCliente.menu) {
-            alert("Por favor, completa tus datos (nombre, apellido, email) y selecciona un menú antes de continuar.");
+            toast({
+                title: "Datos incompletos",
+                description: "Por favor, completa tus datos (nombre, apellido, email) y selecciona un menú antes de continuar.",
+                variant: "destructive",
+            });
             return;
         }
         for (const acompanante of acompanantes) {
             if (!acompanante.nombre || !acompanante.apellido || !acompanante.menu) {
-                alert("Por favor, completa los datos de todos los acompañantes (nombre, apellido y menú).");
+                toast({
+                    title: "Datos incompletos",
+                    description: "Por favor, completa los datos de todos los acompañantes (nombre, apellido y menú).",
+                    variant: "destructive",
+                });
                 return;
             }
         }
@@ -129,11 +160,19 @@ export default function FormInscripcion({ taller }) {
             } else {
                 console.error("Error al crear preferencia de MP. Respuesta:", responseData);
                 const errorMessage = responseData?.message || responseData?.mercadopago?.message || "Hubo un problema al iniciar el pago (respuesta inválida del servidor).";
-                alert(errorMessage);
+                toast({
+                    title: "Error al iniciar el pago",
+                    description: errorMessage,
+                    variant: "destructive",
+                });
             }
         } catch (error) {
             console.error("Error en la petición fetch a create-preference:", error);
-            alert("Ocurrió un error de red o al procesar la solicitud. Por favor, intenta de nuevo.");
+            toast({
+                title: "Error de red",
+                description: "Ocurrió un error de red o al procesar la solicitud. Por favor, intenta de nuevo.",
+                variant: "destructive",
+            });
         } finally {
             setIsLoadingMercadoPago(false);
         }
@@ -142,12 +181,20 @@ export default function FormInscripcion({ taller }) {
     // Nueva función para transferencia
     const handleTransferencia = () => {
         if (!datosCliente.nombre || !datosCliente.apellido || !datosCliente.email || !datosCliente.menu) {
-            alert("Por favor, completa tus datos (nombre, apellido, email) y selecciona un menú antes de continuar.");
+            toast({
+                title: "Datos incompletos",
+                description: "Por favor, completa tus datos (nombre, apellido, email) y selecciona un menú antes de continuar.",
+                variant: "destructive",
+            });
             return;
         }
         for (const acompanante of acompanantes) {
             if (!acompanante.nombre || !acompanante.apellido || !acompanante.menu) {
-                alert("Por favor, completa los datos de todos los acompañantes (nombre, apellido y menú).");
+                toast({
+                    title: "Datos incompletos",
+                    description: "Por favor, completa los datos de todos los acompañantes (nombre, apellido y menú).",
+                    variant: "destructive",
+                });
                 return;
             }
         }
@@ -163,13 +210,60 @@ export default function FormInscripcion({ taller }) {
             menu_id: datosCliente.menu
         }, {
             onSuccess: () => {
-                alert('¡Inscripción realizada! Revisa tu correo para las instrucciones de pago.');
+                toast({
+                    title: '¡Inscripción realizada!',
+                    description: 'Revisa tu correo para las instrucciones de pago.',
+                    variant: 'default',
+                });
                 window.location.href = '/talleres';
             },
             onError: (errors) => {
-                alert(errors.message || 'Ocurrió un error al procesar la inscripción.');
+                toast({
+                    title: 'Error',
+                    description: errors.message || 'Ocurrió un error al procesar la inscripción.',
+                    variant: 'destructive',
+                });
             }
         });
+    };
+
+    const handleInscripcionConCaptcha = async (accion) => {
+        // Ejecutar reCAPTCHA v3
+        const v3Token = await window.grecaptcha.execute(recaptchaV3Key, { action: "submit" });
+
+        // Validar en backend
+        const response = await fetch("/api/validar-captcha", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ v3Token }),
+        });
+        const data = await response.json();
+
+        if (data.score < 0.5) {
+            // Score bajo: mostrar reCAPTCHA v2 y guardar la acción pendiente
+            setShowV2(true);
+            setAccionPendiente(() => accion);
+        } else {
+            // Score alto: ejecutar la acción original
+            accion();
+        }
+    };
+
+    const handleV2Change = async (token) => {
+        setV2Token(token);
+        const response = await fetch("/api/validar-captcha", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ v2Token: token }),
+        });
+        const data = await response.json();
+        if (data.success && accionPendiente) {
+            accionPendiente(); // Ejecuta la acción original
+            setShowV2(false);
+            setAccionPendiente(null);
+        } else {
+            // Mostrar error si el captcha falla
+        }
     };
 
     return (
@@ -433,24 +527,57 @@ export default function FormInscripcion({ taller }) {
                     Total a pagar: <strong>${total.toLocaleString("es-AR")}</strong>
                 </p>
 
-                {metodoPago === "tarjeta" ? (
-                    <Button
-                        className="w-full mt-4 px-6 h-14"
-                        onClick={handlePagoMercadoPago}
-                        disabled={isLoadingMercadoPago || !datosCliente.nombre || !datosCliente.apellido || !datosCliente.email || !datosCliente.menu }
-                    >
-                        {isLoadingMercadoPago ? "Procesando..." : "Pagar con MercadoPago"}
-                    </Button>
-                ) : (
-                    <Button
-                        className="w-full mt-4 px-6 h-14 bg-green-600 hover:bg-green-700"
-                        onClick={handleTransferencia}
-                        disabled={!datosCliente.nombre || !datosCliente.apellido || !datosCliente.email || !datosCliente.menu}
-                    >
-                        Confirmar inscripción y recibir datos de transferencia
-                    </Button>
-                )}
+                <Button
+                    className="w-full mt-4 px-6 h-14"
+                    onClick={() => handleInscripcionConCaptcha(handlePagoMercadoPago)}
+                    disabled={isLoadingMercadoPago || !datosCliente.nombre || !datosCliente.apellido || !datosCliente.email || !datosCliente.menu }
+                >
+                    {isLoadingMercadoPago ? "Procesando..." : "Pagar con MercadoPago"}
+                </Button>
+
+                <Button
+                    className="w-full mt-4 px-6 h-14 bg-green-600 hover:bg-green-700"
+                    onClick={() => handleInscripcionConCaptcha(handleTransferencia)}
+                    disabled={!datosCliente.nombre || !datosCliente.apellido || !datosCliente.email || !datosCliente.menu}
+                >
+                    Confirmar inscripción y recibir datos de transferencia
+                </Button>
             </div>
+
+            <Dialog open={showFailure} onOpenChange={setShowFailure}>
+                <DialogContent>
+                    <div className="flex flex-col items-center justify-center bg-gray-100 px-4 pt-2">
+                        <XCircle className="w-16 h-16 text-red-500 mx-auto mb-6" />
+                        <h1 className="text-3xl font-bold text-gray-800 mb-4">Pago Rechazado</h1>
+                        <p className="text-gray-600 mb-6 text-lg text-center">
+                            Tu pago no pudo ser procesado o fue rechazado.<br />
+                            Por favor, intenta nuevamente o elige otro método de pago.
+                        </p>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={showPending} onOpenChange={setShowPending}>
+                <DialogContent>
+                    <div className="flex flex-col items-center justify-center bg-gray-100 px-4 pt-2">
+                        <Clock className="w-16 h-16 text-yellow-500 mx-auto mb-6" />
+                        <h1 className="text-3xl font-bold text-gray-800 mb-4">Pago Pendiente</h1>
+                        <p className="text-gray-600 mb-6 text-lg text-center">
+                            Tu pago está pendiente de aprobación.<br />
+                            Te notificaremos por email cuando se confirme.<br />
+                            Si tienes dudas, contáctanos.
+                        </p>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {showV2 && (
+                <ReCAPTCHA
+                    sitekey={recaptchaV2Key}
+                    onChange={handleV2Change}
+                    ref={recaptchaV2Ref}
+                />
+            )}
         </div>
     );
 }
