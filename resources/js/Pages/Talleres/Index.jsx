@@ -16,7 +16,9 @@ export default function TalleresIndex({reviews} ) {
       <div className="relative h-[51.5vh] w-full">
       <video autoPlay="autoplay" loop muted className="object-cover  object-[63%_1%] w-full h-full" alt="Portada talleres">
         <source src="/storage/uploads/Portada.webm" type="video/webm" />
+        <source src="/storage/uploads/Portada.mp4" type="video/mp4" />
         Tu navegador no soporta el formato de video.
+
       </video>
         <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center  text-white text-center px-4">
           <h1 className="text-5xl pt-16 md:text-6xl font-bold">Workshop de Cerámica</h1>
