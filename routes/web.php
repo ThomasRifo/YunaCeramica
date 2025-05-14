@@ -95,4 +95,7 @@ Route::get('/pago-pending', fn() => Inertia::render('Pagos/Pending'))->name('pag
 Route::fallback(function () {
     return Inertia::render('Errors/404')->toResponse(request())->setStatusCode(404);
 });
+
+Route::post('/talleres/transferencia', [TallerController::class, 'procesarTransferencia'])->name('talleres.transferencia');
+
 require __DIR__.'/auth.php';

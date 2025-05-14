@@ -139,6 +139,39 @@ export default function FormInscripcion({ taller }) {
         }
     };
 
+    // Nueva función para transferencia
+    const handleTransferencia = () => {
+        if (!datosCliente.nombre || !datosCliente.apellido || !datosCliente.email || !datosCliente.menu) {
+            alert("Por favor, completa tus datos (nombre, apellido, email) y selecciona un menú antes de continuar.");
+            return;
+        }
+        for (const acompanante of acompanantes) {
+            if (!acompanante.nombre || !acompanante.apellido || !acompanante.menu) {
+                alert("Por favor, completa los datos de todos los acompañantes (nombre, apellido y menú).");
+                return;
+            }
+        }
+    
+        router.post('/talleres/transferencia', {
+            tallerId: taller.id,
+            nombre: datosCliente.nombre,
+            apellido: datosCliente.apellido,
+            email: datosCliente.email,
+            telefono: datosCliente.telefono,
+            cantidadPersonas,
+            esReserva: metodoPago === 'reserva',
+            menu_id: datosCliente.menu
+        }, {
+            onSuccess: () => {
+                alert('¡Inscripción realizada! Revisa tu correo para las instrucciones de pago.');
+                window.location.href = '/talleres';
+            },
+            onError: (errors) => {
+                alert(errors.message || 'Ocurrió un error al procesar la inscripción.');
+            }
+        });
+    };
+
     return (
         <div className="max-w-5xl mx-auto px-4 py-36">
             <Head title={`Inscripción - ${taller?.nombre}`} />
@@ -409,14 +442,13 @@ export default function FormInscripcion({ taller }) {
                         {isLoadingMercadoPago ? "Procesando..." : "Pagar con MercadoPago"}
                     </Button>
                 ) : (
-                    <a
-                        href={`https://wa.me/5492994160728?text=${encodeURIComponent(
-                            `Hola! Quiero reservar para el taller "${taller.nombre}", somos ${cantidadPersonas} personas.`,
-                        )}`}
-                        className="w-full mt-4 bg-green-500 text-white font-semibold px-6 rounded-lg text-center py-4 block h-14 hover:bg-green-600 transition-colors"
+                    <Button
+                        className="w-full mt-4 px-6 h-14 bg-green-600 hover:bg-green-700"
+                        onClick={handleTransferencia}
+                        disabled={!datosCliente.nombre || !datosCliente.apellido || !datosCliente.email || !datosCliente.menu}
                     >
-                        Datos para abonar (WhatsApp)
-                    </a>
+                        Confirmar inscripción y recibir datos de transferencia
+                    </Button>
                 )}
             </div>
         </div>

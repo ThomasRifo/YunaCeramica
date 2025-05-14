@@ -15,6 +15,8 @@ use Illuminate\Container\Attributes\Log;
 use Illuminate\Support\Facades\Log as FacadesLog;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
+use App\Mail\TransferenciaTaller;
+use Illuminate\Support\Facades\Mail;
 
 class TallerController extends Controller
 {
@@ -210,16 +212,62 @@ public function view($id)
 public function talleresClient()
 {
     $reviews = Reviews::where('habilitada', 1)
-    ->whereNotNull('fecha_publicacion')
-    ->orderBy('fecha_publicacion', 'desc')
-    ->take(20) // Trae solo las 10 más nuevas
-    ->get();
+        ->whereNotNull('fecha_publicacion')
+        ->orderBy('fecha_publicacion', 'desc')
+        ->take(20)
+        ->get();
+
+    // Obtener talleres activos
     $talleres = Taller::where('activo', true)
         ->orderBy('fecha', 'asc')
-        ->get(['id', 'nombre', 'descripcion', 'fecha', 'hora', 'ubicacion', 'precio']);
+        ->get(['id', 'nombre', 'descripcion', 'fecha', 'hora', 'ubicacion', 'precio', 'idSubcategoria', 'cupoMaximo', 'cantInscriptos']);
+
+    // Verificar talleres futuros por tipo
+    $ceramicaYCafeFuturos = Taller::where('activo', true)
+        ->where('idSubcategoria', 2) // ID de Cerámica y Café
+        ->where('fecha', '>', now())
+        ->exists();
+
+    $ceramicaYGinFuturos = Taller::where('activo', true)
+        ->where('idSubcategoria', 1) // ID de Cerámica y Gin
+        ->where('fecha', '>', now())
+        ->exists();
+
+    // Determinar el estado de cada tipo de taller
+    $estadoTalleres = [
+        'ceramicaYCafe' => 'disponible',
+        'ceramicaYCafeFuturos' => $ceramicaYCafeFuturos,
+        'ceramicaYGin' => 'disponible',
+        'ceramicaYGinFuturos' => $ceramicaYGinFuturos
+    ];
+
+    // Verificar cupos llenos
+    if ($ceramicaYCafeFuturos) {
+        $tallerCafe = Taller::where('activo', true)
+            ->where('idSubcategoria', 2)
+            ->where('fecha', '>', now())
+            ->orderBy('fecha', 'asc')
+            ->first();
+        
+        if ($tallerCafe && $tallerCafe->cantInscriptos >= $tallerCafe->cupoMaximo) {
+            $estadoTalleres['ceramicaYCafe'] = 'cupo_lleno';
+        }
+    }
+
+    if ($ceramicaYGinFuturos) {
+        $tallerGin = Taller::where('activo', true)
+            ->where('idSubcategoria', 1)
+            ->where('fecha', '>', now())
+            ->orderBy('fecha', 'asc')
+            ->first();
+        
+        if ($tallerGin && $tallerGin->cantInscriptos >= $tallerGin->cupoMaximo) {
+            $estadoTalleres['ceramicaYGin'] = 'cupo_lleno';
+        }
+    }
 
     return Inertia::render('Talleres/Index', [
-        'talleres' => $talleres,
+        'talleres' => $estadoTalleres,
         'reviews' => $reviews,
     ]);
 }
@@ -350,6 +398,50 @@ public function updateMenusHtml(Request $request, $id)
             DB::rollBack();
             return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
         }
+    }
+
+    public function procesarTransferencia(Request $request)
+    {
+        $request->validate([
+            'tallerId' => 'required|exists:talleres,id',
+            'nombre' => 'required|string',
+            'apellido' => 'required|string',
+            'email' => 'required|email',
+            'telefono' => 'required|string',
+            'cantidadPersonas' => 'required|integer|min:1',
+            'esReserva' => 'required|boolean',
+            'menu_id' => 'required|exists:menus,id'
+        ]);
+
+        $taller = Taller::findOrFail($request->tallerId);
+        
+        // Crear el taller cliente con estado pendiente
+        $tallerCliente = TallerCliente::create([
+            'idTaller' => $taller->id,
+            'nombre_cliente' => $request->nombre,
+            'apellido_cliente' => $request->apellido,
+            'email_cliente' => $request->email,
+            'telefono_cliente' => $request->telefono,
+            'cantPersonas' => $request->cantidadPersonas,
+            'idEstadoPago' => 1, // 1 = Pendiente
+            'idMenu' => $request->menu_id
+        ]);
+
+        // Enviar email con instrucciones
+        Mail::to($request->email)->send(new TransferenciaTaller(
+            $taller,
+            [
+                'nombre' => $request->nombre,
+                'apellido' => $request->apellido
+            ],
+            $request->cantidadPersonas,
+            $request->esReserva
+        ));
+
+        return response()->json([
+            'message' => 'Inscripción procesada correctamente. Revisa tu email para las instrucciones de pago.',
+            'tallerCliente' => $tallerCliente
+        ]);
     }
 }
 
