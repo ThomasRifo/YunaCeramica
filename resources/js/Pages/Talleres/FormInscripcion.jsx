@@ -36,6 +36,8 @@ export default function FormInscripcion({ taller }) {
     const [cantidadPersonas, setCantidadPersonas] = useState(1);
     const [metodoPago, setMetodoPago] = useState("reserva");
     const [isLoadingMercadoPago, setIsLoadingMercadoPago] = useState(false);
+    const [isLoadingTransferencia, setIsLoadingTransferencia] = useState(false);
+    const [showSuccessDialog, setShowSuccessDialog] = useState(false);
     const [datosCliente, setDatosCliente] = useState({
         nombre: "",
         apellido: "",
@@ -156,7 +158,7 @@ export default function FormInscripcion({ taller }) {
             const responseData = await response.json();
 
             if (response.ok && responseData?.mercadopago?.init_point) {
-                window.location.href = responseData.mercadopago.init_point;
+                router.visit(responseData.mercadopago.init_point);
             } else {
                 console.error("Error al crear preferencia de MP. Respuesta:", responseData);
                 const errorMessage = responseData?.message || responseData?.mercadopago?.message || "Hubo un problema al iniciar el pago (respuesta inválida del servidor).";
@@ -178,7 +180,6 @@ export default function FormInscripcion({ taller }) {
         }
     };
 
-    // Nueva función para transferencia
     const handleTransferencia = () => {
         if (!datosCliente.nombre || !datosCliente.apellido || !datosCliente.email || !datosCliente.menu) {
             toast({
@@ -199,6 +200,7 @@ export default function FormInscripcion({ taller }) {
             }
         }
     
+        setIsLoadingTransferencia(true);
         router.post('/talleres/transferencia', {
             tallerId: taller.id,
             nombre: datosCliente.nombre,
@@ -210,12 +212,7 @@ export default function FormInscripcion({ taller }) {
             menu_id: datosCliente.menu
         }, {
             onSuccess: () => {
-                toast({
-                    title: '¡Inscripción realizada!',
-                    description: 'Revisa tu correo para las instrucciones de pago.',
-                    variant: 'default',
-                });
-                window.location.href = '/talleres';
+                setShowSuccessDialog(true);
             },
             onError: (errors) => {
                 toast({
@@ -223,6 +220,9 @@ export default function FormInscripcion({ taller }) {
                     description: errors.message || 'Ocurrió un error al procesar la inscripción.',
                     variant: 'destructive',
                 });
+            },
+            onFinish: () => {
+                setIsLoadingTransferencia(false);
             }
         });
     };
@@ -527,21 +527,34 @@ export default function FormInscripcion({ taller }) {
                     Total a pagar: <strong>${total.toLocaleString("es-AR")}</strong>
                 </p>
 
-                <Button
-                    className="w-full mt-4 px-6 h-14"
-                    onClick={() => handleInscripcionConCaptcha(handlePagoMercadoPago)}
-                    disabled={isLoadingMercadoPago || !datosCliente.nombre || !datosCliente.apellido || !datosCliente.email || !datosCliente.menu }
-                >
-                    {isLoadingMercadoPago ? "Procesando..." : "Pagar con MercadoPago"}
-                </Button>
-
-                <Button
-                    className="w-full mt-4 px-6 h-14 bg-green-600 hover:bg-green-700"
-                    onClick={() => handleInscripcionConCaptcha(handleTransferencia)}
-                    disabled={!datosCliente.nombre || !datosCliente.apellido || !datosCliente.email || !datosCliente.menu}
-                >
-                    Confirmar inscripción y recibir datos de transferencia
-                </Button>
+                <div className="flex justify-end space-x-4">
+                    {metodoPago === 'tarjeta' && (
+                        <Button
+                            className="h-12 w-full"
+                            onClick={handlePagoMercadoPago}
+                            disabled={isLoadingMercadoPago || !datosCliente.nombre || !datosCliente.apellido || !datosCliente.email || !datosCliente.menu}
+                        >
+                            {isLoadingMercadoPago ? "Procesando..." : "Pagar con MercadoPago"}
+                        </Button>
+                    )}
+                    
+                    {(metodoPago === 'reserva' || metodoPago === 'total') && (
+                        <Button
+                            className="h-12 w-full bg-green-600 hover:bg-green-700"
+                            onClick={handleTransferencia}
+                            disabled={isLoadingTransferencia || !datosCliente.nombre || !datosCliente.apellido || !datosCliente.email || !datosCliente.menu}
+                        >
+                            {isLoadingTransferencia ? (
+                                <div className="flex items-center space-x-2">
+                                    <div className="w-5 h-5 border-t-2 border-b-2 border-white rounded-full animate-spin"></div>
+                                    <span>Procesando inscripción...</span>
+                                </div>
+                            ) : (
+                                "Confirmar inscripción y recibir datos de transferencia"
+                            )}
+                        </Button>
+                    )}
+                </div>
             </div>
 
             <Dialog open={showFailure} onOpenChange={setShowFailure}>
@@ -567,6 +580,45 @@ export default function FormInscripcion({ taller }) {
                             Te notificaremos por email cuando se confirme.<br />
                             Si tienes dudas, contáctanos.
                         </p>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+                <DialogContent className="sm:max-w-md">
+                    <div className="flex flex-col items-center justify-center p-6 text-center">
+                        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                            <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </div>
+                        <h2 className="text-2xl font-bold text-gray-900 mb-2">¡Inscripción Exitosa!</h2>
+                        <p className="text-gray-600 mb-4">
+                            Hemos enviado un correo a <span className="font-semibold">{datosCliente.email}</span> con los datos para realizar la transferencia.
+                        </p>
+                        <div className="bg-gray-50 p-4 rounded-lg w-full mb-4">
+                            <h3 className="font-semibold text-gray-900 mb-2">Próximos pasos:</h3>
+                            <ol className="text-left text-gray-600 space-y-2">
+                                <li className="flex items-start">
+                                    <span className="mr-2">1.</span>
+                                    <span>Revisa tu correo electrónico para obtener los datos de la transferencia.</span>
+                                </li>
+                                <li className="flex items-start">
+                                    <span className="mr-2">2.</span>
+                                    <span>Realiza la transferencia por el monto indicado.</span>
+                                </li>
+                                <li className="flex items-start">
+                                    <span className="mr-2">3.</span>
+                                    <span>Envía el comprobante de transferencia al mismo correo electrónico.</span>
+                                </li>
+                            </ol>
+                        </div>
+                        <Button
+                            className="w-full bg-green-600 hover:bg-green-700"
+                            onClick={() => router.visit('/talleres')}
+                        >
+                            Volver a Talleres
+                        </Button>
                     </div>
                 </DialogContent>
             </Dialog>

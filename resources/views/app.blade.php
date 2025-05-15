@@ -4,8 +4,21 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-
-        <title inertia>{{ config('app.name', 'Laravel') }}</title>
+        <meta name="description" content="Yuna Cerámica - Talleres de cerámica y arte en Cipolletti, Río Negro">
+        <meta name="keywords" content="cerámica, talleres, arte, Cipolletti, Río Negro">
+        <meta name="robots" content="index, follow">
+        <meta property="og:title" content="{{ config('app.name', 'Yuna Cerámica') }}">
+        <meta property="og:description" content="Talleres de cerámica y arte en Cipolletti, Río Negro">
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="{{ url()->current() }}">
+        <meta property="og:image" content="{{ asset('storage/uploads/yunalogowhite.webp') }}">
+        
+        <!-- Prevención de clickjacking -->
+        <meta http-equiv="X-Frame-Options" content="SAMEORIGIN">
+        <!-- Prevención de XSS -->
+        <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: http://localhost:* 'unsafe-inline' 'unsafe-eval'; script-src 'self' https: http://localhost:* 'unsafe-inline' 'unsafe-eval'; img-src 'self' https: data:; font-src 'self' https: data:;">
+        
+        <title inertia>{{ config('app.name', 'Yuna Cerámica') }}</title>
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">

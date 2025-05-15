@@ -313,9 +313,20 @@ public function formInscripcion($slug)
 {
     $taller = Taller::with([
         'menus' => function ($query) {
-            $query->withPivot('html');
+            $query->select('menus.id', 'menus.nombre')
+                  ->withPivot('html');
         },
-        'subcategoria'
+        'subcategoria:id,nombre,url'
+    ])
+    ->select([
+        'id',
+        'nombre',
+        'fecha',
+        'hora',
+        'precio',
+        'ubicacion',
+        'cupoMaximo',
+        'cantInscriptos'
     ])
     ->where('activo', true)
     ->orderBy('created_at', 'desc')
@@ -433,10 +444,7 @@ public function updateMenusHtml(Request $request, $id)
             $request->esReserva
         ));
 
-        return response()->json([
-            'message' => 'Inscripción procesada correctamente. Revisa tu email para las instrucciones de pago.',
-            'tallerCliente' => $tallerCliente
-        ]);
+        return back()->with('success', 'Inscripción procesada correctamente. Revisa tu email para las instrucciones de pago.');
     }
 }
 

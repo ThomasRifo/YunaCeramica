@@ -55,7 +55,7 @@ export default function Footer() {
                         </div>
                     </div>
 
-                    {/* Enlaces Rápidos */}
+                    
                     <div>
                         <h3 className="text-xl font-bold mb-4">Enlaces Rápidos</h3>
                         <ul className="space-y-2">
@@ -82,12 +82,12 @@ export default function Footer() {
                         </ul>
                     </div>
 
-                    {/* Newsletter */}
+                    {/* Newsletter para recibir información sobre nuevos talleres */}
                     <div>
                         <h3 className="text-xl font-bold mb-4">Newsletter</h3>
                         <p className="text-gray-300 mb-4">Suscríbite para recibir información sobre nuevos talleres</p>
                         <form onSubmit={handleSubmit} className="space-y-3">
-                            {/* Honeypot */}
+                            {/* Honeypot para evitar spam */}
                             <input
                                 type="text"
                                 name="website"
@@ -118,7 +118,7 @@ export default function Footer() {
                         </form>
                     </div>
 
-                    {/* Redes Sociales y Métodos de Pago */}
+                    
                     <div>
                         <h3 className="text-xl font-bold mb-4">Seguinos</h3>
                         <div className="flex gap-4 mb-6">
@@ -137,12 +137,7 @@ export default function Footer() {
                                 <img src="/images/mercadopago.png" alt="Mercado Pago" className="h-8" />
                                 <span className="text-sm text-gray-300">Mercado Pago</span>
                             </div>
-                            <div className="flex flex-wrap gap-2">
-                                <img src="/images/visa.png" alt="Visa" className="h-6" />
-                                <img src="/images/mastercard.png" alt="Mastercard" className="h-6" />
-                                <img src="/images/amex.png" alt="American Express" className="h-6" />
-                                <img src="/images/transferencia.png" alt="Transferencia" className="h-6" />
-                            </div>
+                        
                         </div>
                     </div>
                 </div>
