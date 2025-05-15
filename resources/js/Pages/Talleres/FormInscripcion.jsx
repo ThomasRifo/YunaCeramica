@@ -158,7 +158,7 @@ export default function FormInscripcion({ taller }) {
             const responseData = await response.json();
 
             if (response.ok && responseData?.mercadopago?.init_point) {
-                router.visit(responseData.mercadopago.init_point);
+                window.location.href = responseData.mercadopago.init_point;
             } else {
                 console.error("Error al crear preferencia de MP. Respuesta:", responseData);
                 const errorMessage = responseData?.message || responseData?.mercadopago?.message || "Hubo un problema al iniciar el pago (respuesta inválida del servidor).";
@@ -615,7 +615,7 @@ export default function FormInscripcion({ taller }) {
                         </div>
                         <Button
                             className="w-full bg-green-600 hover:bg-green-700"
-                            onClick={() => router.visit('/talleres')}
+                            onClick={() => window.location.href = '/talleres'}
                         >
                             Volver a Talleres
                         </Button>
