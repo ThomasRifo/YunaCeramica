@@ -430,7 +430,8 @@ public function updateMenusHtml(Request $request, $id)
             'telefono_cliente' => $request->telefono,
             'cantPersonas' => $request->cantidadPersonas,
             'idEstadoPago' => 1, // 1 = Pendiente
-            'idMenu' => $request->menu_id
+            'idMenu' => $request->menu_id,
+            'fecha' => now(), // Fecha de inscripción
         ]);
 
         // Enviar email con instrucciones

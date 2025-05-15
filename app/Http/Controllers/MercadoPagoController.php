@@ -87,9 +87,9 @@ class MercadoPagoController extends Controller
                     'email' => $validatedData['datos_cliente']['email'],
                 ],
                 'back_urls' => [
-                    'success' => url('/talleres-' . $taller->subcategoria->url . '?pago=success'),
-                    'failure' => url('/talleres-' . $taller->subcategoria->url . '-inscripcion?pago=failure'),
-                    'pending' => url('/talleres-' . $taller->subcategoria->url . '-inscripcion?pago=pending'),
+                    'success' => env('APP_URL') . '/talleres-' . $taller->subcategoria->url . '?pago=success',
+                    'failure' => env('APP_URL') . '/talleres-' . $taller->subcategoria->url . '-inscripcion?pago=failure',
+                    'pending' => env('APP_URL') . '/talleres-' . $taller->subcategoria->url . '-inscripcion?pago=pending',
                 ],
                 'auto_return' => 'approved',
                 'notification_url' => route('mercadopago.notifications'),
@@ -112,18 +112,16 @@ class MercadoPagoController extends Controller
 
             $tallerCliente = TallerCliente::create([
                 'idTaller' => $validatedData['tallerId'],
-                // 'idCliente' => auth()->id(), // Si el usuario debe estar logueado, o null si no
                 'email_cliente' => $datosClientePrincipal['email'],
                 'nombre_cliente' => $datosClientePrincipal['nombre'],
                 'apellido_cliente' => $datosClientePrincipal['apellido'],
                 'telefono_cliente' => $datosClientePrincipal['telefono'] ?? null,
-                'fecha' => now(), // Fecha de inscripción
+                'fecha' => now(), // Agregamos la fecha actual
                 'cantPersonas' => $validatedData['cantidad'],
-                // 'referido' => $validatedData['referido'] ?? null, // Si tienes un campo referido en el form
                 'idMenu' => $menuClientePrincipalId,
                 'idEstadoPago' => $idEstadoPendiente,
                 'external_reference_mp' => $externalReference,
-                'monto_total_pagado_mp' => $validatedData['precioUnitario'] * $validatedData['cantidad'], // Monto esperado
+                'monto_total_pagado_mp' => $validatedData['precioUnitario'] * $validatedData['cantidad'],
             ]);
 
             // Guardar acompañantes (si los hay, es decir, si cantidad > 1)
@@ -212,36 +210,24 @@ class MercadoPagoController extends Controller
 
     public function handleNotification(Request $request)
     {
-        // Aquí va la lógica para manejar las notificaciones de MercadoPago (webhooks)
-        // Este es un paso crucial y se implementará a continuación.
-        Log::info('Notificación de MercadoPago recibida:', $request->all());
+        // Log inicial de la notificación
+        Log::info('🔔 Nueva notificación de MercadoPago recibida', [
+            'tipo' => $request->input('type'),
+            'topic' => $request->input('topic'),
+            'datos' => $request->all()
+        ]);
         
-        // Validar el origen de la notificación (opcional pero recomendado)
-
         $type = $request->input('type');
-        $topic = $request->input('topic'); // Algunas notificaciones usan 'topic' en lugar de 'type' directamente para pagos.
+        $topic = $request->input('topic');
         $data_id = null;
 
         if ($type === 'payment' && $request->has('data.id')) {
             $data_id = $request->input('data.id');
-        } elseif ($topic === 'payment' && $request->has('id')) { // Otro formato común de webhook
-             $data_id = $request->input('id');
-        } elseif ($request->has('resource') && str_contains($request->input('resource'), 'merchant_orders')) {
-            // Para notificaciones de merchant_order más nuevas (usan 'resource' URL)
-            // $resource_uri = $request->input('resource');
-            // $merchant_order_id = basename($resource_uri);
-            // $merchantOrder = \MercadoPago\Resources\MerchantOrder::find_by_id($merchant_order_id);
-            // if ($merchantOrder) {
-            //     foreach ($merchantOrder->payments as $payment_data) {
-            //          // Procesar cada pago dentro de la orden
-            //          $payment_obj = Payment::find_by_id($payment_data->id);
-            //          if ($payment_obj) { /* ... lógica de actualización de BD ... */ }
-            //     }
-            // }
-            // Log::info('Merchant Order procesada desde resource URI');
-            // return response()->json(['status' => 'received_merchant_order_uri'], 200);
+            Log::info('💰 Notificación de pago detectada', ['payment_id' => $data_id]);
+        } elseif ($topic === 'payment' && $request->has('id')) {
+            $data_id = $request->input('id');
+            Log::info('💰 Notificación de pago detectada (formato alternativo)', ['payment_id' => $data_id]);
         }
-
 
         if ($data_id) {
             DB::beginTransaction();
@@ -250,7 +236,13 @@ class MercadoPagoController extends Controller
                 $payment_resource = $payment_client->get((int)$data_id); 
                 
                 if ($payment_resource && $payment_resource->external_reference) {
-                    Log::info('Pago encontrado por SDK v3:', (array)$payment_resource);
+                    Log::info('✅ Pago encontrado en MercadoPago', [
+                        'payment_id' => $payment_resource->id,
+                        'external_reference' => $payment_resource->external_reference,
+                        'status' => $payment_resource->status,
+                        'amount' => $payment_resource->transaction_amount
+                    ]);
+
                     $externalReference = $payment_resource->external_reference;
                     $status_mp = $payment_resource->status;
 
@@ -261,42 +253,68 @@ class MercadoPagoController extends Controller
                         $idEstadoPagoNuevo = $this->mapMercadoPagoStatusToIdEstadoPago($status_mp);
                         
                         if ($idEstadoPagoNuevo !== null && $idEstadoPagoNuevo !== $idEstadoPagoPrevio) {
+                            Log::info('🔄 Actualizando estado de inscripción', [
+                                'taller_cliente_id' => $tallerCliente->id,
+                                'estado_anterior' => $idEstadoPagoPrevio,
+                                'estado_nuevo' => $idEstadoPagoNuevo,
+                                'status_mp' => $status_mp
+                            ]);
+
                             $tallerCliente->idEstadoPago = $idEstadoPagoNuevo;
                             $tallerCliente->payment_id_mp = $payment_resource->id;
                             $tallerCliente->monto_total_pagado_mp = $payment_resource->transaction_amount; 
                             $tallerCliente->datos_pago_mp = (array) $payment_resource;
                             $tallerCliente->save();
 
-                            // Actualizar cupos del taller si el pago es aprobado y antes no lo estaba
-                            $estadoAprobadoId = 3; // Asumiendo ID 3 para 'Pagado'
+                            // Actualizar cupos del taller
+                            $estadoAprobadoId = 3; // ID para 'Pagado'
                             $taller = Taller::find($tallerCliente->idTaller);
                             if ($taller) {
                                 if ($idEstadoPagoNuevo === $estadoAprobadoId && ($idEstadoPagoPrevio !== $estadoAprobadoId)) {
                                     $taller->increment('cantInscriptos', $tallerCliente->cantPersonas);
+                                    Log::info('📈 Incrementando cupos del taller', [
+                                        'taller_id' => $taller->id,
+                                        'cantidad' => $tallerCliente->cantPersonas
+                                    ]);
                                 } elseif ($idEstadoPagoPrevio === $estadoAprobadoId && $idEstadoPagoNuevo !== $estadoAprobadoId) {
-                                    // Si el pago fue aprobado y ahora se cancela/rechaza, liberar cupo
                                     $taller->decrement('cantInscriptos', $tallerCliente->cantPersonas);
+                                    Log::info('📉 Decrementando cupos del taller', [
+                                        'taller_id' => $taller->id,
+                                        'cantidad' => $tallerCliente->cantPersonas
+                                    ]);
                                 }
                             }
-                            Log::info('Inscripción actualizada por webhook:', ['ext_ref' => $externalReference, 'new_status_mp' => $status_mp, 'new_estado_id' => $idEstadoPagoNuevo]);
-                            // Aquí también podrías enviar un email de confirmación al cliente
                         } else {
-                            Log::info('Webhook recibido, pero sin cambio de estado relevante o estado no mapeado:', ['ext_ref' => $externalReference, 'status_mp' => $status_mp]);
+                            Log::info('ℹ️ Sin cambios en el estado de la inscripción', [
+                                'external_reference' => $externalReference,
+                                'status_mp' => $status_mp
+                            ]);
                         }
                     } else {
-                        Log::warning('No se encontró TallerCliente para external_reference:', ['ext_ref' => $externalReference]);
+                        Log::warning('⚠️ No se encontró TallerCliente', [
+                            'external_reference' => $externalReference
+                        ]);
                     }
                 } else {
-                     Log::warning('Pago no encontrado en MP o sin external_reference (v3 client):', ['payment_id' => $data_id]);
+                    Log::warning('⚠️ Pago sin external_reference', [
+                        'payment_id' => $data_id
+                    ]);
                 }
                 DB::commit();
+                Log::info('✅ Transacción completada exitosamente');
             } catch (\MercadoPago\Exceptions\MPApiException $e) {
                 DB::rollBack();
-                Log::error('MP API Exception en webhook (v3 client): ' . $e->getMessage() . ' - ' . json_encode($e->getApiResponse()->getContent()), $e->getApiResponse()->getContent());
+                Log::error('❌ Error de API de MercadoPago', [
+                    'mensaje' => $e->getMessage(),
+                    'respuesta' => $e->getApiResponse()->getContent()
+                ]);
                 return response()->json(['status' => 'error', 'message' => 'MP API error'], 500); 
             } catch (\Exception $e) {
                 DB::rollBack();
-                Log::error('Error general en webhook MP (v3 client): ' . $e->getMessage(). ' Stack: ' . $e->getTraceAsString());
+                Log::error('❌ Error general en webhook', [
+                    'mensaje' => $e->getMessage(),
+                    'stack' => $e->getTraceAsString()
+                ]);
                 return response()->json(['status' => 'error', 'message' => 'Internal server error'], 500); 
             }
         }
