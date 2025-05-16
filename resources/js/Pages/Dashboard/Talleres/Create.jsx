@@ -136,7 +136,7 @@ label="Tipo de taller"
   selectedMenus={menus.filter(menu => data.menus.includes(menu.id))}  // Solo pasamos los objetos completos
   onChange={(newMenuIds) => {
     // Verifica el tipo de datos que llega en newMenuIds
-    console.log(newMenuIds);
+   
 
     // Si newMenuIds es un array de objetos, extraemos solo los IDs
     const menuIds = newMenuIds.map(menu => menu.id);  // Extraemos los IDs

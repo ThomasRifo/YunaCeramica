@@ -42,6 +42,7 @@ export default function TallerView({ taller, imagenes, pagoAprobado: pagoAprobad
 
   dayjs.extend(customParseFormat);
   const tallerEsPasado = dayjs(taller.fecha).isBefore(dayjs(), 'day');
+  const tallerLleno = taller.cantInscriptos >= taller.cupoMaximo;
   const precios = (
     <div className="mt-6 space-y-2 text-gray-800">
       <div className="flex items-center gap-2">
@@ -70,12 +71,12 @@ export default function TallerView({ taller, imagenes, pagoAprobado: pagoAprobad
   );
   
 
-  console.log('IMAGENES PIEZAS:', imagenesPiezas);
+
 
   return (
     <>
       <Head title={taller.nombre} />
-      <div className="max-w-7xl mx-auto px-4 py-8 pt-36">
+      <div className="max-w-7xl mx-auto px-4 py-8 pt-24 md:pt-36">
         {/* Floating Button */}
         <AnimatePresence>
           {taller.idSubcategoria && showFloatingButton && (
@@ -97,6 +98,13 @@ export default function TallerView({ taller, imagenes, pagoAprobado: pagoAprobad
                 >
                   Evento finalizado
                 </button>
+              ) : tallerLleno ? (
+                <button
+                  className="inline-block bg-black text-white font-semibold py-3 px-6 rounded-lg text-xl shadow-lg cursor-not-allowed opacity-70"
+                  disabled
+                >
+                  CUPO LLENO
+                </button>
               ) : (
                 <Link
                   href={`/talleres-${taller.subcategoria.url}-inscripcion`}
@@ -111,7 +119,7 @@ export default function TallerView({ taller, imagenes, pagoAprobado: pagoAprobad
 
         {/* Título principal */}
         <motion.h1
-          className="text-3xl md:text-5xl font-bold text-center mb-12"
+          className="text-3xl md:text-5xl font-bold text-center mb-2"
           initial={{ opacity: 0, scale: 0.8 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true, amount: 0.4 }}
@@ -121,7 +129,7 @@ export default function TallerView({ taller, imagenes, pagoAprobado: pagoAprobad
         </motion.h1>
 
         {/* Secciones de Imagen + Texto */}
-        <div className="space-y-16 mt-32">
+        <div className="space-y-16 md:mt-24 mt-8">
           <ImageWithText
             image={`/storage/talleres/${imagenes[0]?.urlImagen}`}
             title="Nuestra Experiencia"
@@ -179,6 +187,13 @@ export default function TallerView({ taller, imagenes, pagoAprobado: pagoAprobad
                   disabled
                 >
                   Evento finalizado
+                </button>
+              ) : tallerLleno ? (
+                <button
+                  className="inline-block w-1/2 bg-gray-400 text-white font-semibold py-3 px-6 rounded-lg text-2xl shadow-lg cursor-not-allowed opacity-70"
+                  disabled
+                >
+                  CUPO LLENO
                 </button>
               ) : (
                 <Link

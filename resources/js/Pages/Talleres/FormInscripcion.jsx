@@ -500,7 +500,7 @@ export default function FormInscripcion({ taller }) {
                             }
                             onClick={() => setMetodoPago("reserva")}
                         >
-                            Reserva (${((precioBase / 2) * cantidadPersonas).toLocaleString("es-AR")})
+                            Reserva con transferencia (${((precioBase / 2) * cantidadPersonas).toLocaleString("es-AR")})
                         </Button>
                         <Button
                             className="h-12"

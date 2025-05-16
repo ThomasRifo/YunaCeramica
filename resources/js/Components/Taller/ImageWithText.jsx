@@ -3,16 +3,17 @@ import { AspectRatio } from "@/Components/ui/aspect-ratio";
 
 export default function ImageWithText({ image, title, description, extraContent }) {
     return (
-      <div className="flex flex-col md:flex-row md:items-start items-center gap-8">
-            <div className="flex-shrink-0 w-full md:w-1/2">
+      <div className="flex w-2xl flex-col md:flex-row md:items-start items-center mx-auto gap-8">
+        <div className=" w-36 " ></div>
+            <div className="flex-shrink-0 w-full md:w-1/3">
                 <motion.div
                     initial={{ opacity: 0, scale: 0.8 }}
                     whileInView={{ opacity: 1, scale: 1 }}
-                    viewport={{ once: true, amount: 0.2 }} // amount es qué porcentaje debe entrar para activarse
+                    viewport={{ once: true, amount: 0.2 }} 
                     transition={{ duration: 0.6 }}
                 >
                     <AspectRatio
-                        ratio={2 / 1.5}
+                        ratio={1.4 / 1.5}
                         className="relative rounded-xl overflow-hidden shadow-lg"
                     >
                         {image ? (
@@ -45,6 +46,8 @@ export default function ImageWithText({ image, title, description, extraContent 
 
     {extraContent}
 </motion.div>
+<div className="w-36" ></div>
         </div>
+        
     );
 }

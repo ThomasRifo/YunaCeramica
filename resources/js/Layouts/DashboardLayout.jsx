@@ -70,7 +70,7 @@ function InnerLayout({ children, router, toggleColorMode }) {
   const theme = useTheme();
 
   React.useEffect(() => {
-    console.log("🎨 Modo actual del tema:", theme.palette.mode);
+ 
   }, [theme.palette.mode]);
 
   return (

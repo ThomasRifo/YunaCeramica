@@ -9,7 +9,7 @@ import PiecesCarousel from '@/Components/Taller/PiecesCarousel';
 
 export default function TalleresIndex({ reviews, talleres, imagenesPiezas }) {
 
-  console.log('IMAGENES PIEZAS:', imagenesPiezas);
+ 
   return (
     <>
     <Head title="Talleres" />

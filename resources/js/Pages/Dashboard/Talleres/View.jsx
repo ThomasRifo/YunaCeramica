@@ -35,16 +35,19 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
   const [selectedParticipant, setSelectedParticipant] = useState(null);
   const [updatePagoOpen, setUpdatePagoOpen] = useState(false);
   const [selectedPendiente, setSelectedPendiente] = useState(null);
-  const pagos = 0;
-  const grupos = {};
-  const resumenGrupos = {};
-  const resumenMenus = {};
-  let totalRecaudado = 0;
   const [estadoEdicion, setEstadoEdicion] = useState({});
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [cambiosAConfirmar, setCambiosAConfirmar] = useState([]);
   const [guardando, setGuardando] = useState(false);
   const [resultados, setResultados] = useState([]);
+
+  // Declaración de todas las variables necesarias
+  let totalRecaudado = 0;
+  const grupos = {};
+  const resumenGrupos = {};
+  const resumenMenus = {};
+  let groupId = 0;
+  let rows = [];
 
   // Crear el objeto acompByCliente usando los acompañantes de cada tallerCliente
   const acompByCliente = tallerClientesPagados.reduce((acc, tc) => {
@@ -54,18 +57,7 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
     return acc;
   }, {});
 
-  let rows = [];
-
-  tallerClientesPagados.forEach((tc) => {
-    if (tc.estado_pago?.id === 3) {
-      totalRecaudado += tc.cantPersonas * taller.precio;
-    } else if (tc.estado_pago?.id === 2) {
-      totalRecaudado += tc.cantPersonas * (taller.precio / 2);
-    }
-  });
-
-  let groupId = 0;
-
+  // Generación de filas y cálculo del total recaudado
   tallerClientesPagados.forEach((tc) => {
     groupId++;
     const baseRow = {
@@ -84,6 +76,13 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
       clienteId: tc.id,
     };
     rows.push(baseRow);
+
+    // Calcular total recaudado
+    if (tc.estado_pago?.id === 3) {
+      totalRecaudado += tc.cantPersonas * taller.precio;
+    } else if (tc.estado_pago?.id === 2) {
+      totalRecaudado += tc.cantPersonas * (taller.precio / 2);
+    }
 
     if (tc.acompaniantes && tc.acompaniantes.length > 0) {
       tc.acompaniantes.forEach((a) => {
@@ -232,16 +231,6 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
         });
       });
     }
-    // Calcular total recaudado
-    if (tc.estado_pago?.id === 2) {
-      totalRecaudado += tc.cantPersonas * (taller.precio / 2);
-    } else if (tc.estado_pago?.id === 3) {
-      totalRecaudado += tc.cantPersonas * taller.precio;
-    }
-    // Resumen de mesas (grupos)
-    const tam = 1 + (tc.acompaniantes ? tc.acompaniantes.length : 0);
-    if (!resumenGrupos[tam]) resumenGrupos[tam] = 0;
-    resumenGrupos[tam]++;
   });
   // Resumen de menús
   rowsPagados.forEach(row => {
