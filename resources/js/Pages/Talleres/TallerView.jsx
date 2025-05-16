@@ -12,7 +12,7 @@ import customParseFormat from "dayjs/plugin/customParseFormat";
 import { useRef, useEffect, useState } from "react";
 
 
-export default function TallerView({ taller, imagenes, pagoAprobado: pagoAprobadoProp }) {
+export default function TallerView({ taller, imagenes, pagoAprobado: pagoAprobadoProp, imagenesPiezas }) {
   const [showFloatingButton, setShowFloatingButton] = useState(true);
   const mainButtonRef = useRef(null);
   const { scrollYProgress } = useScroll();
@@ -69,6 +69,8 @@ export default function TallerView({ taller, imagenes, pagoAprobado: pagoAprobad
     </div>
   );
   
+
+  console.log('IMAGENES PIEZAS:', imagenesPiezas);
 
   return (
     <>
@@ -191,7 +193,9 @@ export default function TallerView({ taller, imagenes, pagoAprobado: pagoAprobad
         </motion.div>
 
         {/* Carrusel de piezas */}
-        <PiecesCarousel images={taller.imagenesPiezas} />
+
+        <PiecesCarousel images={imagenesPiezas} title="Piezas disponibles para pintar" />
+        
 
         {/* Mapa */}
         <div id="ubicacion">

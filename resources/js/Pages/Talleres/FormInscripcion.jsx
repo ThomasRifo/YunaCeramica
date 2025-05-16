@@ -121,6 +121,7 @@ export default function FormInscripcion({ taller }) {
             descripcion: `Inscripción al taller: ${taller.nombre} (${cantidadPersonas} persona(s))`,
             cantidad: cantidadPersonas,
             precioUnitario: precioTarjeta,
+            metodoPago,
             datos_cliente: { 
                 nombre: datosCliente.nombre,
                 apellido: datosCliente.apellido,
@@ -209,7 +210,8 @@ export default function FormInscripcion({ taller }) {
             telefono: datosCliente.telefono,
             cantidadPersonas,
             esReserva: metodoPago === 'reserva',
-            menu_id: datosCliente.menu
+            menu_id: datosCliente.menu,
+            metodoPago
         }, {
             onSuccess: () => {
                 setShowSuccessDialog(true);

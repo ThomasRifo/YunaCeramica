@@ -118,6 +118,7 @@ class MercadoPagoController extends Controller
                 'cantPersonas' => $validatedData['cantidad'],
                 'idMenu' => $menuClientePrincipalId,
                 'idEstadoPago' => $idEstadoPendiente,
+                'idMetodoPago' => 2, // 2 = MercadoPago
                 'external_reference_mp' => $externalReference,
                 'monto_total_pagado_mp' => $validatedData['precioUnitario'] * $validatedData['cantidad'],
             ]);

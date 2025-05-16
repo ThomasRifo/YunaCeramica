@@ -43,7 +43,7 @@ export default function ReviewCarousel({ reviews }) {
       </div>
       <div className="absolute -right-1 top-1/2 transform -translate-y-1/2 z-10">
         <button className="swiper-next text-gray-500 hover:text-gray-700 transition">
-          <ChevronRight size={30} />
+          <ChevronRight size={40} />
         </button>
       </div>
     </div>

@@ -5,8 +5,11 @@ import { Head, Link } from '@inertiajs/react';
 import { AspectRatio } from "@/Components/ui/aspect-ratio"
 import { cn } from '@/lib/utils';
 import ReviewsSection from '@/Components/ReviewsSection';
+import PiecesCarousel from '@/Components/Taller/PiecesCarousel';
 
-export default function TalleresIndex({ reviews, talleres }) {
+export default function TalleresIndex({ reviews, talleres, imagenesPiezas }) {
+
+  console.log('IMAGENES PIEZAS:', imagenesPiezas);
   return (
     <>
     <Head title="Talleres" />
@@ -114,7 +117,9 @@ export default function TalleresIndex({ reviews, talleres }) {
         )}
       </div>
       </section>
-
+<section className='mx-auto max-w-7xl mt-16'>
+  <PiecesCarousel images={imagenesPiezas} title="Sus piezas" />
+</section>
       <section>
       <ReviewsSection reviews={reviews} />
       </section>

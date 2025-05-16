@@ -23,6 +23,7 @@ class TallerCliente extends Model
         'referido',
         'idMenu',
         'idEstadoPago',
+        'idMetodoPago',
         'external_reference_mp',
         'preference_id_mp',
         'payment_id_mp',

@@ -17,6 +17,7 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
 use App\Mail\TransferenciaTaller;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 
 class TallerController extends Controller
 {
@@ -241,6 +242,14 @@ public function talleresClient()
         'ceramicaYGinFuturos' => $ceramicaYGinFuturos
     ];
 
+    $archivos = Storage::disk('public')->files('piezas/realizadas');
+    $imagenesPiezas = collect($archivos)
+        ->map(function($file) {
+            return asset('storage/' . $file);
+        })
+        ->values()
+        ->toArray();
+
     // Verificar cupos llenos para Cerámica y Café
     $tallerCafe = Taller::where('activo', true)
         ->where('idSubcategoria', 2)
@@ -264,6 +273,7 @@ public function talleresClient()
     return Inertia::render('Talleres/Index', [
         'talleres' => $estadoTalleres,
         'reviews' => $reviews,
+        'imagenesPiezas' => $imagenesPiezas, //pintadas
     ]);
 }
 
@@ -303,10 +313,20 @@ public function tallerView()
         ->orderBy('orden')
         ->get();
 
+    $archivos = Storage::disk('public')->files('piezas/parapintar');
+    $imagenesPiezas = collect($archivos)
+        ->map(function($file) {
+            return asset('storage/' . $file);
+        })
+        ->values()
+        ->toArray();
+
+
     return Inertia::render('Talleres/TallerView', [
         'taller' => $taller,
         'imagenes' => $imagenes,
         'slug' => $slug,
+        'imagenesPiezas' => $imagenesPiezas,
     ]);
 }
 public function formInscripcion($slug)
@@ -431,6 +451,7 @@ public function updateMenusHtml(Request $request, $id)
             'cantPersonas' => $request->cantidadPersonas,
             'idEstadoPago' => 1, // 1 = Pendiente
             'idMenu' => $request->menu_id,
+            'idMetodoPago' => 1, // 1 = Transferencia
             'fecha' => now(), // Fecha de inscripción
         ]);
 

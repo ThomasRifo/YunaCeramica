@@ -74,6 +74,8 @@ Route::middleware(['auth', 'verified', 'role:admin'])
 
         Route::get('/archivos', [App\Http\Controllers\ArchivosController::class, 'index'])->name('archivos.index');
         Route::post('/archivos/upload', [App\Http\Controllers\ArchivosController::class, 'upload'])->name('archivos.upload');
+        Route::post('/archivos/upload-parapintar', [App\Http\Controllers\ArchivosController::class, 'uploadPiezasParaPintar'])->name('archivos.upload.parapintar');
+        Route::post('/archivos/upload-realizadas', [App\Http\Controllers\ArchivosController::class, 'uploadPiezasRealizadas'])->name('archivos.upload.realizadas');
     });
 
 Route::post('/dashboard/talleres/actualizar-estados-pago', [TallerController::class, 'actualizarEstadosPagoMasivo'])->name('dashboard.talleres.actualizarEstadosPagoMasivo');

@@ -13,10 +13,14 @@
         <meta property="og:url" content="{{ url()->current() }}">
         <meta property="og:image" content="{{ asset('storage/uploads/yunalogowhite.webp') }}">
         
+        <!-- Favicon -->
+        <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+        <link rel="shortcut icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+        
         <!-- Prevención de clickjacking -->
-        <meta http-equiv="X-Frame-Options" content="SAMEORIGIN">
+        <!-- <meta http-equiv="X-Frame-Options" content="SAMEORIGIN"> -->
         <!-- Prevención de XSS -->
-        <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: http://localhost:* 'unsafe-inline' 'unsafe-eval'; script-src 'self' https: http://localhost:* 'unsafe-inline' 'unsafe-eval'; img-src 'self' https: data:; font-src 'self' https: data:;">
+        <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: http://localhost:* 'unsafe-inline' 'unsafe-eval'; connect-src 'self' ws://localhost:5173 http://localhost:5173 https:; script-src 'self' https: http://localhost:* 'unsafe-inline' 'unsafe-eval'; img-src 'self' https: data:; font-src 'self' https: data:;">
         
         <title inertia>{{ config('app.name', 'Yuna Cerámica') }}</title>
 
