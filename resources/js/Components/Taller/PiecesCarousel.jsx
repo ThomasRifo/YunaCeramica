@@ -5,14 +5,42 @@ import { Navigation, Autoplay } from 'swiper/modules';
 import { motion } from 'framer-motion';
 import { AspectRatio } from "@/Components/ui/aspect-ratio";
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 export default function PiecesCarousel({ images, title }) {
+  const [imagesLoaded, setImagesLoaded] = useState(false);
+
+  useEffect(() => {
+    if (images?.length > 0) {
+      const loadImages = async () => {
+        const imagePromises = images.map((src) => {
+          return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.src = src;
+            img.onload = resolve;
+            img.onerror = reject;
+          });
+        });
+
+        try {
+          await Promise.all(imagePromises);
+          setImagesLoaded(true);
+        } catch (error) {
+          console.error('Error preloading images:', error);
+          setImagesLoaded(true); // Aún así mostramos el carrusel
+        }
+      };
+
+      loadImages();
+    }
+  }, [images]);
+
   return (
     <motion.div
     initial={{ opacity: 0, scale: 0.8 }}
     whileInView={{ opacity: 1, scale: 1 }}
     viewport={{ once: true, amount: 0.8 }}
-    transition={{ duration: 1.8 }}
+    transition={{ duration: 1. }}
     className="relative"
     >
       <h2 className="text-2xl md:text-3xl font-bold text-center mb-6">{title}</h2>
@@ -27,7 +55,10 @@ export default function PiecesCarousel({ images, title }) {
             prevEl: '.swiper-button-prev',
             nextEl: '.swiper-button-next',
           }}
-          autoplay={{ delay: 2500, disableOnInteraction: false }}
+          autoplay={{ delay: 1000, disableOnInteraction: false }}
+          speed={500}
+          preloadImages={true}
+          watchSlidesProgress={true}
           breakpoints={{
             640: { slidesPerView: 3 },
             768: { slidesPerView: 3 },
@@ -45,7 +76,8 @@ export default function PiecesCarousel({ images, title }) {
                     src={img}
                     alt={`Pieza ${idx + 1}`}
                     className="object-cover w-full h-full"
-                    loading="lazy"
+                    loading="eager"
+                    style={{ opacity: imagesLoaded ? 1 : 0 }}
                   />
                 ) : (
                   <div className="w-full h-full bg-gray-400" />
@@ -79,6 +111,14 @@ export default function PiecesCarousel({ images, title }) {
         .swiper-button-next {
           width: 50px !important;
           height: 50px !important;
+        }
+        @supports (-webkit-touch-callout: none) {
+          .swiper-button-prev {
+            left: 0 !important;
+          }
+          .swiper-button-next {
+            right: 0 !important;
+          }
         }
       `}</style>
     </motion.div>
