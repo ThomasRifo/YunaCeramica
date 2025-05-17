@@ -18,12 +18,12 @@ export default function ReviewCard({ review }) {
   const MAX_LENGTH = 120;
   const isLong = review.mensaje.length > MAX_LENGTH;
   const previewText = isLong
-    ? review.mensaje.slice(0, MAX_LENGTH) + '... ver más'
+    ? review.mensaje.slice(0, MAX_LENGTH)
     : review.mensaje;
 
   return (
     <>
-      <div className=" min-h-48 md:min-h-56 rounded-2xl bg-white border border-gray-300 shadow-lg p-6 flex flex-col justify-between  overflow-hidden">
+      <div className="min-h-48 md:min-h-56 rounded-2xl bg-white border border-gray-300 shadow-lg p-6 flex flex-col justify-between overflow-hidden">
         <div>
           <h3 className="font-bold text-lg">{review.nombre} {review.apellido}</h3>
           <p className="text-sm text-gray-500 mb-2">{review.taller} - {fecha}</p>
@@ -31,25 +31,25 @@ export default function ReviewCard({ review }) {
           }
           <p className="mt-8 text-gray-700 text-base leading-relaxed">
             {previewText}
+            {isLong && (
+              <Dialog open={open} onOpenChange={setOpen} modal={false}>
+                <DialogTrigger asChild>
+                  <button className="text-blue-600 hover:text-blue-800 font-medium ml-1">
+                    ...ver más
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="max-w-lg">
+                  <h3 className="text-xl font-bold">{review.nombre} {review.apellido}</h3>
+                  <p className="text-gray-500 text-sm">{review.taller} - {fecha}</p>
+                  {/*<div className="flex my-2">{stars}</div>  Por el momento no se muestra la valoración,
+                  */
+                  }
+                  <p className="text-gray-700">{review.mensaje}</p>
+                </DialogContent>
+              </Dialog>
+            )}
           </p>
         </div>
-        {isLong && (
-          <div className="mt-4">
-            <Dialog open={open} onOpenChange={setOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline" size="sm">Leer completa</Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-lg">
-                <h3 className="text-xl font-bold">{review.nombre} {review.apellido}</h3>
-                <p className="text-gray-500 text-sm">{review.taller}</p>
-                {/*<div className="flex my-2">{stars}</div>  Por el momento no se muestra la valoración,
-                */
-                }
-                <p className="text-gray-700">{review.mensaje}</p>
-              </DialogContent>
-            </Dialog>
-          </div>
-        )}
       </div>
     </>
   );
