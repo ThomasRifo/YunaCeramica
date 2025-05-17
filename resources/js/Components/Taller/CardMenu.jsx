@@ -12,7 +12,7 @@ export default function CardMenu({ menu, seleccionado, onSelect }) {
         <div
             onClick={handleClick}
             className={cn(
-                "cursor-pointer border rounded-2xl p-4 shadow-md transition-all duration-200  max-w-80 h-64",
+                "cursor-pointer border rounded-2xl p-4 shadow-md transition-all duration-200 mx-auto max-w-80 h-64",
                 seleccionado ? "bg-gray-200 border-gray-700" : "bg-white hover:bg-gray-100 border-gray-300"
             )}
         >

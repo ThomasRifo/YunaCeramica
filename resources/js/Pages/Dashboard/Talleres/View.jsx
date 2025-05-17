@@ -242,6 +242,25 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
   // Calcular cantidad de participantes confirmados (pagados o parciales)
   const cantidadConfirmados = rowsPagados.length;
 
+  // Calcular resumen de grupos
+  rowsPagados.forEach(row => {
+    const grupo = row.group;
+    if (!resumenGrupos[grupo]) {
+      resumenGrupos[grupo] = 0;
+    }
+    resumenGrupos[grupo]++;
+  });
+
+  // Convertir el resumen de grupos a un formato más amigable
+  const gruposFormateados = {};
+  Object.values(resumenGrupos).forEach(cantidad => {
+    const tipo = cantidad === 1 ? 'Individual' : cantidad === 2 ? 'Doble' : cantidad === 3 ? 'Triple' : `${cantidad} personas`;
+    if (!gruposFormateados[tipo]) {
+      gruposFormateados[tipo] = 0;
+    }
+    gruposFormateados[tipo]++;
+  });
+
   // Botón para guardar todos los cambios
   const handleGuardarCambios = () => {
     // Filtrar solo los cambios válidos (clientes con nuevo estado seleccionado)
@@ -389,13 +408,11 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {Object.entries(resumenGrupos).map(([tam, cantidad]) => (
-                      cantidad > 0 && (
-                        <TableRow key={tam}>
-                          <TableCell>{tam === '1' ? 'Individual' : tam === '2' ? 'Doble' : tam === '3' ? 'Triple' : `${tam} personas`}</TableCell>
-                          <TableCell>{cantidad}</TableCell>
-                        </TableRow>
-                      )
+                    {Object.entries(gruposFormateados).map(([tipo, cantidad]) => (
+                      <TableRow key={tipo}>
+                        <TableCell>{tipo}</TableCell>
+                        <TableCell>{cantidad}</TableCell>
+                      </TableRow>
                     ))}
                   </TableBody>
                 </Table>

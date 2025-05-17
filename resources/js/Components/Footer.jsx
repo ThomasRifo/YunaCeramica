@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { Facebook, Instagram, Mail, MapPin, Phone, Send } from 'lucide-react';
+import { Facebook, Instagram, Landmark, Mail, MapPin, Phone, Send } from 'lucide-react';
 import { useState } from 'react';
 import axios from 'axios';
 import { useToast } from "@/hooks/use-toast";
@@ -41,13 +41,23 @@ export default function Footer() {
                         <h3 className="text-xl font-bold mb-4">Información</h3>
                         <div className="space-y-3">
                             <div className="flex items-center gap-2">
-                                <MapPin className="w-5 h-5" />
+                                <MapPin className="w-6 h-6" />
                                 <span>Cipolletti, Río Negro, Argentina</span>
                             </div>
                             <div className="flex items-center gap-2">
-                                <Mail className="w-5 h-5" />
+                                <Mail className="w-6 h-6" />
                                 <span>yunaceramica@gmail.com</span>
                             </div>
+                            
+                        <div className="flex gap-4 mb-6">
+                            <a href="https://instagram.com/yunaceramica" target="_blank" rel="noopener noreferrer" className="hover:text-gray-300 transition">
+                                <Instagram className="inline w-6 h-6 mr-2" />
+                                <span className='text-white inline'>Yuna Cerámica</span>
+                            </a>
+                            {/*<a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="hover:text-gray-300 transition">
+                                <Facebook className="w-6 h-6" />
+                            </a>*/}
+                        </div>
                         </div>
                     </div>
 
@@ -115,25 +125,15 @@ export default function Footer() {
                     </div>
 
                     
-                    <div>
-                        <h3 className="text-xl font-bold mb-4">Seguinos</h3>
-                        <div className="flex gap-4 mb-6">
-                            <a href="https://instagram.com/yunaceramica" target="_blank" rel="noopener noreferrer" className="hover:text-gray-300 transition">
-                                <Instagram className="inline w-6 h-6 mr-2" />
-                                <span className='text-white inline'>Yuna Cerámica</span>
-                            </a>
-                            {/*<a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="hover:text-gray-300 transition">
-                                <Facebook className="w-6 h-6" />
-                            </a>*/}
-                        </div>
-
-                        <h3 className="text-xl font-bold mb-4">Métodos de Pago</h3>
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-2">
-                                <img src="/images/mercadopago.png" alt="Mercado Pago" className="h-8" />
-                                <span className="text-sm text-gray-300">Mercado Pago</span>
-                            </div>
+                    <div className="ml-6">
                         
+
+                        <h3 className="text-xl font-bold mb-4 ">Métodos de Pago</h3>
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-4">
+                                <img src="/storage/uploads/MercadoPago_(horizontal).webp" alt="Mercado Pago" className="h-8" />
+                                <Landmark className="w-8 h-8 text-customGray mb-2" />
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -141,9 +141,21 @@ export default function Footer() {
                 {/* Copyright */}
                 
             </div>
-            <div className="border-t bg-black border-gray-800  mt-8 py-5 text-center">
+            <div className="text-xs text-gray-400 mt-8 text-center">
+                Este sitio está protegido por reCAPTCHA y se aplican la&nbsp;
+                <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="underline">
+                    Política de privacidad
+                </a>
+                &nbsp;y los&nbsp;
+                <a href="https://policies.google.com/terms" target="_blank" rel="noopener noreferrer" className="underline">
+                    Términos de servicio
+                </a>
+                &nbsp;de Google.
+            </div>
+            <div className="border-t bg-black border-gray-800  mt-0 py-5 text-center">
                     <p className='md:inline'>&copy; {new Date().getFullYear()} Yuna Cerámica.</p> <p className='inline'>Todos los derechos reservados.</p>
                 </div>
+
         </footer>
     );
 } 

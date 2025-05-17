@@ -66,3 +66,11 @@
     @apply bg-background text-foreground;
   }
 }
+
+.grecaptcha-badge {
+  opacity: 0.3 !important;   /* Puedes ajustar el valor (0.1 a 0.5 es común) */
+  transition: opacity 0.3s;
+}
+.grecaptcha-badge:hover {
+  opacity: 1 !important;     /* Al pasar el mouse, vuelve a ser visible */
+}
