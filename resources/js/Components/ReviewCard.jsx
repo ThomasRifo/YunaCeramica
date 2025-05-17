@@ -1,25 +1,35 @@
 import { Star } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import dayjs from "dayjs";
 import { Dialog, DialogContent, DialogTrigger } from '@/Components/ui/dialog';
 import { AspectRatio } from "@/Components/ui/aspect-ratio";
 
 export default function ReviewCard({ review }) {
   const [open, setOpen] = useState(false);
+  const [isOverflowing, setIsOverflowing] = useState(false);
+  const textRef = useRef(null);
   const fecha = dayjs(review.fecha_publicacion).format('DD/MM/YYYY');
+  
+  useEffect(() => {
+    const checkOverflow = () => {
+      if (textRef.current) {
+        const isOverflow = textRef.current.scrollHeight > textRef.current.clientHeight;
+        setIsOverflowing(isOverflow);
+      }
+    };
+
+    checkOverflow();
+    window.addEventListener('resize', checkOverflow);
+    return () => window.removeEventListener('resize', checkOverflow);
+  }, []);
+
   const stars = Array.from({ length: 5 }, (_, i) => (
     <Star
       key={i}
       className={`h-5 w-5 ${i < review.valoracion ? 'fill-black' : 'fill-white'} stroke-black`}
     />
   ));
-
-  const MAX_LENGTH = 120;
-  const isLong = review.mensaje.length > MAX_LENGTH;
-  const previewText = isLong
-    ? review.mensaje.slice(0, MAX_LENGTH)
-    : review.mensaje;
 
   return (
     <>
@@ -29,9 +39,11 @@ export default function ReviewCard({ review }) {
           <p className="text-sm text-gray-500 mb-2">{review.taller} - {fecha}</p>
           {//<div className="flex mb-2">{stars}</div> Todavía no las incluímos
           }
-          <p className="mt-8 text-gray-700 text-base leading-relaxed">
-            {previewText}
-            {isLong && (
+          <div className="mt-8 text-gray-700 text-base leading-relaxed">
+            <p ref={textRef} className="line-clamp-4">
+              {review.mensaje}
+            </p>
+            {isOverflowing && (
               <Dialog open={open} onOpenChange={setOpen} modal={false}>
                 <DialogTrigger asChild>
                   <button className="text-blue-600 hover:text-blue-800 font-medium ml-1">
@@ -48,7 +60,7 @@ export default function ReviewCard({ review }) {
                 </DialogContent>
               </Dialog>
             )}
-          </p>
+          </div>
         </div>
       </div>
     </>
