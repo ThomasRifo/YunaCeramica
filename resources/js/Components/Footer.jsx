@@ -131,7 +131,7 @@ export default function Footer() {
                         <h3 className="text-xl font-bold mb-4 ">Métodos de Pago</h3>
                         <div className="space-y-4">
                             <div className="flex items-center gap-4">
-                                <img src="/storage/uploads/MercadoPago_(horizontal).webp" alt="Mercado Pago" className="h-8" />
+                                <img src="/storage/uploads/MercadoPago_horizontal.webp" alt="Mercado Pago" className="h-8" />
                                 <Landmark className="w-8 h-8 text-customGray mb-2" />
                             </div>
                         </div>
