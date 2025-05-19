@@ -537,7 +537,7 @@ export default function FormInscripcion({ taller }) {
                     {metodoPago === 'tarjeta' && (
                         <Button
                             className="h-12 w-full"
-                            onClick={handlePagoMercadoPago}
+                            onClick={handleInscripcionConCaptcha(handlePagoMercadoPago)}
                             disabled={isLoadingMercadoPago || !datosCliente.nombre || !datosCliente.apellido || !datosCliente.email || !datosCliente.menu}
                         >
                             {isLoadingMercadoPago ? "Procesando..." : "Pagar con MercadoPago"}
@@ -547,7 +547,7 @@ export default function FormInscripcion({ taller }) {
                     {(metodoPago === 'reserva' || metodoPago === 'total') && (
                         <Button
                             className="h-12 w-full bg-green-600 hover:bg-green-700"
-                            onClick={handleTransferencia}
+                            onClick={() => handleInscripcionConCaptcha(handleTransferencia)}
                             disabled={isLoadingTransferencia || !datosCliente.nombre || !datosCliente.apellido || !datosCliente.email || !datosCliente.menu}
                         >
                             {isLoadingTransferencia ? (
