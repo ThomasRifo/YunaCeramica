@@ -232,6 +232,7 @@ export default function FormInscripcion({ taller }) {
     const handleInscripcionConCaptcha = async (accion) => {
         // Ejecutar reCAPTCHA v3
         const v3Token = await window.grecaptcha.execute(recaptchaV3Key, { action: "submit" });
+        console.log("reCAPTCHA v3 token generado:", v3Token);
 
         // Validar en backend
         const response = await fetch("/api/validar-captcha", {
@@ -240,27 +241,30 @@ export default function FormInscripcion({ taller }) {
             body: JSON.stringify({ v3Token }),
         });
         const data = await response.json();
+        console.log("Respuesta backend reCAPTCHA v3:", data);
 
         if (data.score < 0.5) {
-            // Score bajo: mostrar reCAPTCHA v2 y guardar la acción pendiente
             setShowV2(true);
             setAccionPendiente(() => accion);
         } else {
-            // Score alto: ejecutar la acción original
             accion();
         }
     };
 
     const handleV2Change = async (token) => {
         setV2Token(token);
+        console.log("reCAPTCHA v2 token generado:", token);
+
         const response = await fetch("/api/validar-captcha", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ v2Token: token }),
         });
         const data = await response.json();
+        console.log("Respuesta backend reCAPTCHA v2:", data);
+
         if (data.success && accionPendiente) {
-            accionPendiente(); // Ejecuta la acción original
+            accionPendiente();
             setShowV2(false);
             setAccionPendiente(null);
         } else {

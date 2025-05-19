@@ -11,18 +11,22 @@ function getCroppedImgArea(imageWidth, imageHeight, crop, zoom, aspect) {
   const croppedAreaHeight = croppedAreaWidth / aspect;
 
   // Centro del crop en la imagen original
-  const centerX = imageWidth / 2 + (crop?.x ?? 0) * imageWidth / 200;
-  const centerY = imageHeight / 2 + (crop?.y ?? 0) * imageHeight / 200;
+  const centerX = imageWidth / 2 + (-(crop?.x ?? 0)) * imageWidth / 200;
+  const centerY = imageHeight / 2 + (-(crop?.y ?? 0)) * imageHeight / 200;
 
   // Esquina superior izquierda del área recortada
   const x = centerX - croppedAreaWidth / 2;
   const y = centerY - croppedAreaHeight / 2;
 
+  // Limitar el área recortada para que no salga de la imagen
+  let safeX = Math.max(0, Math.min(x, imageWidth - croppedAreaWidth));
+  let safeY = Math.max(0, Math.min(y, imageHeight - croppedAreaHeight));
+
   return {
-    x: Math.max(0, x),
-    y: Math.max(0, y),
-    width: Math.min(croppedAreaWidth, imageWidth - x),
-    height: Math.min(croppedAreaHeight, imageHeight - y),
+    x: safeX,
+    y: safeY,
+    width: Math.min(croppedAreaWidth, imageWidth - safeX),
+    height: Math.min(croppedAreaHeight, imageHeight - safeY),
   };
 }
 
@@ -57,6 +61,8 @@ export default function CroppedImageCanvas({ image, crop, zoom, aspectRatio, cla
         cropArea.x, cropArea.y, cropArea.width, cropArea.height,
         0, 0, width, height
       );
+
+
     };
   }, [image, crop, zoom, aspectRatio]);
 
