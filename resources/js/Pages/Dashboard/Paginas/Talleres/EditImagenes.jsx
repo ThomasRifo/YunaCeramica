@@ -2,6 +2,7 @@ import { Box, Breadcrumbs, Link, Typography, Button, Card, CardContent, CardActi
 import ReactQuill from 'react-quill';
 import { useForm, router } from '@inertiajs/react';
 import 'react-quill/dist/quill.snow.css';
+import { useState, useEffect } from 'react';
 
 const DEFAULT_IMAGE = '/images/default-placeholder.png'; // asegurate de tener esta imagen en public/images
 
@@ -15,10 +16,21 @@ export default function EditImagenes({ slug, imagenes, taller }) {
     })),
   });
 
+  const [previewUrls, setPreviewUrls] = useState({});
+
   const handleImageChange = (e, index) => {
-    setData('imagenes', data.imagenes.map((img, i) => (
-      i === index ? { ...img, nueva_imagen: e.target.files[0] } : img
-    )));
+    const file = e.target.files[0];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setPreviewUrls(prev => {
+        // Libera el anterior si existe
+        if (prev[index]) URL.revokeObjectURL(prev[index]);
+        return { ...prev, [index]: url };
+      });
+      setData('imagenes', data.imagenes.map((img, i) => (
+        i === index ? { ...img, nueva_imagen: file } : img
+      )));
+    }
   };
 
   const handleTextoChange = (value, index) => {
@@ -53,10 +65,13 @@ export default function EditImagenes({ slug, imagenes, taller }) {
       }
     });
   };
-  
-  
-  
 
+  useEffect(() => {
+    // Cleanup al desmontar
+    return () => {
+      Object.values(previewUrls).forEach(url => URL.revokeObjectURL(url));
+    };
+  }, [previewUrls]);
 
   return (
     <div className="max-w-4xl mx-auto p-6">
@@ -76,7 +91,7 @@ export default function EditImagenes({ slug, imagenes, taller }) {
       <form onSubmit={handleSubmit}  encType="multipart/form-data" className="space-y-8">
         {data.imagenes.map((img, index) => {
           const imageUrl = img.nueva_imagen
-            ? URL.createObjectURL(img.nueva_imagen)
+            ? previewUrls[index]
             : img.imagen
             ? `/storage/talleres/${img.imagen}`
             : DEFAULT_IMAGE;
@@ -95,11 +110,25 @@ export default function EditImagenes({ slug, imagenes, taller }) {
                   mb: 2,
                 }}
               >
-                <img
-                  src={imageUrl}
-                  alt={`Imagen ${index + 1}`}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
+                {img.nueva_imagen ? (
+                  <img
+                    src={URL.createObjectURL(img.nueva_imagen)}
+                    alt={`Preview Imagen ${index + 1}`}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                ) : img.imagen ? (
+                  <img
+                    src={`/storage/talleres/${img.imagen}`}
+                    alt={`Imagen ${index + 1}`}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                ) : (
+                  <img
+                    src={DEFAULT_IMAGE}
+                    alt="Imagen por defecto"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                )}
               </Box>
 
               {/* Subir imagen */}

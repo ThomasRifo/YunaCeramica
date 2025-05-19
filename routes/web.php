@@ -8,12 +8,13 @@ use App\Http\Controllers\MercadoPagoController;
 use App\Http\Controllers\PagoController;
 use App\Http\Controllers\TallerClienteController;
 use App\Http\Controllers\NewsletterController;
+use App\Http\Controllers\ImageController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-    return Inertia::render('Welcome', [
+    return Inertia::render('Index', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
         'laravelVersion' => Application::VERSION,
@@ -105,5 +106,7 @@ Route::post('/talleres/transferencia', [TallerController::class, 'procesarTransf
 Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('newsletter.subscribe');
 Route::get('/newsletter/verify/{token}', [NewsletterController::class, 'verify'])->name('newsletter.verify');
 Route::get('/newsletter/unsubscribe/{token}', [NewsletterController::class, 'unsubscribe'])->name('newsletter.unsubscribe');
+
+Route::post('/upload-image', [ImageController::class, 'store'])->name('image.store');
 
 require __DIR__.'/auth.php';

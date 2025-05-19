@@ -132,6 +132,9 @@ export default function TallerView({ taller, imagenes, pagoAprobado: pagoAprobad
         <div className="space-y-16 md:mt-24 mt-8">
           <ImageWithText
             image={`/storage/talleres/${imagenes[0]?.urlImagen}`}
+            crop={{ x: imagenes[0]?.crop_x ?? 0, y: imagenes[0]?.crop_y ?? 0 }}
+            zoom={imagenes[0]?.zoom ?? 1}
+            aspectRatio={1.4/1.5}
             title="Nuestra Experiencia"
             description={imagenes[0]?.texto}
             extraContent={extraInfo}
@@ -139,6 +142,9 @@ export default function TallerView({ taller, imagenes, pagoAprobado: pagoAprobad
 
           <ImageWithText
             image={`/storage/talleres/${imagenes[1]?.urlImagen}`}
+            crop={{ x: imagenes[1]?.crop_x ?? 0, y: imagenes[1]?.crop_y ?? 0 }}
+            zoom={imagenes[1]?.zoom ?? 1}
+            aspectRatio={1.4/1.5}
             title="¿Qué incluye?"
             description={imagenes[1]?.texto}
             reverse
@@ -146,6 +152,9 @@ export default function TallerView({ taller, imagenes, pagoAprobado: pagoAprobad
 
           <ImageWithText
             image={`/storage/talleres/${imagenes[2]?.urlImagen}`}
+            crop={{ x: imagenes[2]?.crop_x ?? 0, y: imagenes[2]?.crop_y ?? 0 }}
+            zoom={imagenes[2]?.zoom ?? 1}
+            aspectRatio={1.4/1.5}
             title=""
             description={imagenes[2]?.texto}
             extraContent={precios}
@@ -246,3 +255,4 @@ export default function TallerView({ taller, imagenes, pagoAprobado: pagoAprobad
     </>
   );
 }
+

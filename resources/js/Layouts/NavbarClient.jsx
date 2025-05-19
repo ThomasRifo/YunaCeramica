@@ -13,7 +13,7 @@ export default function NavbarClient({ children }) {
         url.startsWith("/talleres") || url.startsWith("/talleres-");
     const user = usePage().props.auth.user;
 
-    const inherit = ["/talleres"].includes(url);
+    const inherit = ["/talleres", "/productos", "/"].includes(url);
 
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 0);

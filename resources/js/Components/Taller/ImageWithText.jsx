@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
 import { AspectRatio } from "@/Components/ui/aspect-ratio";
+import CroppedImageCanvas from "@/Components/CroppedImageCanvas";
 
-export default function ImageWithText({ image, title, description, extraContent }) {
+export default function ImageWithText({ image, title, description, extraContent, crop, zoom }) {
     return (
       <div className="flex w-2xl flex-col md:flex-row md:items-start items-center mx-auto gap-8">
         <div className=" w-36 " ></div>
@@ -17,11 +18,11 @@ export default function ImageWithText({ image, title, description, extraContent 
                         className="relative rounded-xl overflow-hidden shadow-lg"
                     >
                         {image ? (
-                            <img
-                                src={image}
-                                alt={title}
-                                className="object-cover w-full h-full"
-                                loading="lazy"
+                            <CroppedImageCanvas
+                                image={image}
+                                crop={crop}
+                                zoom={zoom}
+                                aspectRatio={1.4 / 1.5}
                             />
                         ) : (
                             <div className="w-full h-full bg-gray-300" />
