@@ -5,29 +5,37 @@ import { Navigation, Autoplay } from 'swiper/modules';
 import { motion } from 'framer-motion';
 import { AspectRatio } from "@/Components/ui/aspect-ratio";
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 export default function PiecesCarousel({ images, title }) {
-  const [imagesLoaded, setImagesLoaded] = useState(false);
+  const [loadedImages, setLoadedImages] = useState({});
+  const [allImagesLoaded, setAllImagesLoaded] = useState(false);
+  const swiperRef = useRef(null);
 
   useEffect(() => {
     if (images?.length > 0) {
       const loadImages = async () => {
-        const imagePromises = images.map((src) => {
+        const imagePromises = images.map((src, index) => {
           return new Promise((resolve, reject) => {
             const img = new Image();
             img.src = src;
-            img.onload = resolve;
+            img.onload = () => {
+              setLoadedImages(prev => ({
+                ...prev,
+                [index]: true
+              }));
+              resolve();
+            };
             img.onerror = reject;
           });
         });
 
         try {
           await Promise.all(imagePromises);
-          setImagesLoaded(true);
+          setAllImagesLoaded(true);
         } catch (error) {
           console.error('Error preloading images:', error);
-          setImagesLoaded(true); // Aún así mostramos el carrusel
+          setAllImagesLoaded(true);
         }
       };
 
@@ -35,18 +43,30 @@ export default function PiecesCarousel({ images, title }) {
     }
   }, [images]);
 
+  // Controlar el autoplay basado en si todas las imágenes están cargadas
+  useEffect(() => {
+    if (swiperRef.current && swiperRef.current.swiper) {
+      if (!allImagesLoaded) {
+        swiperRef.current.swiper.autoplay.stop();
+      } else {
+        swiperRef.current.swiper.autoplay.start();
+      }
+    }
+  }, [allImagesLoaded]);
+
   return (
     <motion.div
-    initial={{ opacity: 0, scale: 0.8 }}
-    whileInView={{ opacity: 1, scale: 1 }}
-    viewport={{ once: true, amount: 0.8 }}
-    transition={{ duration: 1. }}
-    className="relative"
+      initial={{ opacity: 0, scale: 0.8 }}
+      whileInView={{ opacity: 1, scale: 1 }}
+      viewport={{ once: true, amount: 0.8 }}
+      transition={{ duration: 1. }}
+      className="relative"
     >
       <h2 className="text-2xl md:text-3xl font-bold text-center mb-6">{title}</h2>
 
       <div className="relative">
         <Swiper
+          ref={swiperRef}
           className="h-64 md:h-80"
           modules={[Navigation, Autoplay]}
           spaceBetween={8}
@@ -55,7 +75,11 @@ export default function PiecesCarousel({ images, title }) {
             prevEl: '.swiper-button-prev',
             nextEl: '.swiper-button-next',
           }}
-          autoplay={{ delay: 1000, disableOnInteraction: false }}
+          autoplay={{ 
+            delay: 3000,
+            disableOnInteraction: false,
+            pauseOnMouseEnter: true
+          }}
           speed={500}
           preloadImages={true}
           watchSlidesProgress={true}
@@ -75,9 +99,13 @@ export default function PiecesCarousel({ images, title }) {
                   <img
                     src={img}
                     alt={`Pieza ${idx + 1}`}
-                    className="object-cover w-full h-full"
+                    className="object-cover w-full h-full transition-all duration-300"
                     loading="eager"
-                    style={{ opacity: imagesLoaded ? 1 : 0 }}
+                    style={{ 
+                      opacity: loadedImages[idx] ? 1 : 0,
+                      filter: loadedImages[idx] ? 'none' : 'blur(10px)',
+                      transform: loadedImages[idx] ? 'scale(1)' : 'scale(1.1)'
+                    }}
                   />
                 ) : (
                   <div className="w-full h-full bg-gray-400" />
@@ -94,10 +122,16 @@ export default function PiecesCarousel({ images, title }) {
           )}
         </Swiper>
 
-        <button className="swiper-button-prev !text-gray-400/70 hover:!text-gray-600 transition absolute -left-1 top-1/2 transform -translate-y-1/2 z-10 !w-[50px] !h-[50px]">
+        <button 
+          className="swiper-button-prev !text-gray-400/70 hover:!text-gray-600 transition absolute -left-1 top-1/2 transform -translate-y-1/2 z-10 !w-[50px] !h-[50px]"
+          aria-label="Imagen anterior"
+        >
           <ChevronLeft className="!w-[50px] !h-[50px]" />
         </button>
-        <button className="swiper-button-next !text-gray-400/70 hover:!text-gray-600 transition absolute -right-1 top-1/2 transform -translate-y-1/2 z-10 !w-[50px] !h-[50px]">
+        <button 
+          className="swiper-button-next !text-gray-400/70 hover:!text-gray-600 transition absolute -right-1 top-1/2 transform -translate-y-1/2 z-10 !w-[50px] !h-[50px]"
+          aria-label="Imagen siguiente"
+        >
           <ChevronRight className="!w-[50px] !h-[50px]" />
         </button>
       </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, memo } from "react";
 import { Head, router } from "@inertiajs/react";
 import {
     Banknote,
@@ -31,7 +31,7 @@ dayjs.extend(customParseFormat);
 const recaptchaV3Key = "6LeWbjorAAAAAN1iTNC1iDlAzdGhuqJ9RKKVW0lN";
 const recaptchaV2Key = "6LfRcDorAAAAADXRjzq75JFZVZk_hS_coEOQ2CNV";
 
-export default function FormInscripcion({ taller }) {
+const FormInscripcion = memo(function FormInscripcion({ taller }) {
     const { toast } = useToast();
     const [cantidadPersonas, setCantidadPersonas] = useState(1);
     const [metodoPago, setMetodoPago] = useState("reserva");
@@ -49,7 +49,6 @@ export default function FormInscripcion({ taller }) {
     const [acompanantes, setAcompanantes] = useState([]);
     const [showFailure, setShowFailure] = useState(false);
     const [showPending, setShowPending] = useState(false);
-
     const [showV2, setShowV2] = useState(false);
     const [v2Token, setV2Token] = useState("");
     const [accionPendiente, setAccionPendiente] = useState(null);
@@ -63,45 +62,52 @@ export default function FormInscripcion({ taller }) {
         }
     }, []);
 
-    const handleCantidadChange = (e) => {
+    const handleCantidadChange = useCallback((e) => {
         const nuevaCantidad = parseInt(e.target.value);
         setCantidadPersonas(nuevaCantidad);
 
-        const nuevos = [...acompanantes];
-        while (nuevos.length < nuevaCantidad - 1) {
-            nuevos.push({
-                nombre: "",
-                apellido: "",
-                email: "",
-                telefono: "",
-                menu: "",
-            });
-        }
-        while (nuevos.length > nuevaCantidad - 1) {
-            nuevos.pop();
-        }
-        setAcompanantes(nuevos);
-    };
+        setAcompanantes(prev => {
+            const nuevos = [...prev];
+            while (nuevos.length < nuevaCantidad - 1) {
+                nuevos.push({
+                    nombre: "",
+                    apellido: "",
+                    email: "",
+                    telefono: "",
+                    menu: "",
+                });
+            }
+            while (nuevos.length > nuevaCantidad - 1) {
+                nuevos.pop();
+            }
+            return nuevos;
+        });
+    }, []);
 
     const precioBase = taller.precio;
-    const precioReserva = taller.precio /2;
+    const precioReserva = taller.precio / 2;
     const precioTarjeta = Math.round(precioBase * 1.1);
-    const total =
-        metodoPago === "tarjeta"
-            ? precioTarjeta * cantidadPersonas
-            : metodoPago === "total"
-              ? precioBase * cantidadPersonas
-              : Math.round((precioBase / 2) * cantidadPersonas);
+    const total = useMemo(() => {
+        switch (metodoPago) {
+            case "tarjeta":
+                return precioTarjeta * cantidadPersonas;
+            case "total":
+                return precioBase * cantidadPersonas;
+            default:
+                return Math.round((precioBase / 2) * cantidadPersonas);
+        }
+    }, [metodoPago, precioTarjeta, precioBase, cantidadPersonas]);
 
-    const handlePagoMercadoPago = async () => {
+    const validarDatos = useCallback(() => {
         if (!datosCliente.nombre || !datosCliente.apellido || !datosCliente.email || !datosCliente.menu) {
             toast({
                 title: "Datos incompletos",
                 description: "Por favor, completa tus datos (nombre, apellido, email) y selecciona un menú antes de continuar.",
                 variant: "destructive",
             });
-            return;
+            return false;
         }
+
         for (const acompanante of acompanantes) {
             if (!acompanante.nombre || !acompanante.apellido || !acompanante.menu) {
                 toast({
@@ -109,9 +115,14 @@ export default function FormInscripcion({ taller }) {
                     description: "Por favor, completa los datos de todos los acompañantes (nombre, apellido y menú).",
                     variant: "destructive",
                 });
-                return;
+                return false;
             }
         }
+        return true;
+    }, [datosCliente, acompanantes, toast]);
+
+    const handlePagoMercadoPago = useCallback(async () => {
+        if (!validarDatos()) return;
 
         setIsLoadingMercadoPago(true);
 
@@ -179,27 +190,10 @@ export default function FormInscripcion({ taller }) {
         } finally {
             setIsLoadingMercadoPago(false);
         }
-    };
+    }, [taller, cantidadPersonas, precioTarjeta, metodoPago, datosCliente, acompanantes, toast, validarDatos]);
 
-    const handleTransferencia = () => {
-        if (!datosCliente.nombre || !datosCliente.apellido || !datosCliente.email || !datosCliente.menu) {
-            toast({
-                title: "Datos incompletos",
-                description: "Por favor, completa tus datos (nombre, apellido, email) y selecciona un menú antes de continuar.",
-                variant: "destructive",
-            });
-            return;
-        }
-        for (const acompanante of acompanantes) {
-            if (!acompanante.nombre || !acompanante.apellido || !acompanante.menu) {
-                toast({
-                    title: "Datos incompletos",
-                    description: "Por favor, completa los datos de todos los acompañantes (nombre, apellido y menú).",
-                    variant: "destructive",
-                });
-                return;
-            }
-        }
+    const handleTransferencia = useCallback(() => {
+        if (!validarDatos()) return;
     
         setIsLoadingTransferencia(true);
         router.post('/talleres/transferencia', {
@@ -227,50 +221,84 @@ export default function FormInscripcion({ taller }) {
                 setIsLoadingTransferencia(false);
             }
         });
-    };
+    }, [taller, datosCliente, cantidadPersonas, metodoPago, toast, validarDatos]);
 
-    const handleInscripcionConCaptcha = async (accion) => {
-        // Ejecutar reCAPTCHA v3
-        const v3Token = await window.grecaptcha.execute(recaptchaV3Key, { action: "submit" });
-        console.log("reCAPTCHA v3 token generado:", v3Token);
-
-        // Validar en backend
-        const response = await fetch("/api/validar-captcha", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ v3Token }),
-        });
-        const data = await response.json();
-        console.log("Respuesta backend reCAPTCHA v3:", data);
-
-        if (data.score < 0.5) {
-            setShowV2(true);
-            setAccionPendiente(() => accion);
-        } else {
-            accion();
+    const handleInscripcionConCaptcha = useCallback(async (accion) => {
+        try {
+            const v3Token = await window.grecaptcha.execute(recaptchaV3Key, { action: "submit" });
+            
+            const response = await fetch("/api/validar-captcha", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ v3Token }),
+            });
+            const data = await response.json();
+            
+            if (data.score < 0.5) {
+                setShowV2(true);
+                setAccionPendiente(() => accion);
+            } else {
+                accion();
+            }
+        } catch (error) {
+            console.error("Error en la validación del captcha:", error);
+            toast({
+                title: "Error",
+                description: "Hubo un error al validar el captcha. Por favor, intenta nuevamente.",
+                variant: "destructive",
+            });
         }
-    };
+    }, [toast]);
 
-    const handleV2Change = async (token) => {
+    const handleV2Change = useCallback(async (token) => {
         setV2Token(token);
-        console.log("reCAPTCHA v2 token generado:", token);
-
-        const response = await fetch("/api/validar-captcha", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ v2Token: token }),
-        });
-        const data = await response.json();
-        console.log("Respuesta backend reCAPTCHA v2:", data);
-
-        if (data.success && accionPendiente) {
-            accionPendiente();
-            setShowV2(false);
-            setAccionPendiente(null);
-        } else {
-            // Mostrar error si el captcha falla
+        
+        try {
+            const response = await fetch("/api/validar-captcha", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ v2Token: token }),
+            });
+            const data = await response.json();
+            
+            if (data.success && accionPendiente) {
+                accionPendiente();
+                setShowV2(false);
+                setAccionPendiente(null);
+            } else {
+                toast({
+                    title: "Error",
+                    description: "La validación del captcha falló. Por favor, intenta nuevamente.",
+                    variant: "destructive",
+                });
+            }
+        } catch (error) {
+            console.error("Error en la validación del captcha v2:", error);
+            toast({
+                title: "Error",
+                description: "Hubo un error al validar el captcha. Por favor, intenta nuevamente.",
+                variant: "destructive",
+            });
         }
-    };
+    }, [accionPendiente, toast]);
+
+    const handleDatosClienteChange = useCallback((field, value) => {
+        setDatosCliente(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    }, []);
+
+    const handleAcompananteChange = useCallback((index, field, value) => {
+        setAcompanantes(prev => {
+            const nuevos = [...prev];
+            nuevos[index] = {
+                ...nuevos[index],
+                [field]: value
+            };
+            return nuevos;
+        });
+    }, []);
 
     return (
         <div className="max-w-5xl mx-auto px-4 py-36">
@@ -279,7 +307,7 @@ export default function FormInscripcion({ taller }) {
                 {taller?.nombre?.toUpperCase?.() || "TALLER"} - Inscripción
             </h1>
 
-            <p className="text-gray-600 text-center text-base ">
+            <p className="text-gray-600 text-center text-base">
                 <Calendar className="w-5 h-5 text-black inline" />{" "}
                 <strong>{taller.fecha}</strong> |{" "}
                 <Clock className="w-5 h-5 text-black inline" />{" "}
@@ -357,52 +385,32 @@ export default function FormInscripcion({ taller }) {
                             placeholder="Nombre"
                             className="h-12"
                             value={datosCliente.nombre}
-                            onChange={(e) =>
-                                setDatosCliente({
-                                    ...datosCliente,
-                                    nombre: e.target.value,
-                                })
-                            }
+                            onChange={(e) => handleDatosClienteChange('nombre', e.target.value)}
                         />
                         <Input
                             className="h-12"
                             placeholder="Apellido"
                             value={datosCliente.apellido}
-                            onChange={(e) =>
-                                setDatosCliente({
-                                    ...datosCliente,
-                                    apellido: e.target.value,
-                                })
-                            }
+                            onChange={(e) => handleDatosClienteChange('apellido', e.target.value)}
                         />
                         <Input
                             className="h-12"
                             placeholder="Email"
                             type="email"
                             value={datosCliente.email}
-                            onChange={(e) =>
-                                setDatosCliente({
-                                    ...datosCliente,
-                                    email: e.target.value,
-                                })
-                            }
+                            onChange={(e) => handleDatosClienteChange('email', e.target.value)}
                         />
                         <Input
                             className="h-12"
                             placeholder="Teléfono"
                             type="tel"
                             value={datosCliente.telefono}
-                            onChange={(e) =>
-                                setDatosCliente({
-                                    ...datosCliente,
-                                    telefono: e.target.value,
-                                })
-                            }
+                            onChange={(e) => handleDatosClienteChange('telefono', e.target.value)}
                         />
 
                         <div className="space-y-4 mt-4 mx-auto w-full">
                             <Label className="text-lg">Elegí tu menú:</Label>
-                            <div className="grid sm:grid-cols-2 md:grid-cols-3  gap-4 mt-2 ">
+                            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 mt-2">
                                 {taller.menus.map((menu) => (
                                     <div
                                         key={menu.id}
@@ -411,12 +419,7 @@ export default function FormInscripcion({ taller }) {
                                         <CardMenu
                                             menu={menu}
                                             seleccionado={datosCliente.menu === String(menu.id)}
-                                            onSelect={(id) => {
-                                                setDatosCliente({
-                                                    ...datosCliente,
-                                                    menu: String(id),
-                                                });
-                                            }}
+                                            onSelect={(id) => handleDatosClienteChange('menu', String(id))}
                                         />
                                     </div>
                                 ))}
@@ -435,43 +438,27 @@ export default function FormInscripcion({ taller }) {
                                 className="h-12"
                                 placeholder="Nombre"
                                 value={a.nombre}
-                                onChange={(e) => {
-                                    const nuevos = [...acompanantes];
-                                    nuevos[i].nombre = e.target.value;
-                                    setAcompanantes(nuevos);
-                                }}
+                                onChange={(e) => handleAcompananteChange(i, 'nombre', e.target.value)}
                             />
                             <Input
                                 className="h-12"
                                 placeholder="Apellido"
                                 value={a.apellido}
-                                onChange={(e) => {
-                                    const nuevos = [...acompanantes];
-                                    nuevos[i].apellido = e.target.value;
-                                    setAcompanantes(nuevos);
-                                }}
+                                onChange={(e) => handleAcompananteChange(i, 'apellido', e.target.value)}
                             />
                             <Input
                                 className="h-12"
                                 placeholder="Email"
                                 type="email"
                                 value={a.email}
-                                onChange={(e) => {
-                                    const nuevos = [...acompanantes];
-                                    nuevos[i].email = e.target.value;
-                                    setAcompanantes(nuevos);
-                                }}
+                                onChange={(e) => handleAcompananteChange(i, 'email', e.target.value)}
                             />
                             <Input
                                 className="h-12"
                                 placeholder="Teléfono"
                                 type="tel"
                                 value={a.telefono}
-                                onChange={(e) => {
-                                    const nuevos = [...acompanantes];
-                                    nuevos[i].telefono = e.target.value;
-                                    setAcompanantes(nuevos);
-                                }}
+                                onChange={(e) => handleAcompananteChange(i, 'telefono', e.target.value)}
                             />
                             <div className="space-y-4 mt-4">
                                 <Label className="text-lg">Elegí un menú para el acompañante {i+1}:</Label>
@@ -481,11 +468,7 @@ export default function FormInscripcion({ taller }) {
                                             key={menu.id}
                                             menu={menu}
                                             seleccionado={a.menu === String(menu.id)}
-                                            onSelect={(id) => {
-                                                const nuevosAcompanantes = [...acompanantes];
-                                                nuevosAcompanantes[i].menu = String(id);
-                                                setAcompanantes(nuevosAcompanantes);
-                                            }}
+                                            onSelect={(id) => handleAcompananteChange(i, 'menu', String(id))}
                                         />
                                     ))}
                                 </div>
@@ -499,32 +482,24 @@ export default function FormInscripcion({ taller }) {
                     <div className="grid gap-2">
                         <Button
                             className="h-12"
-                            variant={
-                                metodoPago === "reserva" ? "default" : "outline"
-                            }
+                            variant={metodoPago === "reserva" ? "default" : "outline"}
                             onClick={() => setMetodoPago("reserva")}
                         >
                             Reserva con transferencia (${((precioBase / 2) * cantidadPersonas).toLocaleString("es-AR")})
                         </Button>
                         <Button
                             className="h-12"
-                            variant={
-                                metodoPago === "total" ? "default" : "outline"
-                            }
+                            variant={metodoPago === "total" ? "default" : "outline"}
                             onClick={() => setMetodoPago("total")}
                         >
-                            Total con transferencia ($
-                            {(precioBase * cantidadPersonas).toLocaleString("es-AR")})
+                            Total con transferencia (${(precioBase * cantidadPersonas).toLocaleString("es-AR")})
                         </Button>
                         <Button
                             className="h-12"
-                            variant={
-                                metodoPago === "tarjeta" ? "default" : "outline"
-                            }
+                            variant={metodoPago === "tarjeta" ? "default" : "outline"}
                             onClick={() => setMetodoPago("tarjeta")}
                         >
-                            Total con Tarjeta / MercadoPago ($
-                            {(precioTarjeta * cantidadPersonas).toLocaleString("es-AR")})
+                            Total con Tarjeta / MercadoPago (${(precioTarjeta * cantidadPersonas).toLocaleString("es-AR")})
                         </Button>
                     </div>
                 </div>
@@ -537,7 +512,7 @@ export default function FormInscripcion({ taller }) {
                     {metodoPago === 'tarjeta' && (
                         <Button
                             className="h-12 w-full"
-                            onClick={handleInscripcionConCaptcha(handlePagoMercadoPago)}
+                            onClick={() => handleInscripcionConCaptcha(handlePagoMercadoPago)}
                             disabled={isLoadingMercadoPago || !datosCliente.nombre || !datosCliente.apellido || !datosCliente.email || !datosCliente.menu}
                         >
                             {isLoadingMercadoPago ? "Procesando..." : "Pagar con MercadoPago"}
@@ -638,4 +613,6 @@ export default function FormInscripcion({ taller }) {
             )}
         </div>
     );
-}
+});
+
+export default FormInscripcion;
