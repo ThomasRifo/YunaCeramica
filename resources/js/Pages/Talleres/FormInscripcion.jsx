@@ -250,7 +250,7 @@ export default function FormInscripcion({ taller }) {
             }
 
             const data = await response.json();
-            console.log('Respuesta del captcha:', data);
+            
             
             if (data.score < 0.5) {
                 setShowV2(true);

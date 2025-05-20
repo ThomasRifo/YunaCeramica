@@ -418,6 +418,19 @@ public function updateMenusHtml(Request $request, $id)
                     ];
                 }
             }
+
+            // Obtener el idTaller (asumiendo que todos los cambios son del mismo taller)
+            if (!empty($data['cambios'])) {
+                $primerTC = \App\Models\TallerCliente::find($data['cambios'][0]['id']);
+                if ($primerTC) {
+                    $taller = $primerTC->taller;
+                    $taller->cantInscriptos = \App\Models\TallerCliente::where('idTaller', $taller->id)
+                        ->whereIn('idEstadoPago', [2, 3]) // 2 = parcial, 3 = pagado total (ajusta según tu lógica)
+                        ->count();
+                    $taller->save();
+                }
+            }
+
             DB::commit();
             return response()->json(['success' => true, 'resultados' => $resultados]);
         } catch (\Exception $e) {
