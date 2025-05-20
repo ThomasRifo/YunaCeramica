@@ -94,10 +94,10 @@
         }
         </script>
 
-        
+        <!-- reCAPTCHA -->
+        <script src="https://www.google.com/recaptcha/api.js?render=6LeWbjorAAAAAN1iTNC1iDlAzdGhuqJ9RKKVW0lN"></script>
     </head>
     <body class="font-sans antialiased">
         @inertia
-        <script src="https://www.google.com/recaptcha/api.js?render=6LeWbjorAAAAAN1iTNC1iDlAzdGhuqJ9RKKVW0lN"></script>
     </body>
 </html>

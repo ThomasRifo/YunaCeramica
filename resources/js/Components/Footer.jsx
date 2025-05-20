@@ -14,6 +14,23 @@ export default function Footer() {
         setLoading(true);
 
         try {
+            // Ejecutar reCAPTCHA v3
+            const v3Token = await window.grecaptcha.execute('6LeWbjorAAAAAN1iTNC1iDlAzdGhuqJ9RKKVW0lN', { action: "newsletter_subscribe" });
+            
+            // Validar el token con el backend
+            const captchaResponse = await axios.post('/api/validar-captcha', { v3Token });
+            
+            if (captchaResponse.data.score < 0.5) {
+                toast({
+                    title: "Error de validación",
+                    description: "Por favor, intenta nuevamente.",
+                    variant: "destructive",
+                });
+                setLoading(false);
+                return;
+            }
+
+            // Si el captcha es válido, proceder con la suscripción
             const response = await axios.post('/newsletter/subscribe', { email });
             toast({
                 title: "¡Suscripción exitosa!",

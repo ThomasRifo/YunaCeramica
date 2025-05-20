@@ -230,24 +230,41 @@ export default function FormInscripcion({ taller }) {
     };
 
     const handleInscripcionConCaptcha = async (accion) => {
-        // Ejecutar reCAPTCHA v3
-        const v3Token = await window.grecaptcha.execute(recaptchaV3Key, { action: "submit" });
-        
+        try {
+            // Ejecutar reCAPTCHA v3
+            const v3Token = await window.grecaptcha.execute(recaptchaV3Key, { action: "submit" });
+            
+            // Validar en backend
+            const response = await fetch("/api/validar-captcha", {
+                method: "POST",
+                headers: { 
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({ v3Token }),
+            });
 
-        // Validar en backend
-        const response = await fetch("/api/validar-captcha", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ v3Token }),
-        });
-        const data = await response.json();
-        
+            if (!response.ok) {
+                console.error('Error en la respuesta:', response.status, response.statusText);
+                throw new Error('Error en la validación del captcha');
+            }
 
-        if (data.score < 0.5) {
-            setShowV2(true);
-            setAccionPendiente(() => accion);
-        } else {
-            accion();
+            const data = await response.json();
+            console.log('Respuesta del captcha:', data);
+            
+            if (data.score < 0.5) {
+                setShowV2(true);
+                setAccionPendiente(() => accion);
+            } else {
+                accion();
+            }
+        } catch (error) {
+            console.error('Error en la validación del captcha:', error);
+            toast({
+                title: "Error de validación",
+                description: "Hubo un problema al validar el captcha. Por favor, intenta nuevamente.",
+                variant: "destructive",
+            });
         }
     };
 
