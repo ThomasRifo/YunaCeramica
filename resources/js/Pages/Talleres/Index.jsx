@@ -52,7 +52,7 @@ export default function TalleresIndex({ reviews, talleres, imagenesPiezas }) {
 
       <main className="min-h-screen">
         {/* Hero Section */}
-        <section className="relative h-[51.5vh] w-full" aria-label="Portada de talleres">
+        <section className="relative h-[65.5vh] w-full" aria-label="Portada de talleres">
           <video 
             autoPlay="autoplay" 
             loop 
@@ -68,7 +68,7 @@ export default function TalleresIndex({ reviews, talleres, imagenesPiezas }) {
           <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center text-white text-center px-4">
             <h1 className="text-5xl pt-16 md:text-6xl font-bold">Workshop de Cerámica</h1>
             <p className="mt-5 text-lg md:text-3xl max-w">
-              Una experiencia única para llevarte un recuerdo para toda la vida.
+              Una experiencia creativa, una pieza única, un recuerdo para toda la vida.
             </p>
           </div>
         </section>

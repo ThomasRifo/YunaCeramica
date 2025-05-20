@@ -35,7 +35,7 @@ export default function ReviewCard({ review }) {
 
   return (
     <>
-      <div className="rounded-2xl bg-white border border-gray-300 shadow-lg p-6 flex flex-col justify-start overflow-hidden min-h-52 md:min-h-60 max-h-96">
+      <div className="rounded-2xl bg-white border border-gray-300 shadow-lg p-6 flex flex-col justify-start overflow-hidden min-h-60 md:min-h-72 md:max-h-72 max-h-60">
         <h3 className="font-bold text-lg">{review.nombre} {review.apellido}</h3>
         <p className="text-sm text-gray-500 mb-2 h-10 md:h-4">{review.taller} - {fecha}</p>
         {/* <div className="flex mb-2">{stars}</div> */}
