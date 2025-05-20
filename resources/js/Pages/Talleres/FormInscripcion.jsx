@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo, memo } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Head, router } from "@inertiajs/react";
 import {
     Banknote,
@@ -31,7 +31,7 @@ dayjs.extend(customParseFormat);
 const recaptchaV3Key = "6LeWbjorAAAAAN1iTNC1iDlAzdGhuqJ9RKKVW0lN";
 const recaptchaV2Key = "6LfRcDorAAAAADXRjzq75JFZVZk_hS_coEOQ2CNV";
 
-const FormInscripcion = memo(function FormInscripcion({ taller }) {
+export default function FormInscripcion({ taller }) {
     const { toast } = useToast();
     const [cantidadPersonas, setCantidadPersonas] = useState(1);
     const [metodoPago, setMetodoPago] = useState("reserva");
@@ -49,6 +49,7 @@ const FormInscripcion = memo(function FormInscripcion({ taller }) {
     const [acompanantes, setAcompanantes] = useState([]);
     const [showFailure, setShowFailure] = useState(false);
     const [showPending, setShowPending] = useState(false);
+
     const [showV2, setShowV2] = useState(false);
     const [v2Token, setV2Token] = useState("");
     const [accionPendiente, setAccionPendiente] = useState(null);
@@ -62,52 +63,45 @@ const FormInscripcion = memo(function FormInscripcion({ taller }) {
         }
     }, []);
 
-    const handleCantidadChange = useCallback((e) => {
+    const handleCantidadChange = (e) => {
         const nuevaCantidad = parseInt(e.target.value);
         setCantidadPersonas(nuevaCantidad);
 
-        setAcompanantes(prev => {
-            const nuevos = [...prev];
-            while (nuevos.length < nuevaCantidad - 1) {
-                nuevos.push({
-                    nombre: "",
-                    apellido: "",
-                    email: "",
-                    telefono: "",
-                    menu: "",
-                });
-            }
-            while (nuevos.length > nuevaCantidad - 1) {
-                nuevos.pop();
-            }
-            return nuevos;
-        });
-    }, []);
+        const nuevos = [...acompanantes];
+        while (nuevos.length < nuevaCantidad - 1) {
+            nuevos.push({
+                nombre: "",
+                apellido: "",
+                email: "",
+                telefono: "",
+                menu: "",
+            });
+        }
+        while (nuevos.length > nuevaCantidad - 1) {
+            nuevos.pop();
+        }
+        setAcompanantes(nuevos);
+    };
 
     const precioBase = taller.precio;
-    const precioReserva = taller.precio / 2;
+    const precioReserva = taller.precio /2;
     const precioTarjeta = Math.round(precioBase * 1.1);
-    const total = useMemo(() => {
-        switch (metodoPago) {
-            case "tarjeta":
-                return precioTarjeta * cantidadPersonas;
-            case "total":
-                return precioBase * cantidadPersonas;
-            default:
-                return Math.round((precioBase / 2) * cantidadPersonas);
-        }
-    }, [metodoPago, precioTarjeta, precioBase, cantidadPersonas]);
+    const total =
+        metodoPago === "tarjeta"
+            ? precioTarjeta * cantidadPersonas
+            : metodoPago === "total"
+              ? precioBase * cantidadPersonas
+              : Math.round((precioBase / 2) * cantidadPersonas);
 
-    const validarDatos = useCallback(() => {
+    const handlePagoMercadoPago = async () => {
         if (!datosCliente.nombre || !datosCliente.apellido || !datosCliente.email || !datosCliente.menu) {
             toast({
                 title: "Datos incompletos",
                 description: "Por favor, completa tus datos (nombre, apellido, email) y selecciona un menú antes de continuar.",
                 variant: "destructive",
             });
-            return false;
+            return;
         }
-
         for (const acompanante of acompanantes) {
             if (!acompanante.nombre || !acompanante.apellido || !acompanante.menu) {
                 toast({
@@ -115,14 +109,9 @@ const FormInscripcion = memo(function FormInscripcion({ taller }) {
                     description: "Por favor, completa los datos de todos los acompañantes (nombre, apellido y menú).",
                     variant: "destructive",
                 });
-                return false;
+                return;
             }
         }
-        return true;
-    }, [datosCliente, acompanantes, toast]);
-
-    const handlePagoMercadoPago = useCallback(async () => {
-        if (!validarDatos()) return;
 
         setIsLoadingMercadoPago(true);
 
@@ -190,10 +179,27 @@ const FormInscripcion = memo(function FormInscripcion({ taller }) {
         } finally {
             setIsLoadingMercadoPago(false);
         }
-    }, [taller, cantidadPersonas, precioTarjeta, metodoPago, datosCliente, acompanantes, toast, validarDatos]);
+    };
 
-    const handleTransferencia = useCallback(() => {
-        if (!validarDatos()) return;
+    const handleTransferencia = () => {
+        if (!datosCliente.nombre || !datosCliente.apellido || !datosCliente.email || !datosCliente.menu) {
+            toast({
+                title: "Datos incompletos",
+                description: "Por favor, completa tus datos (nombre, apellido, email) y selecciona un menú antes de continuar.",
+                variant: "destructive",
+            });
+            return;
+        }
+        for (const acompanante of acompanantes) {
+            if (!acompanante.nombre || !acompanante.apellido || !acompanante.menu) {
+                toast({
+                    title: "Datos incompletos",
+                    description: "Por favor, completa los datos de todos los acompañantes (nombre, apellido y menú).",
+                    variant: "destructive",
+                });
+                return;
+            }
+        }
     
         setIsLoadingTransferencia(true);
         router.post('/talleres/transferencia', {
@@ -221,11 +227,14 @@ const FormInscripcion = memo(function FormInscripcion({ taller }) {
                 setIsLoadingTransferencia(false);
             }
         });
-    }, [taller, datosCliente, cantidadPersonas, metodoPago, toast, validarDatos]);
+    };
 
-    const handleInscripcionConCaptcha = useCallback(async (accion) => {
+    const handleInscripcionConCaptcha = async (accion) => {
+        // Ejecutar reCAPTCHA v3
         const v3Token = await window.grecaptcha.execute(recaptchaV3Key, { action: "submit" });
         
+
+        // Validar en backend
         const response = await fetch("/api/validar-captcha", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -233,63 +242,35 @@ const FormInscripcion = memo(function FormInscripcion({ taller }) {
         });
         const data = await response.json();
         
+
         if (data.score < 0.5) {
             setShowV2(true);
             setAccionPendiente(() => accion);
         } else {
             accion();
         }
-    }, [toast]);
+    };
 
-    const handleV2Change = useCallback(async (token) => {
+    const handleV2Change = async (token) => {
         setV2Token(token);
-        
-        try {
-            const response = await fetch("/api/validar-captcha", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ v2Token: token }),
-            });
-            const data = await response.json();
-            
-            if (data.success && accionPendiente) {
-                accionPendiente();
-                setShowV2(false);
-                setAccionPendiente(null);
-            } else {
-                toast({
-                    title: "Error",
-                    description: "La validación del captcha falló. Por favor, intenta nuevamente.",
-                    variant: "destructive",
-                });
-            }
-        } catch (error) {
-            console.error("Error en la validación del captcha v2:", error);
-            toast({
-                title: "Error",
-                description: "Hubo un error al validar el captcha. Por favor, intenta nuevamente.",
-                variant: "destructive",
-            });
-        }
-    }, [accionPendiente, toast]);
+       
 
-    const handleDatosClienteChange = useCallback((field, value) => {
-        setDatosCliente(prev => ({
-            ...prev,
-            [field]: value
-        }));
-    }, []);
-
-    const handleAcompananteChange = useCallback((index, field, value) => {
-        setAcompanantes(prev => {
-            const nuevos = [...prev];
-            nuevos[index] = {
-                ...nuevos[index],
-                [field]: value
-            };
-            return nuevos;
+        const response = await fetch("/api/validar-captcha", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ v2Token: token }),
         });
-    }, []);
+        const data = await response.json();
+        
+
+        if (data.success && accionPendiente) {
+            accionPendiente();
+            setShowV2(false);
+            setAccionPendiente(null);
+        } else {
+            // Mostrar error si el captcha falla
+        }
+    };
 
     return (
         <div className="max-w-5xl mx-auto px-4 py-36">
@@ -298,7 +279,7 @@ const FormInscripcion = memo(function FormInscripcion({ taller }) {
                 {taller?.nombre?.toUpperCase?.() || "TALLER"} - Inscripción
             </h1>
 
-            <p className="text-gray-600 text-center text-base">
+            <p className="text-gray-600 text-center text-base ">
                 <Calendar className="w-5 h-5 text-black inline" />{" "}
                 <strong>{taller.fecha}</strong> |{" "}
                 <Clock className="w-5 h-5 text-black inline" />{" "}
@@ -376,32 +357,52 @@ const FormInscripcion = memo(function FormInscripcion({ taller }) {
                             placeholder="Nombre"
                             className="h-12"
                             value={datosCliente.nombre}
-                            onChange={(e) => handleDatosClienteChange('nombre', e.target.value)}
+                            onChange={(e) =>
+                                setDatosCliente({
+                                    ...datosCliente,
+                                    nombre: e.target.value,
+                                })
+                            }
                         />
                         <Input
                             className="h-12"
                             placeholder="Apellido"
                             value={datosCliente.apellido}
-                            onChange={(e) => handleDatosClienteChange('apellido', e.target.value)}
+                            onChange={(e) =>
+                                setDatosCliente({
+                                    ...datosCliente,
+                                    apellido: e.target.value,
+                                })
+                            }
                         />
                         <Input
                             className="h-12"
                             placeholder="Email"
                             type="email"
                             value={datosCliente.email}
-                            onChange={(e) => handleDatosClienteChange('email', e.target.value)}
+                            onChange={(e) =>
+                                setDatosCliente({
+                                    ...datosCliente,
+                                    email: e.target.value,
+                                })
+                            }
                         />
                         <Input
                             className="h-12"
                             placeholder="Teléfono"
                             type="tel"
                             value={datosCliente.telefono}
-                            onChange={(e) => handleDatosClienteChange('telefono', e.target.value)}
+                            onChange={(e) =>
+                                setDatosCliente({
+                                    ...datosCliente,
+                                    telefono: e.target.value,
+                                })
+                            }
                         />
 
                         <div className="space-y-4 mt-4 mx-auto w-full">
                             <Label className="text-lg">Elegí tu menú:</Label>
-                            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 mt-2">
+                            <div className="grid sm:grid-cols-2 md:grid-cols-3  gap-4 mt-2 ">
                                 {taller.menus.map((menu) => (
                                     <div
                                         key={menu.id}
@@ -410,7 +411,12 @@ const FormInscripcion = memo(function FormInscripcion({ taller }) {
                                         <CardMenu
                                             menu={menu}
                                             seleccionado={datosCliente.menu === String(menu.id)}
-                                            onSelect={(id) => handleDatosClienteChange('menu', String(id))}
+                                            onSelect={(id) => {
+                                                setDatosCliente({
+                                                    ...datosCliente,
+                                                    menu: String(id),
+                                                });
+                                            }}
                                         />
                                     </div>
                                 ))}
@@ -429,27 +435,43 @@ const FormInscripcion = memo(function FormInscripcion({ taller }) {
                                 className="h-12"
                                 placeholder="Nombre"
                                 value={a.nombre}
-                                onChange={(e) => handleAcompananteChange(i, 'nombre', e.target.value)}
+                                onChange={(e) => {
+                                    const nuevos = [...acompanantes];
+                                    nuevos[i].nombre = e.target.value;
+                                    setAcompanantes(nuevos);
+                                }}
                             />
                             <Input
                                 className="h-12"
                                 placeholder="Apellido"
                                 value={a.apellido}
-                                onChange={(e) => handleAcompananteChange(i, 'apellido', e.target.value)}
+                                onChange={(e) => {
+                                    const nuevos = [...acompanantes];
+                                    nuevos[i].apellido = e.target.value;
+                                    setAcompanantes(nuevos);
+                                }}
                             />
                             <Input
                                 className="h-12"
                                 placeholder="Email"
                                 type="email"
                                 value={a.email}
-                                onChange={(e) => handleAcompananteChange(i, 'email', e.target.value)}
+                                onChange={(e) => {
+                                    const nuevos = [...acompanantes];
+                                    nuevos[i].email = e.target.value;
+                                    setAcompanantes(nuevos);
+                                }}
                             />
                             <Input
                                 className="h-12"
                                 placeholder="Teléfono"
                                 type="tel"
                                 value={a.telefono}
-                                onChange={(e) => handleAcompananteChange(i, 'telefono', e.target.value)}
+                                onChange={(e) => {
+                                    const nuevos = [...acompanantes];
+                                    nuevos[i].telefono = e.target.value;
+                                    setAcompanantes(nuevos);
+                                }}
                             />
                             <div className="space-y-4 mt-4">
                                 <Label className="text-lg">Elegí un menú para el acompañante {i+1}:</Label>
@@ -459,7 +481,11 @@ const FormInscripcion = memo(function FormInscripcion({ taller }) {
                                             key={menu.id}
                                             menu={menu}
                                             seleccionado={a.menu === String(menu.id)}
-                                            onSelect={(id) => handleAcompananteChange(i, 'menu', String(id))}
+                                            onSelect={(id) => {
+                                                const nuevosAcompanantes = [...acompanantes];
+                                                nuevosAcompanantes[i].menu = String(id);
+                                                setAcompanantes(nuevosAcompanantes);
+                                            }}
                                         />
                                     ))}
                                 </div>
@@ -473,24 +499,32 @@ const FormInscripcion = memo(function FormInscripcion({ taller }) {
                     <div className="grid gap-2">
                         <Button
                             className="h-12"
-                            variant={metodoPago === "reserva" ? "default" : "outline"}
+                            variant={
+                                metodoPago === "reserva" ? "default" : "outline"
+                            }
                             onClick={() => setMetodoPago("reserva")}
                         >
                             Reserva con transferencia (${((precioBase / 2) * cantidadPersonas).toLocaleString("es-AR")})
                         </Button>
                         <Button
                             className="h-12"
-                            variant={metodoPago === "total" ? "default" : "outline"}
+                            variant={
+                                metodoPago === "total" ? "default" : "outline"
+                            }
                             onClick={() => setMetodoPago("total")}
                         >
-                            Total con transferencia (${(precioBase * cantidadPersonas).toLocaleString("es-AR")})
+                            Total con transferencia ($
+                            {(precioBase * cantidadPersonas).toLocaleString("es-AR")})
                         </Button>
                         <Button
                             className="h-12"
-                            variant={metodoPago === "tarjeta" ? "default" : "outline"}
+                            variant={
+                                metodoPago === "tarjeta" ? "default" : "outline"
+                            }
                             onClick={() => setMetodoPago("tarjeta")}
                         >
-                            Total con Tarjeta / MercadoPago (${(precioTarjeta * cantidadPersonas).toLocaleString("es-AR")})
+                            Total con Tarjeta / MercadoPago ($
+                            {(precioTarjeta * cantidadPersonas).toLocaleString("es-AR")})
                         </Button>
                     </div>
                 </div>
@@ -503,7 +537,7 @@ const FormInscripcion = memo(function FormInscripcion({ taller }) {
                     {metodoPago === 'tarjeta' && (
                         <Button
                             className="h-12 w-full"
-                            onClick={() => handleInscripcionConCaptcha(handlePagoMercadoPago)}
+                            onClick={handleInscripcionConCaptcha(handlePagoMercadoPago)}
                             disabled={isLoadingMercadoPago || !datosCliente.nombre || !datosCliente.apellido || !datosCliente.email || !datosCliente.menu}
                         >
                             {isLoadingMercadoPago ? "Procesando..." : "Pagar con MercadoPago"}
@@ -604,6 +638,4 @@ const FormInscripcion = memo(function FormInscripcion({ taller }) {
             )}
         </div>
     );
-});
-
-export default FormInscripcion;
+}
