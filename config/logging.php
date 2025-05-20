@@ -64,6 +64,7 @@ return [
             'level' => env('LOG_LEVEL', 'debug'),
             'permission' => 0664,
             'encoding' => 'UTF-8',
+            'replace_placeholders' => true,
         ],
 
         'daily' => [

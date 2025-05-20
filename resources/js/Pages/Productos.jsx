@@ -16,7 +16,7 @@ export default function Welcome() {
         <div className="h-screen absolute inset-0 bg-black/40 flex flex-col items-center justify-start  text-white text-center px-4">
           <h1 className="mt-8 md:mt-52 text-5xl pt-16 md:text-6xl font-bold">Yuna Cerámica</h1>
           <p className=" mt-5  text-4xl md:text-4xl max-w">
-           Piezas en stock proximamente...
+           Piezas en stock próximamente...
           </p>
         </div>
       </div>

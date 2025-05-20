@@ -26,7 +26,10 @@ export default function Contacto() {
     try {
       const res = await fetch("/contacto", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
         body: JSON.stringify(form)
       });
       if (res.ok) {

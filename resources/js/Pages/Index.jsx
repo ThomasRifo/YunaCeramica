@@ -14,8 +14,8 @@ export default function Index() {
             className="object-cover w-full h-full object-bottom"
           />
           <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-start text-white text-center px-0">
-            <h1 className="text-5xl mt-52 md:mt-32 pt-0 md:text-6xl font-bold">Yuna Cerámica</h1>
-            <p className="mt-2 md:mt-5 text-2xl md:text-3xl max-w">
+            <h1 className="text-5xl mt-52 md:mt-72 pt-0 md:text-8xl font-bold">Yuna</h1>
+            <p className="mt-2 md:mt-2 text-2xl md:text-4xl max-w">
               Arte y diseño en cerámica
             </p>
             
@@ -48,7 +48,7 @@ export default function Index() {
                 <img
                   src="/storage/uploads/talleres.webp"
                   alt="Talleres"
-                  className="object-cover w-full max-h-96 transition-transform duration-300 group-hover:scale-105"
+                  className="object-cover object-[center_75%]  w-full h-full transition-transform duration-300 group-hover:scale-105 "
                 />
                 <div className="absolute inset-0 bg-black/30 flex p-10 justify-center items-center">
                   <h3 className="text-white text-end text-4xl md:text-6xl font-semibold">TALLERES</h3>

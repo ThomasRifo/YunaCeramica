@@ -76,11 +76,11 @@ export default function PiecesCarousel({ images, title }) {
             nextEl: '.swiper-button-next',
           }}
           autoplay={{ 
-            delay: 3000,
+            delay: 1000,
             disableOnInteraction: false,
             pauseOnMouseEnter: true
           }}
-          speed={500}
+          speed={300}
           preloadImages={true}
           watchSlidesProgress={true}
           breakpoints={{
