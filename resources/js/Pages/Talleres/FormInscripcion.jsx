@@ -224,29 +224,20 @@ const FormInscripcion = memo(function FormInscripcion({ taller }) {
     }, [taller, datosCliente, cantidadPersonas, metodoPago, toast, validarDatos]);
 
     const handleInscripcionConCaptcha = useCallback(async (accion) => {
-        try {
-            const v3Token = await window.grecaptcha.execute(recaptchaV3Key, { action: "submit" });
-            
-            const response = await fetch("/api/validar-captcha", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ v3Token }),
-            });
-            const data = await response.json();
-            
-            if (data.score < 0.5) {
-                setShowV2(true);
-                setAccionPendiente(() => accion);
-            } else {
-                accion();
-            }
-        } catch (error) {
-            console.error("Error en la validación del captcha:", error);
-            toast({
-                title: "Error",
-                description: "Hubo un error al validar el captcha. Por favor, intenta nuevamente.",
-                variant: "destructive",
-            });
+        const v3Token = await window.grecaptcha.execute(recaptchaV3Key, { action: "submit" });
+        
+        const response = await fetch("/api/validar-captcha", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ v3Token }),
+        });
+        const data = await response.json();
+        
+        if (data.score < 0.5) {
+            setShowV2(true);
+            setAccionPendiente(() => accion);
+        } else {
+            accion();
         }
     }, [toast]);
 

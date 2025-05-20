@@ -93,6 +93,8 @@
             ]
         }
         </script>
+
+        <script src="https://www.google.com/recaptcha/api.js?render=TU_CLAVE_V3"></script>
     </head>
     <body class="font-sans antialiased">
         @inertia

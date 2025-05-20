@@ -27,6 +27,7 @@ const Footer = memo(function Footer() {
         
         setLoading(true);
         try {
+            const token = await window.grecaptcha.execute(recaptchaV3Key, { action: "newsletter" });
             const response = await axios.post('/newsletter/subscribe', { email });
             if (toast) {
                 toast({
