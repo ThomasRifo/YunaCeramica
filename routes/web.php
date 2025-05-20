@@ -9,6 +9,7 @@ use App\Http\Controllers\PagoController;
 use App\Http\Controllers\TallerClienteController;
 use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\ImageController;
+use App\Http\Controllers\ContactoController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -108,5 +109,13 @@ Route::get('/newsletter/verify/{token}', [NewsletterController::class, 'verify']
 Route::get('/newsletter/unsubscribe/{token}', [NewsletterController::class, 'unsubscribe'])->name('newsletter.unsubscribe');
 
 Route::post('/upload-image', [ImageController::class, 'store'])->name('image.store');
+
+// Página de contacto
+Route::get('/contacto', function() {
+    return Inertia::render('Contacto');
+})->name('contacto');
+
+// Procesar formulario de contacto
+Route::post('/contacto', [ContactoController::class, 'enviar'])->name('contacto.enviar');
 
 require __DIR__.'/auth.php';

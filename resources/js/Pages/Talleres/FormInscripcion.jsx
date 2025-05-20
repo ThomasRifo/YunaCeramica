@@ -554,7 +554,7 @@ export default function FormInscripcion({ taller }) {
                     {metodoPago === 'tarjeta' && (
                         <Button
                             className="h-12 w-full"
-                            onClick={handleInscripcionConCaptcha(handlePagoMercadoPago)}
+                            onClick={() => handleInscripcionConCaptcha(handlePagoMercadoPago)}
                             disabled={isLoadingMercadoPago || !datosCliente.nombre || !datosCliente.apellido || !datosCliente.email || !datosCliente.menu}
                         >
                             {isLoadingMercadoPago ? "Procesando..." : "Pagar con MercadoPago"}

@@ -6,7 +6,7 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
         
         <!-- SEO Meta Tags -->
-        <meta name="description" content="Yuna Cerámica - Talleres de cerámica artesanal en Cipolletti y Neuquén. Aprende cerámica, crea piezas únicas y disfruta de experiencias creativas con café y gin. Talleres para principiantes y avanzados.">
+        <meta name="description" content="Yuna Cerámica - Talleres de cerámica en Cipolletti y Neuquén. Aprende cerámica, crea piezas únicas y disfruta de experiencias creativas con café y gin. Talleres para principiantes y avanzados.">
         <meta name="keywords" content="cerámica, talleres de cerámica, cerámica artesanal, cerámica Cipolletti, cerámica Neuquén, taller de cerámica, cerámica y café, cerámica y gin, clases de cerámica, cerámica Río Negro, arte cerámico, cerámica para principiantes, cerámica para adultos, cerámica creativa, taller de arte, cerámica personalizada">
         <meta name="robots" content="index, follow">
         <meta name="author" content="Yuna Cerámica">
@@ -27,8 +27,10 @@
         <meta name="twitter:description" content="Talleres de cerámica artesanal en Cipolletti. Aprende, crea y disfruta de experiencias únicas con cerámica, café y gin.">
         <meta name="twitter:image" content="{{ asset('storage/uploads/yunalogowhite.webp') }}">
         
-        <!-- Canonical URL -->
-        <link rel="canonical" href="{{ url()->current() }}">
+        <!-- Canonical URL - Solo para páginas principales -->
+        @if(request()->routeIs('talleres') || request()->routeIs('productos') || request()->routeIs('/'))
+            <link rel="canonical" href="{{ url()->current() }}" />
+        @endif
         
         <!-- Favicon -->
         <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">

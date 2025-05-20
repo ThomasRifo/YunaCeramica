@@ -1,5 +1,14 @@
+import { Head } from "@inertiajs/react";
+
 export default function Welcome() {
     return (
+      <>
+      <Head>
+        <title>Productos</title>
+        <meta name="description" content="Descubre nuestros productos de cerámica artesanal. Piezas únicas y personalizadas para tu hogar y regalo especial." />
+        <meta name="keywords" content="cerámica, piezas de cerámica, cerámica artesanal, cerámica personalizada, regalo especial, hogar, decoración, tazas, platos, vasos, figuras, esculturas, cerámica Río Negro, Yuna Cerámica, Yuna Cerámica Cipolletti, Yuna Cerámica Neuquén, Yuna Cerámica Río Negro, Yuna Cerámica Talleres, Yuna Cerámica Productos" />
+        
+      </Head>
 <div className="">
       {/* Imagen de portada */}
       <div className="max-h-screen max-w-screen">
@@ -12,5 +21,6 @@ export default function Welcome() {
         </div>
       </div>
       </div>
+      </>
     );
   }

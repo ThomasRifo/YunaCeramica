@@ -11,7 +11,7 @@ export default function TalleresIndex({ reviews, talleres, imagenesPiezas }) {
   return (
     <>
       <Head>
-        <title>Talleres de Cerámica en Cipolletti | Cerámica y Café, Cerámica y Gin</title>
+        <title>Talleres</title>
         <meta name="description" content="Descubre nuestros talleres de cerámica en Cipolletti. Experiencias únicas combinando cerámica con café y gin. Aprende técnicas artesanales y crea piezas únicas en un ambiente relajado y creativo." />
         <meta name="keywords" content="talleres de cerámica Cipolletti, cerámica y café, cerámica y gin, clases de cerámica, taller de cerámica artesanal, cerámica para principiantes, cerámica Río Negro" />
         
