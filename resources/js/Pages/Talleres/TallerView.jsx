@@ -10,14 +10,23 @@ import { Dialog, DialogContent, DialogTrigger } from '@/Components/ui/dialog';
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import { useRef, useEffect, useState } from "react";
+import Breadcrumbs from "@/Components/Breadcrumbs";
 
-
-export default function TallerView({ taller, imagenes, pagoAprobado: pagoAprobadoProp, imagenesPiezas }) {
+export default function TallerView({ taller, imagenes, pagoAprobado: pagoAprobadoProp, imagenesPiezas, slug }) {
   const [showFloatingButton, setShowFloatingButton] = useState(true);
   const mainButtonRef = useRef(null);
   const { scrollYProgress } = useScroll();
   const [showModal, setShowModal] = useState(false);
-
+console.log(slug)
+  const breadcrumbItems = [
+    {
+      label: 'Talleres',
+      href: '/talleres'
+    },{
+      label: slug === 'ceramica-y-cafe' ? 'Cerámica y Café' : 'Cerámica y Gin',
+      href: '#'
+  }
+  ];
   useEffect(() => {
     const handleScroll = () => {
       if (mainButtonRef.current) {
@@ -64,8 +73,12 @@ export default function TallerView({ taller, imagenes, pagoAprobado: pagoAprobad
         <span><strong>Horario:</strong> {dayjs(taller.hora, "HH:mm:ss").format("HH:mm")}</span>
       </div>
       <div className="flex items-center gap-2">
-        <MapPin className="w-5 h-5 text-black" />
-        <a href="#ubicacion"><p><strong>Ubicación:</strong > <span className="text-blue-500 hover:underline">{taller.ubicacion} (Ver mapa)</span> </p> </a>
+        <div className="flex items-center gap-2">
+        <MapPin className="md:w-5 md:h-5 min-h-5 min-w-5 text-black" />
+        <a href="#ubicacion" className="flex items-center">
+          <span><strong>Ubicación:</strong> <span className="text-blue-500 hover:underline">{taller.ubicacion} (Ver mapa)</span></span>
+        </a>
+        </div>
       </div>
     </div>
   );
@@ -76,7 +89,8 @@ export default function TallerView({ taller, imagenes, pagoAprobado: pagoAprobad
   return (
     <>
       <Head title={taller.nombre} />
-      <div className="max-w-7xl mx-auto px-4 py-8 pt-24 md:pt-36">
+      <div className="max-w-7xl mx-auto px-4 py-8 pt-24 md:pt-28">
+      <Breadcrumbs items={breadcrumbItems} />
         {/* Floating Button */}
         <AnimatePresence>
           {taller.idSubcategoria && showFloatingButton && (

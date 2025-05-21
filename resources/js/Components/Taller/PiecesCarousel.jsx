@@ -98,6 +98,7 @@ export default function PiecesCarousel({ images, title }) {
                 {img ? (
                   <img
                     src={img}
+                    title={img.split('/').pop().split('.')[0].replace(/[-_]/g, ' ')}
                     alt={`Pieza ${idx + 1}`}
                     className="object-cover w-full h-full transition-all duration-300"
                     loading="eager"

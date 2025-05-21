@@ -357,6 +357,7 @@ public function formInscripcion($slug)
 
     return Inertia::render('Talleres/FormInscripcion', [
         'taller' => $taller,
+        'slug' => $slug
     ]);
 }
 

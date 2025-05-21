@@ -75,7 +75,6 @@
                 "longitude": "-68.0667"
             },
             "url": "{{ url()->current() }}",
-            "telephone": "+54-9-299-1234567",
             "priceRange": "$$",
             "openingHoursSpecification": {
                 "@type": "OpeningHoursSpecification",
