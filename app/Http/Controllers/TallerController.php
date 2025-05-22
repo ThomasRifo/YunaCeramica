@@ -480,6 +480,20 @@ public function updateMenusHtml(Request $request, $id)
             $request->esReserva
         ));
 
+        if ($request->has('participantes') && count($request->participantes) > 1) {
+            foreach ($request->participantes as $index => $participante) {
+                if ($index === 0) continue; // El primero es el titular
+                Acompaniante::create([
+                    'idTallerCliente' => $tallerCliente->id,
+                    'nombre' => $participante['nombre'],
+                    'apellido' => $participante['apellido'],
+                    'email' => $participante['email'],
+                    'telefono' => $participante['telefono'] ?? null,
+                    'idMenu' => $participante['menu_id'],
+                ]);
+            }
+        }
+
         return back()->with('success', 'Inscripción procesada correctamente. Revisa tu email para las instrucciones de pago.');
     }
 }

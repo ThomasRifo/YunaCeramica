@@ -229,7 +229,23 @@ export default function FormInscripcion({ taller, slug }) {
             cantidadPersonas,
             esReserva: metodoPago === 'reserva',
             menu_id: datosCliente.menu,
-            metodoPago
+            metodoPago,
+            participantes: [
+                {
+                    nombre: datosCliente.nombre,
+                    apellido: datosCliente.apellido,
+                    email: datosCliente.email,
+                    telefono: datosCliente.telefono,
+                    menu_id: datosCliente.menu,
+                },
+                ...acompanantes.map(a => ({
+                    nombre: a.nombre,
+                    apellido: a.apellido,
+                    email: a.email,
+                    telefono: a.telefono,
+                    menu_id: a.menu,
+                }))
+            ]
         }, {
             onSuccess: () => {
                 setShowSuccessDialog(true);
