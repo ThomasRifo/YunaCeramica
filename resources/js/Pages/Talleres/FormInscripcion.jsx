@@ -54,8 +54,9 @@ export default function FormInscripcion({ taller, slug }) {
     const [showV2, setShowV2] = useState(false);
     const [v2Token, setV2Token] = useState("");
     const [accionPendiente, setAccionPendiente] = useState(null);
+    const [errores, setErrores] = useState({});
     const recaptchaV2Ref = useRef();
-    console.log(slug)
+    
 
     const breadcrumbItems = [
         {
@@ -112,23 +113,13 @@ export default function FormInscripcion({ taller, slug }) {
               : Math.round((precioBase / 2) * cantidadPersonas);
 
     const handlePagoMercadoPago = async () => {
-        if (!datosCliente.nombre || !datosCliente.apellido || !datosCliente.email || !datosCliente.menu) {
+        if (!validarCampos()) {
             toast({
                 title: "Datos incompletos",
-                description: "Por favor, completa tus datos (nombre, apellido, email) y selecciona un menú antes de continuar.",
+                description: "Por favor, revisá los campos en rojo.",
                 variant: "destructive",
             });
             return;
-        }
-        for (const acompanante of acompanantes) {
-            if (!acompanante.nombre || !acompanante.apellido || !acompanante.menu) {
-                toast({
-                    title: "Datos incompletos",
-                    description: "Por favor, completa los datos de todos los acompañantes (nombre, apellido y menú).",
-                    variant: "destructive",
-                });
-                return;
-            }
         }
 
         setIsLoadingMercadoPago(true);
@@ -200,23 +191,13 @@ export default function FormInscripcion({ taller, slug }) {
     };
 
     const handleTransferencia = () => {
-        if (!datosCliente.nombre || !datosCliente.apellido || !datosCliente.email || !datosCliente.menu) {
+        if (!validarCampos()) {
             toast({
                 title: "Datos incompletos",
-                description: "Por favor, completa tus datos (nombre, apellido, email) y selecciona un menú antes de continuar.",
+                description: "Por favor, revisá los campos en rojo.",
                 variant: "destructive",
             });
             return;
-        }
-        for (const acompanante of acompanantes) {
-            if (!acompanante.nombre || !acompanante.apellido || !acompanante.menu) {
-                toast({
-                    title: "Datos incompletos",
-                    description: "Por favor, completa los datos de todos los acompañantes (nombre, apellido y menú).",
-                    variant: "destructive",
-                });
-                return;
-            }
         }
     
         setIsLoadingTransferencia(true);
@@ -323,6 +304,26 @@ export default function FormInscripcion({ taller, slug }) {
         }
     };
 
+    const validarCampos = () => {
+        const nuevosErrores = {};
+
+        // Validar datos del titular
+        if (!datosCliente.nombre) nuevosErrores.nombre = "El nombre es obligatorio";
+        if (!datosCliente.apellido) nuevosErrores.apellido = "El apellido es obligatorio";
+        if (!datosCliente.email) nuevosErrores.email = "El email es obligatorio";
+        if (!datosCliente.menu) nuevosErrores.menu = "Selecciona un menú";
+
+        // Validar datos de los acompañantes
+        acompanantes.forEach((a, i) => {
+            if (!a.nombre) nuevosErrores[`acompanante_nombre_${i}`] = "El nombre es obligatorio";
+            if (!a.apellido) nuevosErrores[`acompanante_apellido_${i}`] = "El apellido es obligatorio";
+            if (!a.menu) nuevosErrores[`acompanante_menu_${i}`] = "Selecciona un menú";
+        });
+
+        setErrores(nuevosErrores);
+        return Object.keys(nuevosErrores).length === 0;
+    };
+
     return (
         <>
             <Head title={`Inscripción - ${taller?.nombre}`} />
@@ -409,7 +410,7 @@ export default function FormInscripcion({ taller, slug }) {
                         <div className="grid gap-2">
                             <Input
                                 placeholder="Nombre"
-                                className="h-12"
+                                className={`h-12 ${errores.nombre ? 'border-red-500' : ''}`}
                                 value={datosCliente.nombre}
                                 onChange={(e) =>
                                     setDatosCliente({
@@ -418,8 +419,9 @@ export default function FormInscripcion({ taller, slug }) {
                                     })
                                 }
                             />
+                            {errores.nombre && <p className="text-red-500 text-sm">{errores.nombre}</p>}
                             <Input
-                                className="h-12"
+                                className={`h-12 ${errores.apellido ? 'border-red-500' : ''}`}
                                 placeholder="Apellido"
                                 value={datosCliente.apellido}
                                 onChange={(e) =>
@@ -429,8 +431,9 @@ export default function FormInscripcion({ taller, slug }) {
                                     })
                                 }
                             />
+                            {errores.apellido && <p className="text-red-500 text-sm">{errores.apellido}</p>}
                             <Input
-                                className="h-12"
+                                className={`h-12 ${errores.email ? 'border-red-500' : ''}`}
                                 placeholder="Email"
                                 type="email"
                                 value={datosCliente.email}
@@ -441,9 +444,10 @@ export default function FormInscripcion({ taller, slug }) {
                                     })
                                 }
                             />
+                            {errores.email && <p className="text-red-500 text-sm">{errores.email}</p>}
                             <Input
                                 className="h-12"
-                                placeholder="Teléfono"
+                                placeholder="Teléfono (opcional)"
                                 type="tel"
                                 value={datosCliente.telefono}
                                 onChange={(e) =>
@@ -486,7 +490,7 @@ export default function FormInscripcion({ taller, slug }) {
                             </h2>
                             <div className="grid gap-2">
                                 <Input
-                                    className="h-12"
+                                    className={`h-12 ${errores[`acompanante_nombre_${i}`] ? 'border-red-500' : ''}`}
                                     placeholder="Nombre"
                                     value={a.nombre}
                                     onChange={(e) => {
@@ -495,8 +499,10 @@ export default function FormInscripcion({ taller, slug }) {
                                         setAcompanantes(nuevos);
                                     }}
                                 />
+                                {errores[`acompanante_nombre_${i}`] && <p className="text-red-500 text-sm">{errores[`acompanante_nombre_${i}`]}</p>}
+                                
                                 <Input
-                                    className="h-12"
+                                    className={`h-12 ${errores[`acompanante_apellido_${i}`] ? 'border-red-500' : ''}`}
                                     placeholder="Apellido"
                                     value={a.apellido}
                                     onChange={(e) => {
@@ -505,9 +511,11 @@ export default function FormInscripcion({ taller, slug }) {
                                         setAcompanantes(nuevos);
                                     }}
                                 />
+                                {errores[`acompanante_apellido_${i}`] && <p className="text-red-500 text-sm">{errores[`acompanante_apellido_${i}`]}</p>}
+                                
                                 <Input
                                     className="h-12"
-                                    placeholder="Email"
+                                    placeholder="Email (opcional)"
                                     type="email"
                                     value={a.email}
                                     onChange={(e) => {
@@ -516,9 +524,10 @@ export default function FormInscripcion({ taller, slug }) {
                                         setAcompanantes(nuevos);
                                     }}
                                 />
+                                
                                 <Input
                                     className="h-12"
-                                    placeholder="Teléfono"
+                                    placeholder="Teléfono (opcional)"
                                     type="tel"
                                     value={a.telefono}
                                     onChange={(e) => {
@@ -527,6 +536,7 @@ export default function FormInscripcion({ taller, slug }) {
                                         setAcompanantes(nuevos);
                                     }}
                                 />
+                                
                                 <div className="space-y-4 mt-4">
                                     <Label className="text-lg">Elegí un menú para el acompañante {i+1}:</Label>
                                     <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 mt-2">
@@ -543,6 +553,7 @@ export default function FormInscripcion({ taller, slug }) {
                                             />
                                         ))}
                                     </div>
+                                    {errores[`acompanante_menu_${i}`] && <p className="text-red-500 text-sm">{errores[`acompanante_menu_${i}`]}</p>}
                                 </div>
                             </div>
                         </div>

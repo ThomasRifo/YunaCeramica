@@ -60,6 +60,12 @@
             <p><strong>Monto a abonar:</strong> ${{ number_format($monto, 2) }}</p>
         </div>
 
+        <div class="important">
+            <h2 style="color: #db0000; font-weight: bold;">Importante:</h2>
+            <p><strong>Una vez realizada la transferencia, por favor envía el comprobante a yunaceramica@gmail.com o responde a este email con el comprobante.</strong></p>
+            <p><strong>Tu inscripción quedará confirmada una vez que verifiquemos el pago.</strong></p>
+        </div>
+
         <div class="bank-details">
             <h2>Datos para la transferencia</h2>
             <p><strong>Banco:</strong> Mercado Pago</p>
@@ -68,11 +74,7 @@
             <p><strong>Titular:</strong> Ana Carmen da Silva</p>
         </div>
 
-        <div class="important">
-            <h3>Importante:</h3>
-            <p>Una vez realizada la transferencia, por favor envía el comprobante a info@yunaceramica.com</p>
-            <p>Tu inscripción quedará confirmada una vez que verifiquemos el pago.</p>
-        </div>
+
 
         <div class="footer">
             <p>Yuna Cerámica</p>

@@ -58,7 +58,7 @@ class MercadoPagoController extends Controller
             'participantes' => 'required|array|min:1',
             'participantes.*.nombre' => 'required|string|max:100',
             'participantes.*.apellido' => 'required|string|max:100',
-            'participantes.*.email' => 'required|email|max:100',
+            'participantes.*.email' => 'nullable|email|max:100',
             'participantes.*.telefono' => 'nullable|string|max:20',
             'participantes.*.menu_id' => 'required|exists:menus,id',
         ]);
@@ -142,9 +142,9 @@ class MercadoPagoController extends Controller
             if ($taller) {
                 if ($taller->cantInscriptos + $validatedData['cantidad'] > $taller->cupoMaximo) {
                     DB::rollBack();
-                    Log::warning('⚠️ Intento de inscripción excede cupo máximo para taller ID: ' . $taller->id);
+                    Log::warning('⚠️ Intento de inscripción excede cupo máximo para taller de: ' . $taller->nombre) . '. Comunicate con nosotros para coordinar la inscripción ';
                     return response()->json([
-                        'message' => 'No hay suficiente cupo disponible para la cantidad de personas seleccionada.',
+                        'message' => 'No hay suficiente cupo disponible para la cantidad de personas seleccionada. Comunicate con nosotros para coordinar una solución',
                     ], 400);
                 }
             } else {

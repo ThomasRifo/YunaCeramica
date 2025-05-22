@@ -17,7 +17,7 @@ export default function TallerView({ taller, imagenes, pagoAprobado: pagoAprobad
   const mainButtonRef = useRef(null);
   const { scrollYProgress } = useScroll();
   const [showModal, setShowModal] = useState(false);
-console.log(slug)
+
   const breadcrumbItems = [
     {
       label: 'Talleres',

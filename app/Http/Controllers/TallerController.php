@@ -396,47 +396,80 @@ public function updateMenusHtml(Request $request, $id)
      */
     public function actualizarEstadosPagoMasivo(Request $request)
     {
-        $data = $request->validate([
-            'cambios' => 'required|array',
-            'cambios.*.id' => 'required|integer|exists:taller_clientes,id',
-            'cambios.*.nuevoEstado' => 'required|integer|exists:estados_pago,id',
-        ]);
-
-        DB::beginTransaction();
         try {
-            $resultados = [];
-            foreach ($data['cambios'] as $cambio) {
-                $tc = \App\Models\TallerCliente::find($cambio['id']);
-                if ($tc) {
-                    $tc->idEstadoPago = $cambio['nuevoEstado'];
-                    $tc->save();
-                    $resultados[] = [
-                        'id' => $tc->id,
-                        'nombre' => $tc->nombre_cliente,
-                        'apellido' => $tc->apellido_cliente,
-                        'email' => $tc->email_cliente,
-                        'nuevoEstado' => $tc->idEstadoPago,
-                    ];
-                }
-            }
+            $data = $request->validate([
+                'cambios' => 'required|array',
+                'cambios.*.id' => 'required|integer|exists:taller_clientes,id',
+                'cambios.*.nuevoEstado' => 'required|integer|exists:estados_pago,id',
+            ]);
 
-            // Obtener el idTaller (asumiendo que todos los cambios son del mismo taller)
+            DB::beginTransaction();
+            $resultados = [];
+
             if (!empty($data['cambios'])) {
                 $primerTC = \App\Models\TallerCliente::find($data['cambios'][0]['id']);
                 if ($primerTC) {
                     $taller = $primerTC->taller;
-                    $taller->cantInscriptos = \App\Models\TallerCliente::where('idTaller', $taller->id)
-                        ->whereIn('idEstadoPago', [2, 3]) // 2 = parcial, 3 = pagado total (ajusta según tu lógica)
-                        ->count();
+                    
+                    // Para cada cambio, actualizamos el estado y ajustamos cantInscriptos
+                    foreach ($data['cambios'] as $cambio) {
+                        $tc = \App\Models\TallerCliente::find($cambio['id']);
+                        
+                        if ($tc) {
+                            $estadoAnterior = $tc->idEstadoPago;
+                            $nuevoEstado = $cambio['nuevoEstado'];
+                            
+                            // Actualizar el estado
+                            $tc->idEstadoPago = $nuevoEstado;
+                            $tc->save();
+                            
+                            // Ajustar cantInscriptos según los estados
+                            if (in_array($estadoAnterior, [2, 3]) && !in_array($nuevoEstado, [2, 3])) {
+                                // Si antes estaba pagado/parcial y ahora no, decrementar
+                                $taller->decrement('cantInscriptos', $tc->cantPersonas);
+                            } else if (!in_array($estadoAnterior, [2, 3]) && in_array($nuevoEstado, [2, 3])) {
+                                // Si antes no estaba pagado/parcial y ahora sí, incrementar
+                                $taller->increment('cantInscriptos', $tc->cantPersonas);
+                            }
+                            
+                            $resultados[] = [
+                                'id' => $tc->id,
+                                'nombre' => $tc->nombre_cliente,
+                                'apellido' => $tc->apellido_cliente,
+                                'email' => $tc->email_cliente,
+                                'nuevoEstado' => $tc->idEstadoPago,
+                            ];
+                        }
+                    }
+                    
                     $taller->save();
                 }
             }
 
             DB::commit();
-            return response()->json(['success' => true, 'resultados' => $resultados]);
+            return response()->json([
+                'success' => true,
+                'resultados' => $resultados,
+                'taller' => [
+                    'id' => $taller->id,
+                    'cantInscriptos' => $taller->cantInscriptos
+                ]
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false, 
+                'error' => 'Error de validación',
+                'message' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
+            return response()->json([
+                'success' => false, 
+                'error' => 'Error interno del servidor',
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -447,10 +480,16 @@ public function updateMenusHtml(Request $request, $id)
             'nombre' => 'required|string',
             'apellido' => 'required|string',
             'email' => 'required|email',
-            'telefono' => 'required|string',
+            'telefono' => 'nullable|string',
             'cantidadPersonas' => 'required|integer|min:1',
             'esReserva' => 'required|boolean',
-            'menu_id' => 'required|exists:menus,id'
+            'menu_id' => 'required|exists:menus,id',
+            'participantes' => 'nullable|array',
+            'participantes.*.nombre' => 'required|string',
+            'participantes.*.apellido' => 'required|string',
+            'participantes.*.email' => 'nullable|email',
+            'participantes.*.telefono' => 'nullable|string',
+            'participantes.*.menu_id' => 'required|exists:menus,id',
         ]);
 
         $taller = Taller::findOrFail($request->tallerId);
@@ -470,15 +509,7 @@ public function updateMenusHtml(Request $request, $id)
         ]);
 
         // Enviar email con instrucciones
-        Mail::to($request->email)->send(new TransferenciaTaller(
-            $taller,
-            [
-                'nombre' => $request->nombre,
-                'apellido' => $request->apellido
-            ],
-            $request->cantidadPersonas,
-            $request->esReserva
-        ));
+
 
         if ($request->has('participantes') && count($request->participantes) > 1) {
             foreach ($request->participantes as $index => $participante) {
@@ -493,7 +524,15 @@ public function updateMenusHtml(Request $request, $id)
                 ]);
             }
         }
-
+        Mail::to($request->email)->send(new TransferenciaTaller(
+            $taller,
+            [
+                'nombre' => $request->nombre,
+                'apellido' => $request->apellido
+            ],
+            $request->cantidadPersonas,
+            $request->esReserva
+        ));
         return back()->with('success', 'Inscripción procesada correctamente. Revisa tu email para las instrucciones de pago.');
     }
 }
