@@ -57,6 +57,7 @@ export default function TalleresIndex({ reviews, talleres, imagenesPiezas }) {
             autoPlay="autoplay" 
             loop 
             muted 
+            playsInline
             poster="/storage/uploads/poster.webp" 
             className="object-cover object-[63%_1%] w-full h-full" 
             alt="Video de portada de talleres de cerámica"

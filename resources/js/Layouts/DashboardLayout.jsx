@@ -78,12 +78,15 @@ function InnerLayout({ children, router, toggleColorMode }) {
       navigation={NAVIGATION}
       theme={theme}
       router={router}
+      className="h-96"
       linkComponent={(props) => <Link {...props} />}
       branding={{
         logo: (
-          <img src="https://mui.com/static/logo.png" alt="MUI logo" />
+          <div style={{ width: '250px', display: 'flex', alignItems: 'center' }}>
+            <img src="/storage/uploads/yunalogo.webp" alt="Yuna Cerámica logo" style={{ height: '120px', width: 'auto' }} />
+          </div>
         ),
-        title: "Yuna Cerámica",
+        title: " ",
         color: "#000",
         homeUrl: "/",
       }}
