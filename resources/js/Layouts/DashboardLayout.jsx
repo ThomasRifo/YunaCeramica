@@ -23,6 +23,8 @@ import WebIcon from '@mui/icons-material/Web';
 import { usePage, Link as InertiaLink } from '@inertiajs/react';
 import BreadcrumbsNavigation from "@/Components/BreadcrumbsNavigation";
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import { useEffect } from 'react';
+
 
 const NAVIGATION = [
   { kind: "header", title: "Main items" },
@@ -70,7 +72,7 @@ function InnerLayout({ children, router, toggleColorMode }) {
   const theme = useTheme();
 
   React.useEffect(() => {
- 
+    // Aquí puedes dejar otros efectos relacionados con el theme si los necesitas
   }, [theme.palette.mode]);
 
   return (
@@ -125,6 +127,20 @@ export default function DashboardLayout({ children }) {
   };
 
   const theme = React.useMemo(() => getTheme(mode), [mode]);
+
+  useEffect(() => {
+    const errorHandler = (event) => {
+      if (event.detail?.response?.status === 419) {
+        window.location.href = '/login?expired=1';
+      }
+    };
+
+    window.addEventListener('inertia:error', errorHandler);
+
+    return () => {
+      window.removeEventListener('inertia:error', errorHandler);
+    };
+  }, []);
 
   return (
     <ThemeProvider theme={theme}>

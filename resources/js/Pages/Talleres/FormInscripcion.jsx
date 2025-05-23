@@ -25,12 +25,8 @@ import {
 import CardMenu from "@/Components/Taller/CardMenu";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent } from "@/Components/ui/dialog";
-import ReCAPTCHA from "react-google-recaptcha";
 import Breadcrumbs from '@/Components/Breadcrumbs';
 dayjs.extend(customParseFormat);
-
-const recaptchaV3Key = "6LeWbjorAAAAAN1iTNC1iDlAzdGhuqJ9RKKVW0lN";
-const recaptchaV2Key = "6LfRcDorAAAAADXRjzq75JFZVZk_hS_coEOQ2CNV";
 
 export default function FormInscripcion({ taller, slug }) {
     const { toast } = useToast();
@@ -50,13 +46,7 @@ export default function FormInscripcion({ taller, slug }) {
     const [acompanantes, setAcompanantes] = useState([]);
     const [showFailure, setShowFailure] = useState(false);
     const [showPending, setShowPending] = useState(false);
-
-    const [showV2, setShowV2] = useState(false);
-    const [v2Token, setV2Token] = useState("");
-    const [accionPendiente, setAccionPendiente] = useState(null);
     const [errores, setErrores] = useState({});
-    const recaptchaV2Ref = useRef();
-    
 
     const breadcrumbItems = [
         {
@@ -242,66 +232,6 @@ export default function FormInscripcion({ taller, slug }) {
                 setIsLoadingTransferencia(false);
             }
         });
-    };
-
-    const handleInscripcionConCaptcha = async (accion) => {
-        try {
-            // Ejecutar reCAPTCHA v3
-            const v3Token = await window.grecaptcha.execute(recaptchaV3Key, { action: "submit" });
-            
-            // Validar en backend
-            const response = await fetch("/api/validar-captcha", {
-                method: "POST",
-                headers: { 
-                    "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify({ v3Token }),
-            });
-
-            if (!response.ok) {
-                console.error('Error en la respuesta:', response.status, response.statusText);
-                throw new Error('Error en la validación del captcha');
-            }
-
-            const data = await response.json();
-            
-            
-            if (data.score < 0.5) {
-                setShowV2(true);
-                setAccionPendiente(() => accion);
-            } else {
-                accion();
-            }
-        } catch (error) {
-            console.error('Error en la validación del captcha:', error);
-            toast({
-                title: "Error de validación",
-                description: "Hubo un problema al validar el captcha. Por favor, intenta nuevamente.",
-                variant: "destructive",
-            });
-        }
-    };
-
-    const handleV2Change = async (token) => {
-        setV2Token(token);
-       
-
-        const response = await fetch("/api/validar-captcha", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ v2Token: token }),
-        });
-        const data = await response.json();
-        
-
-        if (data.success && accionPendiente) {
-            accionPendiente();
-            setShowV2(false);
-            setAccionPendiente(null);
-        } else {
-            // Mostrar error si el captcha falla
-        }
     };
 
     const validarCampos = () => {
@@ -602,7 +532,7 @@ export default function FormInscripcion({ taller, slug }) {
                         {metodoPago === 'tarjeta' && (
                             <Button
                                 className="h-12 w-full"
-                                onClick={() => handleInscripcionConCaptcha(handlePagoMercadoPago)}
+                                onClick={handlePagoMercadoPago}
                                 disabled={isLoadingMercadoPago || !datosCliente.nombre || !datosCliente.apellido || !datosCliente.email || !datosCliente.menu}
                             >
                                 {isLoadingMercadoPago ? "Procesando..." : "Pagar con MercadoPago"}
@@ -612,7 +542,7 @@ export default function FormInscripcion({ taller, slug }) {
                         {(metodoPago === 'reserva' || metodoPago === 'total') && (
                             <Button
                                 className="h-12 w-full bg-green-600 hover:bg-green-700"
-                                onClick={() => handleInscripcionConCaptcha(handleTransferencia)}
+                                onClick={handleTransferencia}
                                 disabled={isLoadingTransferencia || !datosCliente.nombre || !datosCliente.apellido || !datosCliente.email || !datosCliente.menu}
                             >
                                 {isLoadingTransferencia ? (
@@ -693,14 +623,6 @@ export default function FormInscripcion({ taller, slug }) {
                         </div>
                     </DialogContent>
                 </Dialog>
-
-                {showV2 && (
-                    <ReCAPTCHA
-                        sitekey={recaptchaV2Key}
-                        onChange={handleV2Change}
-                        ref={recaptchaV2Ref}
-                    />
-                )}
             </div>
         </>
     );

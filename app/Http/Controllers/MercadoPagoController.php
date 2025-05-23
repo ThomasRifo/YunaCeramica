@@ -23,6 +23,9 @@ use MercadoPago\Resources\Payment;
 use App\Models\Taller;            // Modelo Taller
 use App\Models\TallerCliente;     // Modelo TallerCliente
 use App\Models\Acompaniante;      // Modelo Acompaniante
+use Illuminate\Support\Facades\Mail;
+use App\Mail\ConfirmacionInscripcionTaller;
+
 // Asumiendo que tienes un modelo EstadoPago y Menu también, aunque no se usen directamente aquí para crear.
 
 class MercadoPagoController extends Controller
@@ -270,6 +273,23 @@ class MercadoPagoController extends Controller
                             if ($taller) {
                                 if ($idEstadoPagoNuevo === $estadoAprobadoId && ($idEstadoPagoPrevio !== $estadoAprobadoId)) {
                                     $taller->increment('cantInscriptos', $tallerCliente->cantPersonas);
+                                    Log::info('Intentando enviar mail de confirmación a: ' . $tallerCliente->email_cliente);
+
+                                    try {
+                                        Mail::to($tallerCliente->email_cliente)->send(
+                                            new ConfirmacionInscripcionTaller(
+                                                $taller,
+                                                [
+                                                    'nombre' => $tallerCliente->nombre_cliente,
+                                                    'apellido' => $tallerCliente->apellido_cliente,
+                                                ],
+                                                'total'
+                                            )
+                                        );
+                                        Log::info('Mail de confirmación enviado correctamente a: ' . $tallerCliente->email_cliente);
+                                    } catch (\Exception $e) {
+                                        Log::error('Error al enviar mail de confirmación: ' . $e->getMessage());
+                                    }
                                 } elseif ($idEstadoPagoPrevio === $estadoAprobadoId && $idEstadoPagoNuevo !== $estadoAprobadoId) {
                                     // Si el pago fue aprobado y ahora se cancela/rechaza, liberar cupo
                                     $taller->decrement('cantInscriptos', $tallerCliente->cantPersonas);

@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\DB;
 use App\Mail\TransferenciaTaller;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use App\Mail\ConfirmacionInscripcionTaller;
 
 class TallerController extends Controller
 {
@@ -425,11 +426,25 @@ public function updateMenusHtml(Request $request, $id)
                             
                             // Ajustar cantInscriptos según los estados
                             if (in_array($estadoAnterior, [2, 3]) && !in_array($nuevoEstado, [2, 3])) {
-                                // Si antes estaba pagado/parcial y ahora no, decrementar
                                 $taller->decrement('cantInscriptos', $tc->cantPersonas);
                             } else if (!in_array($estadoAnterior, [2, 3]) && in_array($nuevoEstado, [2, 3])) {
-                                // Si antes no estaba pagado/parcial y ahora sí, incrementar
                                 $taller->increment('cantInscriptos', $tc->cantPersonas);
+
+                                // Enviar mail solo si pasa a pagado parcial o total
+                                $tipo = $nuevoEstado == 2 ? 'reserva' : 'total';
+                                $textoExtra = null; // Puedes personalizarlo si quieres
+
+                                Mail::to($tc->email_cliente)->send(
+                                    new ConfirmacionInscripcionTaller(
+                                        $taller,
+                                        [
+                                            'nombre' => $tc->nombre_cliente,
+                                            'apellido' => $tc->apellido_cliente,
+                                        ],
+                                        $tipo,
+                                        $textoExtra
+                                    )
+                                );
                             }
                             
                             $resultados[] = [

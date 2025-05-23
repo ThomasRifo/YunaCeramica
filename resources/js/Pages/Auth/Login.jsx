@@ -5,6 +5,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
+import { useEffect, useState } from 'react';
 
 export default function Login({ status, canResetPassword }) {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -12,6 +13,18 @@ export default function Login({ status, canResetPassword }) {
         password: '',
         remember: false,
     });
+
+    // Detectar si la URL tiene ?expired=1
+    const [expiredMsg, setExpiredMsg] = useState(false);
+
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get("expired") === "1") {
+                setExpiredMsg(true);
+            }
+        }
+    }, []);
 
     const submit = (e) => {
         e.preventDefault();
@@ -24,6 +37,12 @@ export default function Login({ status, canResetPassword }) {
     return (
         <GuestLayout>
             <Head title="Log in" />
+
+            {expiredMsg && (
+                <div className="mb-4 text-sm font-medium text-yellow-700 bg-yellow-100 border border-yellow-300 rounded p-3">
+                    Tu sesión expiró por inactividad o por un cambio en el sistema. Por favor, vuelve a iniciar sesión para continuar.
+                </div>
+            )}
 
             {status && (
                 <div className="mb-4 text-sm font-medium text-green-600">
