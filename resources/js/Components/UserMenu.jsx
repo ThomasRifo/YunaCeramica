@@ -17,12 +17,17 @@ export default function UserMenu() {
     setAnchorEl(null);
   };
 
+  // Si no hay usuario autenticado, no mostramos el menú
+  if (!auth?.user) {
+    return null;
+  }
+
   return (
     <>
     <div className="p-4 mr-2">
       <Tooltip title="Cuenta">
-        <IconButton  onClick={handleOpenMenu} sx={{ p: 0 }}>
-          <Avatar alt={auth.user.name} src="/default-avatar.png" />
+        <IconButton onClick={handleOpenMenu} sx={{ p: 0 }}>
+          <Avatar alt={auth.user.name || 'Usuario'} src="/default-avatar.png" />
         </IconButton>
       </Tooltip>
       <Menu
@@ -35,7 +40,7 @@ export default function UserMenu() {
         anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
       >
         <MenuItem disabled>
-          {auth.user.name}
+          {auth.user.name || 'Usuario'}
         </MenuItem>
 
         <Divider />
@@ -50,6 +55,5 @@ export default function UserMenu() {
       </Menu>
       </div>
     </>
-    
   );
 }

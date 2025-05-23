@@ -11,11 +11,11 @@
                 <table width="600" align="center" bgcolor="#fff" cellpadding="40" cellspacing="0" style="margin: 40px auto; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.07);">
                     <tr>
                         <td align="center">
-                            <img src="https://yunaceramica.com/storage/uploads/yunalogo.webp" alt="Yuna Cerámica" style="width: 120px; margin-bottom: 20px;">
+                            <img src="{{ asset('storage/uploads/yunalogo.webp') }}" alt="Yuna Cerámica" style="width: 120px; margin-bottom: 20px;">
                             <h2 style="color: #1a202c; margin-bottom: 10px;">¡Inscripción confirmada!</h2>
                             <p style="font-size: 18px; color: #333; margin-bottom: 30px;">
-                                Hola <strong>{{ $titular['nombre'] }}</strong>,<br>
-                                Te confirmamos que tu inscripción al taller <strong>{{ $taller->nombre }}</strong> ha sido
+                                Hola <strong>{{ ucfirst($titular['nombre']) }}</strong>,<br>
+                                Te informamos que tu inscripción al taller <strong>{{ $taller->nombre }}</strong> ha sido
                                 <span style="color: #0d9488; font-weight: bold;">
                                     {{ $tipo == 'total' ? 'confirmada' : 'reservada con seña' }}.
                                 </span>
@@ -49,7 +49,7 @@
 
                             <div style="margin: 30px 0; padding: 18px; background: #f1f5f9; border-radius: 8px; color: #334155; font-size: 15px;">
                                 <strong>Política de cancelación:</strong><br>
-                                Las cancelaciones al evento solo se aceptan hasta <strong>72 horas antes</strong> del inicio del taller. Pasado ese plazo, no se realizarán devoluciones ni reprogramaciones.
+                                Las cancelaciones al evento solo se aceptan hasta <strong>72 horas antes</strong> del inicio del taller. Pasado ese plazo, no se realizarán devoluciones.
                             </div>
 
                             <p style="font-size: 16px; color: #0d9488; margin-top: 30px;">

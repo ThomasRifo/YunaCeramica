@@ -28,6 +28,6 @@ class TransferenciaTaller extends Mailable
     public function build()
     {
         return $this->view('emails.transferencia-taller')
-                    ->subject('Instrucciones de pago - { $this->taller->nombre }');
+                    ->subject('Instrucciones de pago - '.  $this->taller->nombre );
     }
 } 

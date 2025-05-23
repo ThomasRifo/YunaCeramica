@@ -41,9 +41,7 @@ class Taller extends Model
         return $this->hasMany(ImagenTaller::class, 'idTaller');
     }
     public function tallerClientes()
-{
-    return $this->hasMany(TallerCliente::class, 'idTaller');
-}
-
-
+    {
+        return $this->hasMany(TallerCliente::class, 'idTaller');
+    }
 }

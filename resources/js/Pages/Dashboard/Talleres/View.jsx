@@ -28,6 +28,7 @@ import {
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import dayjs from 'dayjs';
+import DownloadIcon from '@mui/icons-material/Download';
 
 export default function View({ taller, tallerClientesPagados, tallerClientesPendientes }) {
   const theme = useTheme();
@@ -367,8 +368,6 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
         </Breadcrumbs>
       </Box>
 
- 
-
       <Box sx={{ mb: 2 }}>
         <Typography sx={{ mb: 4 }} variant="h4" gutterBottom>{taller.nombre}</Typography>
         <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 2 }}>
@@ -394,6 +393,17 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
               <Typography sx={{ fontSize: '1.3rem' }}>${totalRecaudado.toLocaleString('es-AR')}</Typography>
             </CardContent>
           </Card>
+        </Box>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<DownloadIcon />}
+            onClick={() => window.open(route('talleres.descargar-lista', taller.id), '_blank')}
+            disabled
+          >
+            Descargar Lista de Participantes
+          </Button>
         </Box>
         <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 2 }}>
           <Card sx={{ minWidth: 220, flex: 1 }}>

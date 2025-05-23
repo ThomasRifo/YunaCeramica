@@ -47,7 +47,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>¡Hola {{ $cliente['nombre'] }}!</h1>
+            <h1>¡Hola {{ ucfirst($cliente['nombre']) }}!</h1>
         </div>
 
         <div class="details">

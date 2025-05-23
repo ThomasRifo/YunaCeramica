@@ -19,6 +19,7 @@ use App\Mail\TransferenciaTaller;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use App\Mail\ConfirmacionInscripcionTaller;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class TallerController extends Controller
 {
@@ -549,6 +550,76 @@ public function updateMenusHtml(Request $request, $id)
             $request->esReserva
         ));
         return back()->with('success', 'Inscripción procesada correctamente. Revisa tu email para las instrucciones de pago.');
+    }
+
+    public function listaParticipantes($id)
+    {
+        $taller = Taller::with(['tallerClientes.acompaniantes', 'tallerClientes.menu'])->findOrFail($id);
+        $participantes = collect();
+        
+        foreach ($taller->tallerClientes as $tc) {
+            // Agregar el tallerCliente
+            $participantes->push((object)[
+                'id' => $tc->id,
+                'nombre' => $tc->nombre_cliente,
+                'apellido' => $tc->apellido_cliente,
+                'email' => $tc->email_cliente,
+                'telefono' => $tc->telefono_cliente,
+                'menu' => $tc->menu,
+                'idTallerCliente' => $tc->id
+            ]);
+            
+            // Agregar los acompañantes
+            foreach ($tc->acompaniantes as $acompaniante) {
+                $participantes->push((object)[
+                    'id' => $acompaniante->id,
+                    'nombre' => $acompaniante->nombre,
+                    'apellido' => $acompaniante->apellido,
+                    'email' => $acompaniante->email,
+                    'telefono' => $acompaniante->telefono,
+                    'menu' => $acompaniante->menu,
+                    'idTallerCliente' => $tc->id
+                ]);
+            }
+        }
+        
+        return view('talleres.lista-participantes', compact('taller', 'participantes'));
+    }
+
+    public function descargarListaParticipantes($id)
+    {
+        $taller = Taller::with(['tallerClientes.acompaniantes', 'tallerClientes.menu'])->findOrFail($id);
+        $participantes = collect();
+        
+        foreach ($taller->tallerClientes as $tc) {
+            // Agregar el tallerCliente
+            $participantes->push((object)[
+                'id' => $tc->id,
+                'nombre' => $tc->nombre_cliente,
+                'apellido' => $tc->apellido_cliente,
+                'email' => $tc->email_cliente,
+                'telefono' => $tc->telefono_cliente,
+                'menu' => $tc->menu,
+                'idTallerCliente' => $tc->id
+            ]);
+            
+            // Agregar los acompañantes
+            foreach ($tc->acompaniantes as $acompaniante) {
+                $participantes->push((object)[
+                    'id' => $acompaniante->id,
+                    'nombre' => $acompaniante->nombre,
+                    'apellido' => $acompaniante->apellido,
+                    'email' => $acompaniante->email,
+                    'telefono' => $acompaniante->telefono,
+                    'menu' => $acompaniante->menu,
+                    'idTallerCliente' => $tc->id
+                ]);
+            }
+        }
+        
+        $pdf = PDF::loadView('talleres.lista-participantes', compact('taller', 'participantes'));
+        
+        return $pdf->download('lista-participantes-' . $taller->nombre . '.pdf');
     }
 }
 

@@ -118,4 +118,7 @@ Route::get('/contacto', function() {
 // Procesar formulario de contacto
 Route::post('/contacto', [ContactoController::class, 'enviar'])->name('contacto.enviar');
 
+Route::get('/talleres/{id}/lista-participantes', [TallerController::class, 'listaParticipantes'])->name('talleres.lista-participantes');
+Route::get('/talleres/{id}/descargar-lista', [TallerController::class, 'descargarListaParticipantes'])->name('talleres.descargar-lista');
+
 require __DIR__.'/auth.php';
