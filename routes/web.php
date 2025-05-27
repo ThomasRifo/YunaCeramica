@@ -121,4 +121,6 @@ Route::post('/contacto', [ContactoController::class, 'enviar'])->name('contacto.
 Route::get('/talleres/{id}/lista-participantes', [TallerController::class, 'listaParticipantes'])->name('talleres.lista-participantes');
 Route::get('/talleres/{id}/descargar-lista', [TallerController::class, 'descargarListaParticipantes'])->name('talleres.descargar-lista');
 
+Route::get('/taller/{id}/referido/{codigoReferido}', [App\Http\Controllers\TallerController::class, 'referido'])->name('taller.referido');
+
 require __DIR__.'/auth.php';

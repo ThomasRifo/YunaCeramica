@@ -9,6 +9,8 @@ import {
     Landmark,
     MapPin,
     XCircle,
+    Copy,
+    Check,
 } from "lucide-react";
 import { Input } from "@/Components/ui/input";
 import dayjs from "dayjs";
@@ -28,13 +30,15 @@ import { Dialog, DialogContent } from "@/Components/ui/dialog";
 import Breadcrumbs from '@/Components/Breadcrumbs';
 dayjs.extend(customParseFormat);
 
-export default function FormInscripcion({ taller, slug }) {
+export default function FormInscripcion({ taller, slug, referido: referidoProp }) {
     const { toast } = useToast();
     const [cantidadPersonas, setCantidadPersonas] = useState(1);
     const [metodoPago, setMetodoPago] = useState("reserva");
     const [isLoadingMercadoPago, setIsLoadingMercadoPago] = useState(false);
     const [isLoadingTransferencia, setIsLoadingTransferencia] = useState(false);
     const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+    const [linkReferido, setLinkReferido] = useState("");
+    const [copiado, setCopiado] = useState(false);
     const [datosCliente, setDatosCliente] = useState({
         nombre: "",
         apellido: "",
@@ -47,7 +51,7 @@ export default function FormInscripcion({ taller, slug }) {
     const [showFailure, setShowFailure] = useState(false);
     const [showPending, setShowPending] = useState(false);
     const [errores, setErrores] = useState({});
-
+    const [referido, setReferido] = useState(null);
     const breadcrumbItems = [
         {
             label: 'Talleres',
@@ -71,6 +75,14 @@ export default function FormInscripcion({ taller, slug }) {
             if (params.get("pago") === "pending") setShowPending(true);
         }
     }, []);
+
+    useEffect(() => {
+        if (typeof referidoProp !== "undefined" && referidoProp !== null) {
+            setReferido(referidoProp);
+            // Opcional: debug
+            // console.log("Referido seteado desde prop:", referidoProp);
+        }
+    }, [referidoProp]);
 
     const handleCantidadChange = (e) => {
         const nuevaCantidad = parseInt(e.target.value);
@@ -120,6 +132,7 @@ export default function FormInscripcion({ taller, slug }) {
             descripcion: `Inscripción al taller: ${taller.nombre} (${cantidadPersonas} persona(s))`,
             cantidad: cantidadPersonas,
             precioUnitario: precioTarjeta,
+            referido: referido,
             metodoPago,
             datos_cliente: { 
                 nombre: datosCliente.nombre,
@@ -158,6 +171,8 @@ export default function FormInscripcion({ taller, slug }) {
             const responseData = await response.json();
 
             if (response.ok && responseData?.mercadopago?.init_point) {
+                const link = `${window.location.origin}/taller/${taller.id}/referido/${responseData.referido}`;
+                setLinkReferido(link);
                 window.location.href = responseData.mercadopago.init_point;
             } else {
                 console.error("Error al crear preferencia de MP. Respuesta:", responseData);
@@ -180,7 +195,7 @@ export default function FormInscripcion({ taller, slug }) {
         }
     };
 
-    const handleTransferencia = () => {
+    const handleTransferencia = async () => {
         if (!validarCampos()) {
             toast({
                 title: "Datos incompletos",
@@ -189,49 +204,80 @@ export default function FormInscripcion({ taller, slug }) {
             });
             return;
         }
-    
+
         setIsLoadingTransferencia(true);
-        router.post('/talleres/transferencia', {
-            tallerId: taller.id,
-            nombre: datosCliente.nombre,
-            apellido: datosCliente.apellido,
-            email: datosCliente.email,
-            telefono: datosCliente.telefono,
-            cantidadPersonas,
-            esReserva: metodoPago === 'reserva',
-            menu_id: datosCliente.menu,
-            metodoPago,
-            participantes: [
-                {
+
+        try {
+            const response = await fetch('/talleres/transferencia', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name=\"csrf-token\"]').getAttribute('content'),
+                },
+                body: JSON.stringify({
+                    tallerId: taller.id,
                     nombre: datosCliente.nombre,
                     apellido: datosCliente.apellido,
                     email: datosCliente.email,
                     telefono: datosCliente.telefono,
+                    cantidadPersonas,
+                    esReserva: metodoPago === 'reserva',
                     menu_id: datosCliente.menu,
-                },
-                ...acompanantes.map(a => ({
-                    nombre: a.nombre,
-                    apellido: a.apellido,
-                    email: a.email,
-                    telefono: a.telefono,
-                    menu_id: a.menu,
-                }))
-            ]
-        }, {
-            onSuccess: () => {
+                    metodoPago,
+                    referido: referido,
+                    participantes: [
+                        {
+                            nombre: datosCliente.nombre,
+                            apellido: datosCliente.apellido,
+                            email: datosCliente.email,
+                            telefono: datosCliente.telefono,
+                            menu_id: datosCliente.menu,
+                        },
+                        ...acompanantes.map(a => ({
+                            nombre: a.nombre,
+                            apellido: a.apellido,
+                            email: a.email,
+                            telefono: a.telefono,
+                            menu_id: a.menu,
+                        }))
+                    ]
+                })
+            });
+
+            const data = await response.json();
+            if (data.success && data.referido) {
+                const link = `${window.location.origin}/taller/${taller.id}/referido/${data.referido}`;
+                setLinkReferido(link);
                 setShowSuccessDialog(true);
-            },
-            onError: (errors) => {
-                toast({
-                    title: 'Error',
-                    description: errors.message || 'Ocurrió un error al procesar la inscripción.',
-                    variant: 'destructive',
-                });
-            },
-            onFinish: () => {
-                setIsLoadingTransferencia(false);
             }
-        });
+        } catch (error) {
+            toast({
+                title: 'Error',
+                description: 'Ocurrió un error al procesar la inscripción.',
+                variant: 'destructive',
+            });
+        } finally {
+            setIsLoadingTransferencia(false);
+        }
+    };
+
+    const copiarLink = async () => {
+        try {
+            await navigator.clipboard.writeText(linkReferido);
+            setCopiado(true);
+            toast({
+                title: "¡Link copiado!",
+                description: "El link de referido ha sido copiado al portapapeles.",
+            });
+            setTimeout(() => setCopiado(false), 2000);
+        } catch (err) {
+            toast({
+                title: "Error al copiar",
+                description: "No se pudo copiar el link. Por favor, cópialo manualmente.",
+                variant: "destructive",
+            });
+        }
     };
 
     const validarCampos = () => {
@@ -614,8 +660,36 @@ export default function FormInscripcion({ taller, slug }) {
                                     </li>
                                 </ol>
                             </div>
+
+                            <div className="w-full mt-4">
+                                <h3 className="font-semibold text-gray-900 mb-2">Tu link de referido:</h3>
+                                <div className="flex items-center gap-2 bg-gray-50 p-2 rounded-lg">
+                                    <input
+                                        type="text"
+                                        value={linkReferido}
+                                        readOnly
+                                        className="flex-1 bg-transparent border-none focus:ring-0 text-sm"
+                                    />
+                                    <Button
+                                        onClick={copiarLink}
+                                        variant="ghost"
+                                        size="sm"
+                                        className="hover:bg-gray-200"
+                                    >
+                                        {copiado ? (
+                                            <Check className="h-4 w-4 text-green-500" />
+                                        ) : (
+                                            <Copy className="h-4 w-4" />
+                                        )}
+                                    </Button>
+                                </div>
+                                <p className="text-sm text-gray-500 mt-2">
+                                    Comparte este link con tus amigos para que se inscriban contigo
+                                </p>
+                            </div>
+
                             <Button
-                                className="w-full bg-green-600 hover:bg-green-700"
+                                className="w-full bg-green-600 hover:bg-green-700 mt-4"
                                 onClick={() => window.location.href = '/talleres'}
                             >
                                 Volver a Talleres

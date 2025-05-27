@@ -14,14 +14,16 @@ class TransferenciaTaller extends Mailable
     public $cliente;
     public $cantidadPersonas;
     public $esReserva;
+    public $referido;
     public $monto;
 
-    public function __construct($taller, $cliente, $cantidadPersonas, $esReserva)
+    public function __construct($taller, $cliente, $cantidadPersonas, $esReserva, $referido)
     {
         $this->taller = $taller;
         $this->cliente = $cliente;
         $this->cantidadPersonas = $cantidadPersonas;
         $this->esReserva = $esReserva;
+        $this->referido = $referido;
         $this->monto = $esReserva ? ($taller->precio * $cantidadPersonas * 0.5) : ($taller->precio * $cantidadPersonas);
     }
 

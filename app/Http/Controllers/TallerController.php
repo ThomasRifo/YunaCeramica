@@ -506,10 +506,14 @@ public function updateMenusHtml(Request $request, $id)
             'participantes.*.email' => 'nullable|email',
             'participantes.*.telefono' => 'nullable|string',
             'participantes.*.menu_id' => 'required|exists:menus,id',
+            'referido' => 'nullable|string',
         ]);
 
         $taller = Taller::findOrFail($request->tallerId);
-        
+
+        // Generar código de referido único si no viene uno
+        $codigoReferido = $request->input('referido') ?? strtoupper(substr(md5(uniqid()), 0, 8));
+
         // Crear el taller cliente con estado pendiente
         $tallerCliente = TallerCliente::create([
             'idTaller' => $taller->id,
@@ -522,11 +526,10 @@ public function updateMenusHtml(Request $request, $id)
             'idMenu' => $request->menu_id,
             'idMetodoPago' => 1, // 1 = Transferencia
             'fecha' => now(), // Fecha de inscripción
+            'referido' => $codigoReferido,
         ]);
 
         // Enviar email con instrucciones
-
-
         if ($request->has('participantes') && count($request->participantes) > 1) {
             foreach ($request->participantes as $index => $participante) {
                 if ($index === 0) continue; // El primero es el titular
@@ -540,16 +543,23 @@ public function updateMenusHtml(Request $request, $id)
                 ]);
             }
         }
+        $linkReferido = url("/taller/{$taller->id}/referido/{$tallerCliente->referido}");
         Mail::to($request->email)->send(new TransferenciaTaller(
             $taller,
             [
                 'nombre' => $request->nombre,
-                'apellido' => $request->apellido
+                'apellido' => $request->apellido,
             ],
             $request->cantidadPersonas,
-            $request->esReserva
+            $request->esReserva,
+            $linkReferido
         ));
-        return back()->with('success', 'Inscripción procesada correctamente. Revisa tu email para las instrucciones de pago.');
+
+        // RESPUESTA JSON
+        return response()->json([
+            'success' => true,
+            'referido' => $codigoReferido,
+        ]);
     }
 
     public function listaParticipantes($id)
@@ -620,6 +630,38 @@ public function updateMenusHtml(Request $request, $id)
         $pdf = PDF::loadView('talleres.lista-participantes', compact('taller', 'participantes'));
         
         return $pdf->download('lista-participantes-' . $taller->nombre . '.pdf');
+    }
+
+    public function referido($id, $codigoReferido)
+    {
+        $taller = Taller::with([
+            'menus' => function ($query) {
+                $query->select('menus.id', 'menus.nombre')->withPivot('html');
+            },
+            'subcategoria:id,nombre,url'
+        ])
+        ->select([
+            'id',
+            'nombre',
+            'fecha',
+            'hora',
+            'precio',
+            'ubicacion',
+            'cupoMaximo',
+            'cantInscriptos',
+            'idSubcategoria'
+        ])
+        ->findOrFail($id);
+
+        $referidor = TallerCliente::where('idTaller', $id)
+            ->where('referido', $codigoReferido)
+            ->firstOrFail();
+
+        return Inertia::render('Talleres/FormInscripcion', [
+            'taller' => $taller,
+            'referido' => $codigoReferido,
+            'slug' => $taller->subcategoria->url ?? null,
+        ]);
     }
 }
 

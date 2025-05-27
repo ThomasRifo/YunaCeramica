@@ -64,6 +64,10 @@
             <h2 style="color: #db0000; font-weight: bold;">Importante:</h2>
             <p><strong>Una vez realizada la transferencia, por favor envía el comprobante a yunaceramica@gmail.com o responde a este email con el comprobante.</strong></p>
             <p><strong>Tu inscripción quedará confirmada una vez que verifiquemos el pago.</strong></p>
+            <p>
+                Compartí este link con tus amigos para que se inscriban juntos y compartan mesa!<br>
+                <a href="{{ $referido }}">{{ $referido }}</a>
+            </p>
         </div>
 
         <div class="bank-details">
@@ -73,6 +77,7 @@
             <p><strong>Alias:</strong> yunaceramica</p>
             <p><strong>Titular:</strong> Ana Carmen da Silva</p>
         </div>
+
 
 
 

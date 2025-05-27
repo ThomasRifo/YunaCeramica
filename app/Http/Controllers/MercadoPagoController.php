@@ -73,6 +73,10 @@ class MercadoPagoController extends Controller
 
         try {
             $taller = Taller::findOrFail($validatedData['tallerId']);
+            
+            // Generar código de referido único
+            $codigoReferido = strtoupper(substr(md5(uniqid()), 0, 8));
+
             $preference_request_data = [
                 'items' => [
                     [
@@ -124,7 +128,20 @@ class MercadoPagoController extends Controller
                 'idMetodoPago' => 2, // 2 = MercadoPago
                 'external_reference_mp' => $externalReference,
                 'monto_total_pagado_mp' => $validatedData['precioUnitario'] * $validatedData['cantidad'],
+                'referido' => $request->input('referido') ?? $codigoReferido,
             ]);
+
+            // Si el cliente fue referido, actualizar el referido_por
+            if ($request->input('referido')) {
+                $referidor = TallerCliente::where('idTaller', $validatedData['tallerId'])
+                    ->where('referido', $request->input('referido'))
+                    ->first();
+                
+                if ($referidor) {
+                    $tallerCliente->referido_por = $referidor->id;
+                    $tallerCliente->save();
+                }
+            }
 
             if ($validatedData['cantidad'] > 1) {
                 foreach ($validatedData['participantes'] as $index => $participanteData) {
@@ -174,7 +191,8 @@ class MercadoPagoController extends Controller
                         'init_point' => $created_preference->init_point,
                         'preference_id' => $created_preference->id,
                         'external_reference' => $externalReference,
-                    ]
+                    ],
+                    'referido' => $tallerCliente->referido,
                 ], 200);
 
             } else {
