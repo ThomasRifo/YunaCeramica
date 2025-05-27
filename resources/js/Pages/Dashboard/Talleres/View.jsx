@@ -41,6 +41,8 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
   const [cambiosAConfirmar, setCambiosAConfirmar] = useState([]);
   const [guardando, setGuardando] = useState(false);
   const [resultados, setResultados] = useState([]);
+  const [confirmarPagoParcialOpen, setConfirmarPagoParcialOpen] = useState(false);
+  const [participantePagoParcial, setParticipantePagoParcial] = useState(null);
 
   // Declaración de todas las variables necesarias
   let totalRecaudado = 0;
@@ -126,7 +128,33 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
     { field: 'numero', headerName: '#', width: 60 },
     { field: 'nombre', headerName: 'Nombre', flex: 1 },
     { field: 'apellido', headerName: 'Apellido', flex: 1 },
-    { field: 'estadoPago', headerName: 'Estado de pago', flex: 1 },
+    { 
+      field: 'estadoPago', 
+      headerName: 'Estado de pago', 
+      flex: 1,
+      renderCell: (params) => {
+        if (params.row.tipo === 'cliente' && params.row.estadoPagoId === 2) {
+          return (
+            <FormControl fullWidth size="small">
+              <Select
+                value={params.row.estadoPagoId}
+                displayEmpty
+                onChange={(e) => {
+                  if (e.target.value === 3) {  // Solo si se selecciona "Pagado"
+                    setParticipantePagoParcial(params.row);
+                    setConfirmarPagoParcialOpen(true);
+                  }
+                }}
+              >
+                <MenuItem value={2}>Pago Parcial</MenuItem>
+                <MenuItem value={3}>Pagado</MenuItem>
+              </Select>
+            </FormControl>
+          );
+        }
+        return params.row.estadoPago;
+      }
+    },
     { field: 'menu', headerName: 'Menú', flex: 1 },
     { field: 'email', headerName: 'Email', flex: 1 },
     { field: 'telefono', headerName: 'Teléfono', flex: 1 },
@@ -309,6 +337,22 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
     } finally {
       setGuardando(false);
     }
+  };
+
+  const handleConfirmarPagoParcial = () => {
+    if (!participantePagoParcial) return;
+
+    router.put(
+      route('dashboard.taller.actualizarPago', participantePagoParcial.realId),
+      { nuevoEstado: 3 },
+      {
+        preserveScroll: true,
+        onSuccess: () => {
+          setConfirmarPagoParcialOpen(false);
+          setParticipantePagoParcial(null);
+        },
+      }
+    );
   };
 
   // Generar filas para pendientes
@@ -543,6 +587,25 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
         <DialogActions>
           <Button onClick={() => setConfirmDialogOpen(false)} disabled={guardando}>Cancelar</Button>
           <Button onClick={handleConfirmarCambios} color="primary" variant="contained" disabled={guardando}>
+            Confirmar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Diálogo de confirmación para pago parcial */}
+      <Dialog open={confirmarPagoParcialOpen} onClose={() => setConfirmarPagoParcialOpen(false)}>
+        <DialogTitle>Confirmar cambio de estado de pago</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            ¿Deseas cambiar el estado de pago de <strong>{participantePagoParcial?.nombre} {participantePagoParcial?.apellido}</strong> con correo <strong>{participantePagoParcial?.email}</strong> a pagado?
+          </DialogContentText>
+          <DialogContentText color="error" sx={{ mt: 2 }}>
+            Esta acción no tendrá vuelta atrás.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmarPagoParcialOpen(false)}>Cancelar</Button>
+          <Button onClick={handleConfirmarPagoParcial} color="primary" variant="contained">
             Confirmar
           </Button>
         </DialogActions>

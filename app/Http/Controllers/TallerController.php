@@ -228,12 +228,12 @@ public function talleresClient()
     // Verificar talleres futuros por tipo
     $ceramicaYCafeFuturos = Taller::where('activo', true)
         ->where('idSubcategoria', 2) // ID de Cerámica y Café
-        ->where('fecha', '>', now())
+        ->where('fecha', '>=', now()->startOfDay())
         ->exists();
 
     $ceramicaYGinFuturos = Taller::where('activo', true)
         ->where('idSubcategoria', 1) // ID de Cerámica y Gin
-        ->where('fecha', '>', now())
+        ->where('fecha', '>=', now()->startOfDay())
         ->exists();
 
     // Determinar el estado de cada tipo de taller
@@ -303,7 +303,7 @@ public function tallerView()
     $taller = Taller::with('subcategoria')
     ->where('activo', true)
         ->where('idSubcategoria', $subcategoriaId)
-        ->orderBy('created_at', 'desc')
+        ->orderBy('fecha', 'desc')
         ->first();
 
     if (!$taller) {
@@ -351,7 +351,7 @@ public function formInscripcion($slug)
         'cantInscriptos'
     ])
     ->where('activo', true)
-    ->orderBy('created_at', 'desc')
+    ->orderBy('fecha', 'desc')
     ->whereHas('subcategoria', function ($query) use ($slug) {
         $query->where('url', $slug);
     })

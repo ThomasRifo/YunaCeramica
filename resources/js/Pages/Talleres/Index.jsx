@@ -120,7 +120,7 @@ export default function TalleresIndex({ reviews, talleres, imagenesPiezas }) {
                   </div>
                   <div className="absolute inset-0 bg-white/50 flex p-8 items-end justify-center">
                     <div className="text-center bg-black/70 rounded-xl md:p-4 p-3 md:mb-20 mb-6 w-full">
-                      <span className="text-white md:text-4xl text-3xl font-normal">PROXIMAMENTE</span>
+                      <span className="text-white md:text-4xl text-3xl font-normal">PRÓXIMAMENTE</span>
                     </div>
                   </div>
                 </AspectRatio>
@@ -167,7 +167,7 @@ export default function TalleresIndex({ reviews, talleres, imagenesPiezas }) {
                   </div>
                   <div className="absolute inset-0 bg-white/50 flex p-8 items-end justify-center">
                     <div className="text-center bg-black/70 rounded-xl md:p-4 p-3 md:mb-20 mb-6 w-full">
-                      <span className="text-white md:text-4xl text-3xl font-normal">PROXIMAMENTE</span>
+                      <span className="text-white md:text-4xl text-3xl font-normal">PRÓXIMAMENTE</span>
                     </div>
                   </div>
                 </AspectRatio>

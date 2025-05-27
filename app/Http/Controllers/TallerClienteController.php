@@ -63,12 +63,20 @@ class TallerClienteController extends Controller
         //
     }
     public function actualizarPago($id)
-{
-    $tc = TallerCliente::findOrFail($id);
-    $tc->idEstadoPago = 1; // pagado
-    $tc->save();
+    {
+        $tc = TallerCliente::findOrFail($id);
+        
+        // Si viene nuevoEstado en el request, lo usamos
+        if (request()->has('nuevoEstado')) {
+            $tc->idEstadoPago = request('nuevoEstado');
+        } else {
+            // Si no viene nuevoEstado, mantenemos el comportamiento anterior
+            $tc->idEstadoPago = 1;
+        }
+        
+        $tc->save();
 
-    return redirect()->route('dashboard.talleres.view', $tc->idTaller)
-    ->with('success', 'Pago actualizado correctamente.');
-}
+        return redirect()->route('dashboard.talleres.view', $tc->idTaller)
+        ->with('success', 'Pago actualizado correctamente.');
+    }
 }
