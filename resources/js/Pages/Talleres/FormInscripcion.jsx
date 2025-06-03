@@ -27,8 +27,12 @@ import {
 import CardMenu from "@/Components/Taller/CardMenu";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent } from "@/Components/ui/dialog";
+import ReCAPTCHA from "react-google-recaptcha";
 import Breadcrumbs from '@/Components/Breadcrumbs';
 dayjs.extend(customParseFormat);
+
+const recaptchaV3Key = "6LeWbjorAAAAAN1iTNC1iDlAzdGhuqJ9RKKVW0lN";
+const recaptchaV2Key = "6LfRcDorAAAAADXRjzq75JFZVZk_hS_coEOQ2CNV";
 
 export default function FormInscripcion({ taller, slug, referido: referidoProp }) {
     const { toast } = useToast();
@@ -51,7 +55,11 @@ export default function FormInscripcion({ taller, slug, referido: referidoProp }
     const [showFailure, setShowFailure] = useState(false);
     const [showPending, setShowPending] = useState(false);
     const [errores, setErrores] = useState({});
+    const recaptchaV2Ref = useRef();
     const [referido, setReferido] = useState(null);
+    const [showV2, setShowV2] = useState(false);
+    const [accionPendiente, setAccionPendiente] = useState(null);
+    const [v2Token, setV2Token] = useState(null);
     const breadcrumbItems = [
         {
             label: 'Talleres',
@@ -175,7 +183,6 @@ export default function FormInscripcion({ taller, slug, referido: referidoProp }
                 setLinkReferido(link);
                 window.location.href = responseData.mercadopago.init_point;
             } else {
-                console.error("Error al crear preferencia de MP. Respuesta:", responseData);
                 const errorMessage = responseData?.message || responseData?.mercadopago?.message || "Hubo un problema al iniciar el pago (respuesta inválida del servidor).";
                 toast({
                     title: "Error al iniciar el pago",
@@ -184,7 +191,6 @@ export default function FormInscripcion({ taller, slug, referido: referidoProp }
                 });
             }
         } catch (error) {
-            console.error("Error en la petición fetch a create-preference:", error);
             toast({
                 title: "Error de red",
                 description: "Ocurrió un error de red o al procesar la solicitud. Por favor, intenta de nuevo.",
@@ -259,6 +265,82 @@ export default function FormInscripcion({ taller, slug, referido: referidoProp }
             });
         } finally {
             setIsLoadingTransferencia(false);
+        }
+    };
+
+
+    const handleInscripcionConCaptcha = async (accion) => {
+        try {
+            // Ejecutar reCAPTCHA v3
+            const v3Token = await window.grecaptcha.execute(recaptchaV3Key, { action: "submit" });
+
+            // Validar en backend
+            const response = await fetch("/api/validar-captcha", {
+                method: "POST",
+                headers: { 
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({ v3Token }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Error en la validación del captcha');
+            }
+
+            const data = await response.json();
+
+
+            if (data.score < 0.5) {
+                setShowV2(true);
+                setAccionPendiente(() => accion);
+            } else {
+                accion();
+            }
+        } catch (error) {
+            toast({
+                title: "Error de validación",
+                description: "Hubo un problema al validar el captcha. Por favor, intenta nuevamente.",
+                variant: "destructive",
+            });
+        }
+    };
+
+    const handleV2Change = async (token) => {
+        setV2Token(token);
+
+        try {
+            const response = await fetch("/api/validar-captcha", {
+                method: "POST",
+                headers: { 
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({ v2Token: token }),
+            });
+
+            const data = await response.json();
+           
+
+            if (data.success) {
+                if (accionPendiente) {
+                    accionPendiente();
+                    setShowV2(false);
+                    setAccionPendiente(null);
+                }
+            } else {
+                toast({
+                    title: "Error de validación",
+                    description: "No se pudo validar el captcha. Por favor, intenta nuevamente.",
+                    variant: "destructive",
+                });
+            }
+        } catch (error) {
+            toast({
+                title: "Error",
+                description: "Ocurrió un error al validar el captcha. Por favor, intenta nuevamente.",
+                variant: "destructive",
+            });
         }
     };
 
@@ -579,7 +661,7 @@ export default function FormInscripcion({ taller, slug, referido: referidoProp }
                         {metodoPago === 'tarjeta' && (
                             <Button
                                 className="h-12 w-full"
-                                onClick={handlePagoMercadoPago}
+                                onClick={() => handleInscripcionConCaptcha(handlePagoMercadoPago)}
                                 disabled={isLoadingMercadoPago || !datosCliente.nombre || !datosCliente.apellido || !datosCliente.email || !datosCliente.menu}
                             >
                                 {isLoadingMercadoPago ? "Procesando..." : "Pagar con MercadoPago"}
@@ -589,7 +671,7 @@ export default function FormInscripcion({ taller, slug, referido: referidoProp }
                         {(metodoPago === 'reserva' || metodoPago === 'total') && (
                             <Button
                                 className="h-12 w-full bg-green-600 hover:bg-green-700"
-                                onClick={handleTransferencia}
+                                onClick={() => handleInscripcionConCaptcha(handleTransferencia)}
                                 disabled={isLoadingTransferencia || !datosCliente.nombre || !datosCliente.apellido || !datosCliente.email || !datosCliente.menu}
                             >
                                 {isLoadingTransferencia ? (
@@ -698,6 +780,14 @@ export default function FormInscripcion({ taller, slug, referido: referidoProp }
                         </div>
                     </DialogContent>
                 </Dialog>
+
+                {showV2 && (
+                    <ReCAPTCHA                    
+                        sitekey={recaptchaV2Key}           
+                        onChange={handleV2Change}
+                        ref={recaptchaV2Ref}               
+                    />
+                )}
             </div>
         </>
     );
