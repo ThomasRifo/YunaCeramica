@@ -316,6 +316,7 @@ export default function FormInscripcion({ taller, slug, referido: referidoProp }
                     <Clock className="w-5 h-5 text-black inline" />{" "}
                     <strong>
                         {dayjs(taller.hora, "HH:mm:ss").format("HH:mm")}
+                        {taller.horaFin ? ` - ${dayjs(taller.horaFin, "HH:mm:ss").format("HH:mm")}` : ''}
                     </strong>{" "}
                     | <MapPin className="w-5 h-5 inline text-black" />{" "}
                     <strong>{taller.ubicacion}</strong>

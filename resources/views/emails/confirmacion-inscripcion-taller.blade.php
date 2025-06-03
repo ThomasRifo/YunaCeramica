@@ -26,8 +26,8 @@
                                     <td style="padding: 8px 0;">{{ \Carbon\Carbon::parse($taller->fecha)->format('d-m-Y') }}</td>
                                 </tr>
                                 <tr>
-                                    <td style="padding: 8px 0;"><strong>Hora:</strong></td>
-                                    <td style="padding: 8px 0;">{{ \Carbon\Carbon::parse($taller->hora)->format('H:i') }}</td>
+                                    <td style="padding: 8px 0;"><strong>Horario:</strong></td>
+                                    <td style="padding: 8px 0;">{{ \Carbon\Carbon::parse($taller->hora)->format('H:i') }} - {{ \Carbon\Carbon::parse($taller->horaFin)->format('H:i') }}</td>
                                 </tr>
                                 <tr>
                                     <td style="padding: 8px 0;"><strong>Ubicación:</strong></td>

@@ -7,6 +7,9 @@ import Autocomplete from '@mui/material/Autocomplete';
 export default function MenuSelector({ menus, selectedMenus, onChange, fixedMenus = [] }) {
   return (
     <Autocomplete
+      sx={{
+        mt: 2,
+      }}
       multiple
       disableCloseOnSelect
       id="menu-selector"

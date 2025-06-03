@@ -14,6 +14,7 @@ export default function Create({ subcategorias, menus }) {
     descripcion: '',
     fecha: '',
     hora: '',
+    horaFin: '',
     precio: '',
     cupoMaximo: '',
     ubicacion: '',
@@ -74,8 +75,8 @@ menuIds,
 
       <TextField
         fullWidth
-        sx={{ width: 'calc(50% - 12px)' }}
-        label="Hora"
+        sx={{ width: 'calc(25% - 12px)' }}
+        label="Inicio"
         type="time"
         value={data.hora}
         onChange={(e) => setData('hora', e.target.value)}
@@ -85,7 +86,19 @@ menuIds,
         helperText={errors.hora}
         margin="normal"
       />
-
+      <TextField
+        fullWidth
+        sx={{ width: 'calc(25% - 12px)', ml: 1 }}
+        label="Fin"
+        type="time"
+        value={data.horaFin}
+        onChange={(e) => setData('horaFin', e.target.value)}
+        InputLabelProps={{ shrink: true }}
+        inputProps={{ step: 60 }}
+        error={!!errors.horaFin}
+        helperText={errors.horaFin}
+        margin="normal"
+      />
       <TextField
         fullWidth
         label="Precio"
@@ -111,7 +124,7 @@ menuIds,
         margin="normal"
       />
 
-      <FormControl error={!!errors.idSubcategoria} sx={{ width: '50%', ml: 3, mt: 2 }}>
+      <FormControl error={!!errors.idSubcategoria} sx={{ width: 1/2, ml: 3, mt: 2 }}>
       <InputLabel className='MuiFormLabel-root MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-outlined MuiFormLabel-colorPrimary MuiFormLabel-filled MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-outlined css-113d811-MuiFormLabel-root-MuiInputLabel-root'>Tipo de taller</InputLabel>
       
         <Select

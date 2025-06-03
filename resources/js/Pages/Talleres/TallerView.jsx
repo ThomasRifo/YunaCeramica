@@ -70,7 +70,7 @@ export default function TallerView({ taller, imagenes, pagoAprobado: pagoAprobad
       </div>
       <div className="flex items-center gap-2">
         <Clock className="w-5 h-5 text-black" />
-        <span><strong>Horario:</strong> {dayjs(taller.hora, "HH:mm:ss").format("HH:mm")}</span>
+        <span><strong>Horario:</strong> {dayjs(taller.hora, "HH:mm:ss").format("HH:mm")} - {dayjs(taller.horaFin, "HH:mm:ss").format("HH:mm")}</span>
       </div>
       <div className="flex items-center gap-2">
         <div className="flex items-center gap-2">
@@ -234,9 +234,9 @@ export default function TallerView({ taller, imagenes, pagoAprobado: pagoAprobad
 
         <PiecesCarousel images={imagenesPiezas} title="Piezas disponibles para pintar" />
         
-
+  
         {/* Mapa */}
-        <div id="ubicacion">
+        <div id="ubicacion" className="pt-16">
         <LocationMap  direccion={taller.ubicacion} />
         </div>
       </div>
@@ -258,7 +258,7 @@ export default function TallerView({ taller, imagenes, pagoAprobado: pagoAprobad
               <div><strong>Taller:</strong> {taller.nombre}</div>
               <div><strong>Ubicación:</strong> {taller.ubicacion}</div>
               <div><strong>Fecha:</strong> {dayjs(taller.fecha).format('DD-MM-YYYY')} </div>
-              <div><strong>Hora:</strong> {dayjs(taller.hora, "HH:mm:ss").format("HH:mm")}</div>
+              <div><strong>Horario:</strong> {dayjs(taller.hora, "HH:mm:ss").format("HH:mm")} - {dayjs(taller.horaFin, "HH:mm:ss").format("HH:mm")}</div>
             </div>
             <p className="text-gray-600 mb-6">
                     Recibirás un correo electrónico con los detalles completos en breve. ¡Gracias por tu confianza!

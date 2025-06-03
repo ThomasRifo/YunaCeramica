@@ -54,7 +54,7 @@
             <h2>Detalles de tu inscripción</h2>
             <p><strong>Taller:</strong> {{ $taller->nombre }}</p>
             <p><strong>Fecha:</strong> {{ \Carbon\Carbon::parse($taller->fecha)->format('d-m-Y') }}</p>
-            <p><strong>Hora:</strong> {{ \Carbon\Carbon::parse($taller->hora)->format('H:i') }}</p>
+            <p><strong>Horario:</strong> {{ \Carbon\Carbon::parse($taller->hora)->format('H:i') }} - {{ \Carbon\Carbon::parse($taller->horaFin)->format('H:i') }}</p>
             <p><strong>Cantidad de personas:</strong> {{ $cantidadPersonas }}</p>
             <p><strong>Tipo de pago:</strong> {{ $esReserva ? 'Reserva (50%)' : 'Pago total' }}</p>
             <p><strong>Monto a abonar:</strong> ${{ number_format($monto, 2) }}</p>

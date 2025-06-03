@@ -21,6 +21,7 @@ export default function Edit({ taller, subcategorias, menus }) {
     nombre: taller.nombre || '',
     fecha: taller.fecha || '',
     hora: taller.hora || '',
+    horaFin: taller.horaFin || '',
     precio: taller.precio || '',
     cupoMaximo: taller.cupoMaximo || '',
     descripcion: taller.descripcion || '',
@@ -75,6 +76,10 @@ export default function Edit({ taller, subcategorias, menus }) {
     if (data.hora && !data.hora.includes(':')) {
       const parsed = dayjs(data.hora).format('HH:mm');
       setData('hora', parsed);
+    }
+    if (data.horaFin && !data.horaFin.includes(':')) {
+      const parsed = dayjs(data.horaFin).format('HH:mm');
+      setData('horaFin', parsed);
     }
     put(route('dashboard.talleres.update', taller.id), {
       preserveScroll: true,
@@ -135,9 +140,9 @@ export default function Edit({ taller, subcategorias, menus }) {
 <TextField
   fullWidth
   sx={{
-    width: 'calc(50% - 12px)',
+    width: 'calc(25% - 12px)',
   }}
-  label="Hora"
+  label="Inicio"
   type="time"
   value={data.hora}
   onChange={(e) => setData('hora', e.target.value)}
@@ -145,6 +150,23 @@ export default function Edit({ taller, subcategorias, menus }) {
   inputProps={{ step: 60 }} // 🔥 solo horas y minutos
   error={!!errors.hora}
   helperText={errors.hora}
+  margin="normal"
+/>
+
+<TextField
+  fullWidth
+  sx={{
+    width: 'calc(25% - 12px)',
+    ml: 1,
+  }}
+  label="Fin"
+  type="time"
+  value={data.horaFin}
+  onChange={(e) => setData('horaFin', e.target.value)}
+  InputLabelProps={{ shrink: true }}
+  inputProps={{ step: 60 }} // 🔥 solo horas y minutos
+  error={!!errors.horaFin}
+  helperText={errors.horaFin}
   margin="normal"
 />
 
@@ -186,19 +208,23 @@ export default function Edit({ taller, subcategorias, menus }) {
   error={!!errors.idSubcategoria}
   sx={{
     width: '50%',              
-    ml: 3,
-    mt: 2,                    
+    ml: 3,               
   }}
 >
-<InputLabel className='MuiFormLabel-root MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-outlined MuiFormLabel-colorPrimary MuiFormLabel-filled MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-outlined css-113d811-MuiFormLabel-root-MuiInputLabel-root'>Tipo de taller</InputLabel>
+<InputLabel className='MuiFormLabel-root MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-outlined MuiFormLabel-colorPrimary MuiFormLabel-filled MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-outlined css-113d811-MuiFormLabel-root-MuiInputLabel-root'
+>Tipo de taller</InputLabel>
 
   <Select
+    sx={{
+      mt: 2,
+    }}
     labelId="select-subcategoria-label"
     id="select-subcategoria"
     variant="outlined" 
     label="Tipo de taller"
     value={data.idSubcategoria}
     onChange={(e) => setData('idSubcategoria', e.target.value)}    
+
   >
     {subcategorias.map((sub) => (
       <MenuItem key={sub.id} value={sub.id}>
@@ -213,6 +239,8 @@ export default function Edit({ taller, subcategorias, menus }) {
 </FormControl>
 
 <MenuSelector
+
+  
   menus={menus}  // todos los menús disponibles
   selectedMenus={menus.filter(menu => data.menus.includes(menu.id))}  // los objetos completos de los menús seleccionados
   onChange={(newMenuObjects) => {

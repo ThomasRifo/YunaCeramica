@@ -18,6 +18,7 @@ class Taller extends Model
         'descripcion', //CAMBIAR DESCRIPCION POR DETALLES
         'fecha',
         'hora',
+        'horaFin',
         'cupoMaximo',
         'precio',
         'ubicacion',
