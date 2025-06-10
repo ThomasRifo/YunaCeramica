@@ -34,6 +34,7 @@ class ConfirmacionInscripcionTaller extends Mailable
      */
     public function build()
     {
+        $logoPath = public_path('storage/uploads/yunalogowhite192.png');
         return $this->subject('Confirmación Inscripción Taller')
             ->view('emails.confirmacion-inscripcion-taller');
     }

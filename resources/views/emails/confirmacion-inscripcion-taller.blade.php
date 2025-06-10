@@ -11,7 +11,8 @@
                 <table width="600" align="center" bgcolor="#fff" cellpadding="40" cellspacing="0" style="margin: 40px auto; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.07);">
                     <tr>
                         <td align="center">
-                            <img src="{{ asset('storage/uploads/yunalogo.webp') }}" alt="Yuna Cerámica" style="width: 120px; margin-bottom: 20px;">
+                            <img src="{{ $message->embed(public_path('storage/uploads/yunalogowhite192.png')) }}" alt="Logo"
+                            style="width: 80px; margin-bottom: 20px;">
                             <h2 style="color: #1a202c; margin-bottom: 10px;">¡Inscripción confirmada!</h2>
                             <p style="font-size: 18px; color: #333; margin-bottom: 30px;">
                                 Hola <strong>{{ ucfirst($titular['nombre']) }}</strong>,<br>

@@ -123,4 +123,6 @@ Route::get('/talleres/{id}/descargar-lista', [TallerController::class, 'descarga
 
 Route::get('/taller/{id}/referido/{codigoReferido}', [App\Http\Controllers\TallerController::class, 'referido'])->name('taller.referido');
 
+Route::post('/dashboard/talleres/{id}/send-email', [TallerController::class, 'sendEmail'])->name('dashboard.taller.send-email');
+
 require __DIR__.'/auth.php';

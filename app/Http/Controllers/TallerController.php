@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use App\Mail\ConfirmacionInscripcionTaller;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Mail\TallerNotification;
 
 class TallerController extends Controller
 {
@@ -668,6 +669,32 @@ public function updateMenusHtml(Request $request, $id)
             'referido' => $codigoReferido,
             'slug' => $taller->subcategoria->url ?? null,
         ]);
+    }
+
+    public function sendEmail(Request $request, $id)
+    {
+        $taller = Taller::findOrFail($id);
+        // Filtrar solo los clientes confirmados (idEstadoPago 2 o 3)
+        $participantes = $taller->tallerClientes()->with('cliente')->whereIn('idEstadoPago', [2, 3])->get();
+
+        $emailData = $request->validate([
+            'title' => 'required|string|max:255',
+            'content' => 'required|string',
+            'includeReview' => 'boolean'
+        ]);
+
+        foreach ($participantes as $participante) {
+            $email = $participante->email_cliente ?? $participante->cliente->email;
+            if ($email) {
+                Mail::to($email)->send(new TallerNotification(
+                    $emailData['title'],
+                    $emailData['content'],
+                    $emailData['includeReview']
+                ));
+            }
+        }
+
+        return response()->json(['message' => 'Emails enviados correctamente']);
     }
 }
 

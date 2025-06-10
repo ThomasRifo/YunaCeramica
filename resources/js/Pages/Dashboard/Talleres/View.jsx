@@ -28,7 +28,8 @@ import {
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import dayjs from 'dayjs';
-import DownloadIcon from '@mui/icons-material/Download';
+import { Download as DownloadIcon, Email as EmailIcon } from '@mui/icons-material';
+import EmailModal from './EmailModal';
 
 export default function View({ taller, tallerClientesPagados, tallerClientesPendientes }) {
   const theme = useTheme();
@@ -43,6 +44,8 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
   const [resultados, setResultados] = useState([]);
   const [confirmarPagoParcialOpen, setConfirmarPagoParcialOpen] = useState(false);
   const [participantePagoParcial, setParticipantePagoParcial] = useState(null);
+  const [emailModalOpen, setEmailModalOpen] = useState(false);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
 
   // Declaración de todas las variables necesarias
   let totalRecaudado = 0;
@@ -396,6 +399,32 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
     }
   });
 
+  const handleSendEmail = async (emailData) => {
+    setIsSendingEmail(true);
+    try {
+      const response = await fetch(route('dashboard.taller.send-email', taller.id), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        },
+        body: JSON.stringify(emailData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al enviar el email');
+      }
+
+      setEmailModalOpen(false);
+      // Aquí podrías mostrar un mensaje de éxito
+    } catch (error) {
+      console.error('Error:', error);
+      // Aquí podrías mostrar un mensaje de error
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
+
   return (
     <>
       <Head title={`Taller - ${taller.nombre}`} />
@@ -438,7 +467,15 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
             </CardContent>
           </Card>
         </Box>
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mb: 2 }}>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<EmailIcon />}
+            onClick={() => setEmailModalOpen(true)}
+          >
+            Enviar Email a Participantes
+          </Button>
           <Button
             variant="contained"
             color="primary"
@@ -610,6 +647,13 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
           </Button>
         </DialogActions>
       </Dialog>
+
+      <EmailModal
+        open={emailModalOpen}
+        onClose={() => setEmailModalOpen(false)}
+        onSend={handleSendEmail}
+        isLoading={isSendingEmail}
+      />
     </>
   );
 }

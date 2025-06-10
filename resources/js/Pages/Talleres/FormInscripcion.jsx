@@ -34,7 +34,9 @@ dayjs.extend(customParseFormat);
 const recaptchaV3Key = "6LeWbjorAAAAAN1iTNC1iDlAzdGhuqJ9RKKVW0lN";
 const recaptchaV2Key = "6LfRcDorAAAAADXRjzq75JFZVZk_hS_coEOQ2CNV";
 
-export default function FormInscripcion({ taller, slug, referido: referidoProp }) {
+export default function FormInscripcion({ taller = {}, slug = '', referido: referidoProp = null }) {
+    
+    
     const { toast } = useToast();
     const [cantidadPersonas, setCantidadPersonas] = useState(1);
     const [metodoPago, setMetodoPago] = useState("reserva");
@@ -68,13 +70,16 @@ export default function FormInscripcion({ taller, slug, referido: referidoProp }
         {
             label: slug === 'ceramica-y-cafe' ? 'Cerámica y Café' : 'Cerámica y Gin',
             href: `/talleres-${slug}`
-
         },
         {
             label: 'Inscripción',
             href: '#'
         }
     ];
+
+    // Agregar estado para controlar si el formulario está deshabilitado
+    const [isFormDisabled, setIsFormDisabled] = useState(false);
+    const [formStatus, setFormStatus] = useState("");
 
     useEffect(() => {
         if (typeof window !== "undefined") {
@@ -87,10 +92,25 @@ export default function FormInscripcion({ taller, slug, referido: referidoProp }
     useEffect(() => {
         if (typeof referidoProp !== "undefined" && referidoProp !== null) {
             setReferido(referidoProp);
-            // Opcional: debug
-            // console.log("Referido seteado desde prop:", referidoProp);
         }
     }, [referidoProp]);
+
+    useEffect(() => {
+        if (!taller?.id) return;
+
+        const tallerLleno = (taller.cantInscriptos ?? 0) >= (taller.cupoMaximo ?? 0);
+        const tallerEsFuturo = dayjs(taller.fecha).isAfter(dayjs(), 'day');
+        
+        if (tallerLleno && tallerEsFuturo) {
+            setIsFormDisabled(true);
+            setFormStatus("COMPLETO");
+        } else if (!tallerEsFuturo) {
+            setIsFormDisabled(true);
+            setFormStatus("PRÓXIMAMENTE");
+        }
+    }, [taller]);
+
+
 
     const handleCantidadChange = (e) => {
         const nuevaCantidad = parseInt(e.target.value);
@@ -112,8 +132,8 @@ export default function FormInscripcion({ taller, slug, referido: referidoProp }
         setAcompanantes(nuevos);
     };
 
-    const precioBase = taller.precio;
-    const precioReserva = taller.precio /2;
+    const precioBase = taller?.precio ?? 0;
+    const precioReserva = (taller?.precio ?? 0) / 2;
     const precioTarjeta = Math.round(precioBase * 1.1);
     const total =
         metodoPago === "tarjeta"
@@ -382,308 +402,314 @@ export default function FormInscripcion({ taller, slug, referido: referidoProp }
         return Object.keys(nuevosErrores).length === 0;
     };
 
+    const pageTitle = taller?.nombre ? `${taller.nombre} - Inscripción${formStatus ? ` (${formStatus})` : ''}` : 'Inscripción a Taller';
+
     return (
         <>
-            <Head title={`Inscripción - ${taller?.nombre}`} />
+            <Head title={pageTitle} />
             <div className="max-w-7xl mx-auto px-4 py-8 pt-24 md:pt-28">
                 <Breadcrumbs items={breadcrumbItems} />
-                
-                <h1 className="text-3xl text-center font-bold mb-4">
-                    {taller?.nombre?.toUpperCase?.() || "TALLER"} - Inscripción
-                </h1>
-
-                <p className="text-gray-600 text-center text-base ">
-                    <Calendar className="w-5 h-5 text-black inline" />{" "}
-                    <strong>{taller.fecha}</strong> |{" "}
-                    <Clock className="w-5 h-5 text-black inline" />{" "}
-                    <strong>
-                        {dayjs(taller.hora, "HH:mm:ss").format("HH:mm")}
-                        {taller.horaFin ? ` - ${dayjs(taller.horaFin, "HH:mm:ss").format("HH:mm")}` : ''}
-                    </strong>{" "}
-                    | <MapPin className="w-5 h-5 inline text-black" />{" "}
-                    <strong>{taller.ubicacion}</strong>
-                </p>
-
-                <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    {/* Reserva */}
-                    <div className="bg-gray-300 rounded-xl p-4 shadow flex flex-col items-center text-center">
-                        <Landmark className="w-10 h-10 text-black mb-2" />
-                        <h3 className="font-semibold text-gray-700 text-xl mb-1">
-                            Transferencia
-                        </h3>
-                        <strong>Señá tu lugar</strong>
-                        <p className="text-gray-800 text-base">
-                            <strong className="font-extrabold text-lg">
-                                ${precioReserva.toLocaleString("es-AR")}
+                <div className="max-w-3xl mx-auto">
+                    <h1 className="text-3xl md:text-4xl font-bold text-center mb-8">
+                        {taller?.nombre ?? 'Taller'} - Inscripción
+                        {formStatus && <span className="text-red-500"> ({formStatus})</span>}
+                    </h1>
+                    
+                    <div className={`space-y-6 ${isFormDisabled ? 'opacity-50 pointer-events-none' : ''}`}>
+                        <p className="text-gray-600 text-center text-base ">
+                            <Calendar className="w-5 h-5 text-black inline" />{" "}
+                            <strong>{taller?.fecha ?? 'Fecha por confirmar'}</strong> |{" "}
+                            <Clock className="w-5 h-5 text-black inline" />{" "}
+                            <strong>
+                                {taller?.hora ? dayjs(taller.hora, "HH:mm:ss").format("HH:mm") : '--:--'}
+                                {taller?.horaFin ? ` - ${dayjs(taller.horaFin, "HH:mm:ss").format("HH:mm")}` : ''}
                             </strong>{" "}
-                            por persona
+                            | <MapPin className="w-5 h-5 inline text-black" />{" "}
+                            <strong>{taller?.ubicacion ?? 'Ubicación por confirmar'}</strong>
                         </p>
-                    </div>
 
-                    {/* Transferencia total */}
-                    <div className="bg-gray-300 rounded-xl p-4 shadow flex flex-col items-center text-center">
-                        <Landmark className="w-10 h-10 text-black mb-2" />
-                        <h3 className="font-semibold text-gray-700 text-xl mb-1">
-                            Transferencia
-                        </h3>
-                        <strong>Aboná la totalidad</strong>
-                        <p className="text-gray-800 text-base">
-                            <strong className="font-extrabold text-lg">
-                                ${precioBase.toLocaleString("es-AR")}
-                            </strong>{" "}
-                            por persona
-                        </p>
-                    </div>
+                        <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            {/* Reserva */}
+                            <div className="bg-gray-300 rounded-xl p-4 shadow flex flex-col items-center text-center">
+                                <Landmark className="w-10 h-10 text-black mb-2" />
+                                <h3 className="font-semibold text-gray-700 text-xl mb-1">
+                                    Transferencia
+                                </h3>
+                                <strong>Señá tu lugar</strong>
+                                <p className="text-gray-800 text-base">
+                                    <strong className="font-extrabold text-lg">
+                                        ${precioReserva.toLocaleString("es-AR")}
+                                    </strong>{" "}
+                                    por persona
+                                </p>
+                            </div>
 
-                    {/* Tarjeta */}
-                    <div className="bg-gray-300 rounded-xl p-4 shadow flex flex-col items-center text-center">
-                        <CreditCard className="w-10 h-10 text-black mb-2" />
-                        <h3 className="font-semibold text-gray-700 mb-1 text-xl">
-                            Tarjeta / MercadoPago
-                        </h3>
-                        <strong>Aboná la totalidad</strong>
-                        <p className="text-gray-800 text-base">
-                            <strong className="font-extrabold text-lg">
-                                ${(precioTarjeta * cantidadPersonas).toLocaleString("es-AR")}
-                            </strong>{" "}
-                        </p>
-                    </div>
-                </div>
+                            {/* Transferencia total */}
+                            <div className="bg-gray-300 rounded-xl p-4 shadow flex flex-col items-center text-center">
+                                <Landmark className="w-10 h-10 text-black mb-2" />
+                                <h3 className="font-semibold text-gray-700 text-xl mb-1">
+                                    Transferencia
+                                </h3>
+                                <strong>Aboná la totalidad</strong>
+                                <p className="text-gray-800 text-base">
+                                    <strong className="font-extrabold text-lg">
+                                        ${precioBase.toLocaleString("es-AR")}
+                                    </strong>{" "}
+                                    por persona
+                                </p>
+                            </div>
 
-                <div className="mt-10 space-y-6">
-                    <div>
-                        <Label>Cantidad de personas (incluyéndote):</Label>
-                        <Input
-                            type="number"
-                            value={cantidadPersonas}
-                            min={1}
-                            onChange={handleCantidadChange}
-                            className="h-12"
-                        />
-                    </div>
+                            {/* Tarjeta */}
+                            <div className="bg-gray-300 rounded-xl p-4 shadow flex flex-col items-center text-center">
+                                <CreditCard className="w-10 h-10 text-black mb-2" />
+                                <h3 className="font-semibold text-gray-700 mb-1 text-xl">
+                                    Tarjeta / MercadoPago
+                                </h3>
+                                <strong>Aboná la totalidad</strong>
+                                <p className="text-gray-800 text-base">
+                                    <strong className="font-extrabold text-lg">
+                                        ${(precioTarjeta * cantidadPersonas).toLocaleString("es-AR")}
+                                    </strong>{" "}
+                                </p>
+                            </div>
+                        </div>
 
-                    <div>
-                        <h2 className="text-xl font-semibold mt-4 mb-2">
-                            Tus datos
-                        </h2>
-                        <div className="grid gap-2">
-                            <Input
-                                placeholder="Nombre"
-                                className={`h-12 ${errores.nombre ? 'border-red-500' : ''}`}
-                                value={datosCliente.nombre}
-                                onChange={(e) =>
-                                    setDatosCliente({
-                                        ...datosCliente,
-                                        nombre: e.target.value,
-                                    })
-                                }
-                            />
-                            {errores.nombre && <p className="text-red-500 text-sm">{errores.nombre}</p>}
-                            <Input
-                                className={`h-12 ${errores.apellido ? 'border-red-500' : ''}`}
-                                placeholder="Apellido"
-                                value={datosCliente.apellido}
-                                onChange={(e) =>
-                                    setDatosCliente({
-                                        ...datosCliente,
-                                        apellido: e.target.value,
-                                    })
-                                }
-                            />
-                            {errores.apellido && <p className="text-red-500 text-sm">{errores.apellido}</p>}
-                            <Input
-                                className={`h-12 ${errores.email ? 'border-red-500' : ''}`}
-                                placeholder="Email"
-                                type="email"
-                                value={datosCliente.email}
-                                onChange={(e) =>
-                                    setDatosCliente({
-                                        ...datosCliente,
-                                        email: e.target.value,
-                                    })
-                                }
-                            />
-                            {errores.email && <p className="text-red-500 text-sm">{errores.email}</p>}
-                            <Input
-                                className="h-12"
-                                placeholder="Teléfono (opcional)"
-                                type="tel"
-                                value={datosCliente.telefono}
-                                onChange={(e) =>
-                                    setDatosCliente({
-                                        ...datosCliente,
-                                        telefono: e.target.value,
-                                    })
-                                }
-                            />
+                        <div className="mt-10 space-y-6">
+                            <div>
+                                <Label>Cantidad de personas (incluyéndote):</Label>
+                                <Input
+                                    type="number"
+                                    value={cantidadPersonas}
+                                    min={1}
+                                    onChange={handleCantidadChange}
+                                    className="h-12"
+                                />
+                            </div>
 
-                            <div className="space-y-4 mt-4 mx-auto w-full">
-                                <Label className="text-lg">Elegí tu menú:</Label>
-                                <div className="grid sm:grid-cols-2 md:grid-cols-3  gap-4 mt-2 ">
-                                    {taller.menus.map((menu) => (
-                                        <div
-                                            key={menu.id}
-                                            className="prose"
-                                        >
-                                            <CardMenu
-                                                menu={menu}
-                                                seleccionado={datosCliente.menu === String(menu.id)}
-                                                onSelect={(id) => {
-                                                    setDatosCliente({
-                                                        ...datosCliente,
-                                                        menu: String(id),
-                                                    });
-                                                }}
-                                            />
+                            <div>
+                                <h2 className="text-xl font-semibold mt-4 mb-2">
+                                    Tus datos
+                                </h2>
+                                <div className="grid gap-2">
+                                    <Input
+                                        placeholder="Nombre"
+                                        className={`h-12 ${errores.nombre ? 'border-red-500' : ''}`}
+                                        value={datosCliente.nombre}
+                                        onChange={(e) =>
+                                            setDatosCliente({
+                                                ...datosCliente,
+                                                nombre: e.target.value,
+                                            })
+                                        }
+                                    />
+                                    {errores.nombre && <p className="text-red-500 text-sm">{errores.nombre}</p>}
+                                    <Input
+                                        className={`h-12 ${errores.apellido ? 'border-red-500' : ''}`}
+                                        placeholder="Apellido"
+                                        value={datosCliente.apellido}
+                                        onChange={(e) =>
+                                            setDatosCliente({
+                                                ...datosCliente,
+                                                apellido: e.target.value,
+                                            })
+                                        }
+                                    />
+                                    {errores.apellido && <p className="text-red-500 text-sm">{errores.apellido}</p>}
+                                    <Input
+                                        className={`h-12 ${errores.email ? 'border-red-500' : ''}`}
+                                        placeholder="Email"
+                                        type="email"
+                                        value={datosCliente.email}
+                                        onChange={(e) =>
+                                            setDatosCliente({
+                                                ...datosCliente,
+                                                email: e.target.value,
+                                            })
+                                        }
+                                    />
+                                    {errores.email && <p className="text-red-500 text-sm">{errores.email}</p>}
+                                    <Input
+                                        className="h-12"
+                                        placeholder="Teléfono (opcional)"
+                                        type="tel"
+                                        value={datosCliente.telefono}
+                                        onChange={(e) =>
+                                            setDatosCliente({
+                                                ...datosCliente,
+                                                telefono: e.target.value,
+                                            })
+                                        }
+                                    />
+
+                                    <div className="space-y-4 mt-4 mx-auto w-full">
+                                        <Label className="text-lg">Elegí tu menú:</Label>
+                                        <div className="grid sm:grid-cols-2 md:grid-cols-3  gap-4 mt-2 ">
+                                            {taller.menus.map((menu) => (
+                                                <div
+                                                    key={menu.id}
+                                                    className="prose"
+                                                >
+                                                    <CardMenu
+                                                        menu={menu}
+                                                        seleccionado={datosCliente.menu === String(menu.id)}
+                                                        onSelect={(id) => {
+                                                            setDatosCliente({
+                                                                ...datosCliente,
+                                                                menu: String(id),
+                                                            });
+                                                        }}
+                                                    />
+                                                </div>
+                                            ))}
                                         </div>
-                                    ))}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
 
-                    {acompanantes.map((a, i) => (
-                        <div key={i}>
-                            <h2 className="text-lg font-semibold mt-6 mb-2">
-                                Acompañante {i + 1}
-                            </h2>
-                            <div className="grid gap-2">
-                                <Input
-                                    className={`h-12 ${errores[`acompanante_nombre_${i}`] ? 'border-red-500' : ''}`}
-                                    placeholder="Nombre"
-                                    value={a.nombre}
-                                    onChange={(e) => {
-                                        const nuevos = [...acompanantes];
-                                        nuevos[i].nombre = e.target.value;
-                                        setAcompanantes(nuevos);
-                                    }}
-                                />
-                                {errores[`acompanante_nombre_${i}`] && <p className="text-red-500 text-sm">{errores[`acompanante_nombre_${i}`]}</p>}
-                                
-                                <Input
-                                    className={`h-12 ${errores[`acompanante_apellido_${i}`] ? 'border-red-500' : ''}`}
-                                    placeholder="Apellido"
-                                    value={a.apellido}
-                                    onChange={(e) => {
-                                        const nuevos = [...acompanantes];
-                                        nuevos[i].apellido = e.target.value;
-                                        setAcompanantes(nuevos);
-                                    }}
-                                />
-                                {errores[`acompanante_apellido_${i}`] && <p className="text-red-500 text-sm">{errores[`acompanante_apellido_${i}`]}</p>}
-                                
-                                <Input
-                                    className="h-12"
-                                    placeholder="Email (opcional)"
-                                    type="email"
-                                    value={a.email}
-                                    onChange={(e) => {
-                                        const nuevos = [...acompanantes];
-                                        nuevos[i].email = e.target.value;
-                                        setAcompanantes(nuevos);
-                                    }}
-                                />
-                                
-                                <Input
-                                    className="h-12"
-                                    placeholder="Teléfono (opcional)"
-                                    type="tel"
-                                    value={a.telefono}
-                                    onChange={(e) => {
-                                        const nuevos = [...acompanantes];
-                                        nuevos[i].telefono = e.target.value;
-                                        setAcompanantes(nuevos);
-                                    }}
-                                />
-                                
-                                <div className="space-y-4 mt-4">
-                                    <Label className="text-lg">Elegí un menú para el acompañante {i+1}:</Label>
-                                    <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 mt-2">
-                                        {taller.menus.map((menu) => (
-                                            <CardMenu
-                                                key={menu.id}
-                                                menu={menu}
-                                                seleccionado={a.menu === String(menu.id)}
-                                                onSelect={(id) => {
-                                                    const nuevosAcompanantes = [...acompanantes];
-                                                    nuevosAcompanantes[i].menu = String(id);
-                                                    setAcompanantes(nuevosAcompanantes);
-                                                }}
-                                            />
-                                        ))}
+                            {acompanantes.map((a, i) => (
+                                <div key={i}>
+                                    <h2 className="text-lg font-semibold mt-6 mb-2">
+                                        Acompañante {i + 1}
+                                    </h2>
+                                    <div className="grid gap-2">
+                                        <Input
+                                            className={`h-12 ${errores[`acompanante_nombre_${i}`] ? 'border-red-500' : ''}`}
+                                            placeholder="Nombre"
+                                            value={a.nombre}
+                                            onChange={(e) => {
+                                                const nuevos = [...acompanantes];
+                                                nuevos[i].nombre = e.target.value;
+                                                setAcompanantes(nuevos);
+                                            }}
+                                        />
+                                        {errores[`acompanante_nombre_${i}`] && <p className="text-red-500 text-sm">{errores[`acompanante_nombre_${i}`]}</p>}
+                                        
+                                        <Input
+                                            className={`h-12 ${errores[`acompanante_apellido_${i}`] ? 'border-red-500' : ''}`}
+                                            placeholder="Apellido"
+                                            value={a.apellido}
+                                            onChange={(e) => {
+                                                const nuevos = [...acompanantes];
+                                                nuevos[i].apellido = e.target.value;
+                                                setAcompanantes(nuevos);
+                                            }}
+                                        />
+                                        {errores[`acompanante_apellido_${i}`] && <p className="text-red-500 text-sm">{errores[`acompanante_apellido_${i}`]}</p>}
+                                        
+                                        <Input
+                                            className="h-12"
+                                            placeholder="Email (opcional)"
+                                            type="email"
+                                            value={a.email}
+                                            onChange={(e) => {
+                                                const nuevos = [...acompanantes];
+                                                nuevos[i].email = e.target.value;
+                                                setAcompanantes(nuevos);
+                                            }}
+                                        />
+                                        
+                                        <Input
+                                            className="h-12"
+                                            placeholder="Teléfono (opcional)"
+                                            type="tel"
+                                            value={a.telefono}
+                                            onChange={(e) => {
+                                                const nuevos = [...acompanantes];
+                                                nuevos[i].telefono = e.target.value;
+                                                setAcompanantes(nuevos);
+                                            }}
+                                        />
+                                        
+                                        <div className="space-y-4 mt-4">
+                                            <Label className="text-lg">Elegí un menú para el acompañante {i+1}:</Label>
+                                            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 mt-2">
+                                                {taller.menus.map((menu) => (
+                                                    <CardMenu
+                                                        key={menu.id}
+                                                        menu={menu}
+                                                        seleccionado={a.menu === String(menu.id)}
+                                                        onSelect={(id) => {
+                                                            const nuevosAcompanantes = [...acompanantes];
+                                                            nuevosAcompanantes[i].menu = String(id);
+                                                            setAcompanantes(nuevosAcompanantes);
+                                                        }}
+                                                    />
+                                                ))}
+                                            </div>
+                                            {errores[`acompanante_menu_${i}`] && <p className="text-red-500 text-sm">{errores[`acompanante_menu_${i}`]}</p>}
+                                        </div>
                                     </div>
-                                    {errores[`acompanante_menu_${i}`] && <p className="text-red-500 text-sm">{errores[`acompanante_menu_${i}`]}</p>}
+                                </div>
+                            ))}
+
+                            <div className="pt-8 space-y-2 text-center">
+                                <Label className="text-2xl">Método de pago:</Label>
+                                <div className="grid gap-2">
+                                    <Button
+                                        className="h-12"
+                                        variant={
+                                            metodoPago === "reserva" ? "default" : "outline"
+                                        }
+                                        onClick={() => setMetodoPago("reserva")}
+                                    >
+                                        Reserva con transferencia (${((precioBase / 2) * cantidadPersonas).toLocaleString("es-AR")})
+                                    </Button>
+                                    <Button
+                                        className="h-12"
+                                        variant={
+                                            metodoPago === "total" ? "default" : "outline"
+                                        }
+                                        onClick={() => setMetodoPago("total")}
+                                    >
+                                        Total con transferencia ($
+                                        {(precioBase * cantidadPersonas).toLocaleString("es-AR")})
+                                    </Button>
+                                    <Button
+                                        className="h-12"
+                                        variant={
+                                            metodoPago === "tarjeta" ? "default" : "outline"
+                                        }
+                                        onClick={() => setMetodoPago("tarjeta")}
+                                    >
+                                        Total con Tarjeta / MercadoPago ($
+                                        {(precioTarjeta * cantidadPersonas).toLocaleString("es-AR")})
+                                    </Button>
                                 </div>
                             </div>
-                        </div>
-                    ))}
 
-                    <div className="pt-8 space-y-2 text-center">
-                        <Label className="text-2xl">Método de pago:</Label>
-                        <div className="grid gap-2">
-                            <Button
-                                className="h-12"
-                                variant={
-                                    metodoPago === "reserva" ? "default" : "outline"
-                                }
-                                onClick={() => setMetodoPago("reserva")}
-                            >
-                                Reserva con transferencia (${((precioBase / 2) * cantidadPersonas).toLocaleString("es-AR")})
-                            </Button>
-                            <Button
-                                className="h-12"
-                                variant={
-                                    metodoPago === "total" ? "default" : "outline"
-                                }
-                                onClick={() => setMetodoPago("total")}
-                            >
-                                Total con transferencia ($
-                                {(precioBase * cantidadPersonas).toLocaleString("es-AR")})
-                            </Button>
-                            <Button
-                                className="h-12"
-                                variant={
-                                    metodoPago === "tarjeta" ? "default" : "outline"
-                                }
-                                onClick={() => setMetodoPago("tarjeta")}
-                            >
-                                Total con Tarjeta / MercadoPago ($
-                                {(precioTarjeta * cantidadPersonas).toLocaleString("es-AR")})
-                            </Button>
-                        </div>
-                    </div>
+                            <p className="mt-4 text-lg text-center">
+                                Total a pagar: <strong>${total.toLocaleString("es-AR")}</strong>
+                            </p>
 
-                    <p className="mt-4 text-lg text-center">
-                        Total a pagar: <strong>${total.toLocaleString("es-AR")}</strong>
-                    </p>
-
-                    <div className="flex justify-end space-x-4">
-                        {metodoPago === 'tarjeta' && (
-                            <Button
-                                className="h-12 w-full"
-                                onClick={() => handleInscripcionConCaptcha(handlePagoMercadoPago)}
-                                disabled={isLoadingMercadoPago || !datosCliente.nombre || !datosCliente.apellido || !datosCliente.email || !datosCliente.menu}
-                            >
-                                {isLoadingMercadoPago ? "Procesando..." : "Pagar con MercadoPago"}
-                            </Button>
-                        )}
-                        
-                        {(metodoPago === 'reserva' || metodoPago === 'total') && (
-                            <Button
-                                className="h-12 w-full bg-green-600 hover:bg-green-700"
-                                onClick={() => handleInscripcionConCaptcha(handleTransferencia)}
-                                disabled={isLoadingTransferencia || !datosCliente.nombre || !datosCliente.apellido || !datosCliente.email || !datosCliente.menu}
-                            >
-                                {isLoadingTransferencia ? (
-                                    <div className="flex items-center space-x-2">
-                                        <div className="w-5 h-5 border-t-2 border-b-2 border-white rounded-full animate-spin"></div>
-                                        <span>Procesando inscripción...</span>
-                                    </div>
-                                ) : (
-                                    "Confirmar inscripción y recibir datos de transferencia"
+                            <div className="flex justify-end space-x-4">
+                                {metodoPago === 'tarjeta' && (
+                                    <Button
+                                        className="h-12 w-full"
+                                        onClick={() => handleInscripcionConCaptcha(handlePagoMercadoPago)}
+                                        disabled={isLoadingMercadoPago || !datosCliente.nombre || !datosCliente.apellido || !datosCliente.email || !datosCliente.menu}
+                                    >
+                                        {isLoadingMercadoPago ? "Procesando..." : "Pagar con MercadoPago"}
+                                    </Button>
                                 )}
-                            </Button>
-                        )}
+                                
+                                {(metodoPago === 'reserva' || metodoPago === 'total') && (
+                                    <Button
+                                        className="h-12 w-full bg-green-600 hover:bg-green-700"
+                                        onClick={() => handleInscripcionConCaptcha(handleTransferencia)}
+                                        disabled={isLoadingTransferencia || !datosCliente.nombre || !datosCliente.apellido || !datosCliente.email || !datosCliente.menu}
+                                    >
+                                        {isLoadingTransferencia ? (
+                                            <div className="flex items-center space-x-2">
+                                                <div className="w-5 h-5 border-t-2 border-b-2 border-white rounded-full animate-spin"></div>
+                                                <span>Procesando inscripción...</span>
+                                            </div>
+                                        ) : (
+                                            "Confirmar inscripción y recibir datos de transferencia"
+                                        )}
+                                    </Button>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
 
