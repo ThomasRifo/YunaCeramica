@@ -25,6 +25,8 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import dayjs from 'dayjs';
@@ -46,6 +48,7 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
   const [participantePagoParcial, setParticipantePagoParcial] = useState(null);
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [toast, setToast] = useState({ open: false, message: '', severity: 'success' });
 
   // Declaración de todas las variables necesarias
   let totalRecaudado = 0;
@@ -418,11 +421,18 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
       }
 
       setEmailModalOpen(false);
-      // Mostrar mensaje de éxito
-      alert(`Emails encolados correctamente. Se enviarán ${data.emailsEncolados} emails.`);
+      setToast({
+        open: true,
+        message: `Emails encolados correctamente. Se enviarán ${data.emailsEncolados} emails.`,
+        severity: 'success'
+      });
     } catch (error) {
       console.error('Error:', error);
-      alert(error.message || 'Error al enviar el email');
+      setToast({
+        open: true,
+        message: error.message || 'Error al enviar el email',
+        severity: 'error'
+      });
     } finally {
       setIsSendingEmail(false);
     }
@@ -657,6 +667,23 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
         onSend={handleSendEmail}
         isLoading={isSendingEmail}
       />
+
+      <Snackbar
+        open={toast.open}
+        autoHideDuration={6000}
+        onClose={() => setToast({ ...toast, open: false })}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert
+          onClose={() => setToast({ ...toast, open: false })}
+          severity={toast.severity}
+          sx={{ width: '100%' }}
+          elevation={6}
+          variant="filled"
+        >
+          {toast.message}
+        </Alert>
+      </Snackbar>
     </>
   );
 }
