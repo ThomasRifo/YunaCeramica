@@ -673,28 +673,47 @@ public function updateMenusHtml(Request $request, $id)
 
     public function sendEmail(Request $request, $id)
     {
-        $taller = Taller::findOrFail($id);
-        // Filtrar solo los clientes confirmados (idEstadoPago 2 o 3)
-        $participantes = $taller->tallerClientes()->with('cliente')->whereIn('idEstadoPago', [2, 3])->get();
+        try {
+            $taller = Taller::findOrFail($id);
+            // Filtrar solo los clientes confirmados (idEstadoPago 2 o 3)
+            $participantes = $taller->tallerClientes()->with('cliente')->whereIn('idEstadoPago', [2, 3])->get();
 
-        $emailData = $request->validate([
-            'title' => 'required|string|max:255',
-            'content' => 'required|string',
-            'includeReview' => 'boolean'
-        ]);
+            Log::info('Iniciando envío de emails para taller: ' . $taller->nombre);
+            Log::info('Número de participantes: ' . $participantes->count());
 
-        foreach ($participantes as $participante) {
-            $email = $participante->email_cliente ?? $participante->cliente->email;
-            if ($email) {
-                Mail::to($email)->send(new TallerNotification(
-                    $emailData['title'],
-                    $emailData['content'],
-                    $emailData['includeReview']
-                ));
+            $emailData = $request->validate([
+                'title' => 'required|string|max:255',
+                'content' => 'required|string',
+                'includeReview' => 'boolean'
+            ]);
+
+            $emailsEncolados = 0;
+            foreach ($participantes as $participante) {
+                $email = $participante->email_cliente ?? $participante->cliente->email;
+                if ($email) {
+                    Log::info('Encolando email para: ' . $email);
+                    Mail::to($email)->queue(new TallerNotification(
+                        $emailData['title'],
+                        $emailData['content'],
+                        $emailData['includeReview']
+                    ));
+                    $emailsEncolados++;
+                }
             }
-        }
 
-        return response()->json(['message' => 'Emails enviados correctamente']);
+            Log::info('Emails encolados: ' . $emailsEncolados);
+
+            return response()->json([
+                'message' => 'Emails encolados correctamente',
+                'emailsEncolados' => $emailsEncolados
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error al encolar emails: ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+            return response()->json([
+                'error' => 'Error al encolar los emails: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
 

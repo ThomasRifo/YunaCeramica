@@ -15,12 +15,18 @@ class TallerNotification extends Mailable
     public $includeReview;
     public $reviewLink;
 
+    /**
+     * Create a new message instance.
+     */
     public function __construct($title, $content, $includeReview = false)
     {
         $this->title = $title;
         $this->content = $content;
         $this->includeReview = $includeReview;
         $this->reviewLink = $includeReview ? route('taller.review', ['id' => request()->route('taller')]) : null;
+        
+        // Configurar para usar la cola por defecto
+        $this->onQueue('emails');
     }
 
     public function build()

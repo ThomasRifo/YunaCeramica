@@ -411,15 +411,18 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
         body: JSON.stringify(emailData),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error('Error al enviar el email');
+        throw new Error(data.error || 'Error al enviar el email');
       }
 
       setEmailModalOpen(false);
-      // Aquí podrías mostrar un mensaje de éxito
+      // Mostrar mensaje de éxito
+      alert(`Emails encolados correctamente. Se enviarán ${data.emailsEncolados} emails.`);
     } catch (error) {
       console.error('Error:', error);
-      // Aquí podrías mostrar un mensaje de error
+      alert(error.message || 'Error al enviar el email');
     } finally {
       setIsSendingEmail(false);
     }
