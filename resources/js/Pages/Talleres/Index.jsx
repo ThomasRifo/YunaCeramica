@@ -15,7 +15,6 @@ export default function TalleresIndex({ reviews, talleres, imagenesPiezas }) {
         <meta name="description" content="Descubre nuestros talleres de cerámica en Cipolletti. Experiencias únicas combinando cerámica con café y gin. Aprende técnicas artesanales y crea piezas únicas en un ambiente relajado y creativo." />
         <meta name="keywords" content="talleres de cerámica Cipolletti, cerámica y café, cerámica y gin, clases de cerámica, taller de cerámica artesanal, cerámica para principiantes, cerámica Río Negro" />
         
-        {/* Open Graph */}
         <meta property="og:title" content="Talleres de Cerámica en Cipolletti | Yuna Cerámica" />
         <meta property="og:description" content="Experiencias únicas de cerámica combinadas con café y gin. Aprende técnicas artesanales y crea piezas únicas en Cipolletti." />
         <meta property="og:type" content="website" />
@@ -106,6 +105,7 @@ export default function TalleresIndex({ reviews, talleres, imagenesPiezas }) {
               </Link>
             ) : (
               <div className="group relative" aria-label="Taller de Cerámica y Café - Próximamente">
+                 <Link href="talleres-ceramica-y-cafe" className="group relative" aria-label="Taller de Cerámica y Café">
                 <AspectRatio ratio={2 / 1.8} className="relative rounded-xl overflow-hidden shadow-lg">
                   <img
                     src="/storage/uploads/ceramica-y-cafe.webp" 
@@ -124,6 +124,7 @@ export default function TalleresIndex({ reviews, talleres, imagenesPiezas }) {
                     </div>
                   </div>
                 </AspectRatio>
+                </Link>
               </div>
             )}
 
@@ -153,6 +154,7 @@ export default function TalleresIndex({ reviews, talleres, imagenesPiezas }) {
               </Link>
             ) : (
               <div className="group relative" aria-label="Taller de Cerámica y Gin - Próximamente">
+                <Link href="/talleres-ceramica-y-gin" className="group relative" aria-label="Taller de Cerámica y Gin">
                 <AspectRatio ratio={2 / 1.8} className="relative rounded-xl overflow-hidden shadow-lg">
                   <img
                     src="/storage/uploads/ceramica-y-gin.webp"
@@ -171,6 +173,7 @@ export default function TalleresIndex({ reviews, talleres, imagenesPiezas }) {
                     </div>
                   </div>
                 </AspectRatio>
+                </Link>
               </div>
             )}
           </div>

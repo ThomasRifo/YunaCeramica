@@ -11,6 +11,7 @@ import {
     XCircle,
     Copy,
     Check,
+    HelpCircle,
 } from "lucide-react";
 import { Input } from "@/Components/ui/input";
 import dayjs from "dayjs";
@@ -24,6 +25,12 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/Components/ui/select";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/Components/ui/tooltip";
 import CardMenu from "@/Components/Taller/CardMenu";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent } from "@/Components/ui/dialog";
@@ -34,8 +41,19 @@ dayjs.extend(customParseFormat);
 const recaptchaV3Key = "6LeWbjorAAAAAN1iTNC1iDlAzdGhuqJ9RKKVW0lN";
 const recaptchaV2Key = "6LfRcDorAAAAADXRjzq75JFZVZk_hS_coEOQ2CNV";
 
-export default function FormInscripcion({ taller = {}, slug = '', referido: referidoProp = null }) {
+export default function FormInscripcion({ taller = {}, slug = '', referido: referidoProp = null, talleresDisponibles = [], subcategoria }) {
     
+    // Debug: Log de props recibidas
+    console.log('FormInscripcion - Props recibidas:', {
+        taller,
+        slug,
+        referido: referidoProp,
+        tallerId: taller?.id,
+        tallerNombre: taller?.nombre,
+        tallerFecha: taller?.fecha,
+        cupoLleno: taller?.cupoLleno,
+        esPasado: taller?.esPasado,
+    });
     
     const { toast } = useToast();
     const [cantidadPersonas, setCantidadPersonas] = useState(1);
@@ -81,6 +99,8 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
     const [isFormDisabled, setIsFormDisabled] = useState(false);
     const [formStatus, setFormStatus] = useState("");
 
+    const [tallerSeleccionado, setTallerSeleccionado] = useState(taller);
+
     useEffect(() => {
         if (typeof window !== "undefined") {
             const params = new URLSearchParams(window.location.search);
@@ -96,21 +116,25 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
     }, [referidoProp]);
 
     useEffect(() => {
-        if (!taller?.id) return;
+        if (!tallerSeleccionado?.id) return;
 
-        const tallerLleno = (taller.cantInscriptos ?? 0) >= (taller.cupoMaximo ?? 0);
-        const tallerEsFuturo = dayjs(taller.fecha).isAfter(dayjs(), 'day');
-        
-        if (tallerLleno && tallerEsFuturo) {
+        // Ahora usamos las propiedades que vienen del backend
+        if (tallerSeleccionado.cupoLleno && !tallerSeleccionado.esPasado) {
             setIsFormDisabled(true);
             setFormStatus("COMPLETO");
-        } else if (!tallerEsFuturo) {
+        } else if (tallerSeleccionado.esPasado) {
             setIsFormDisabled(true);
-            setFormStatus("PRÓXIMAMENTE");
+            setFormStatus("EVENTO FINALIZADO");
+        } else {
+            setIsFormDisabled(false);
+            setFormStatus("");
         }
+    }, [tallerSeleccionado]);
+
+    useEffect(() => {
+        // Si cambia el taller por defecto (por ejemplo, al cambiar de slug), actualizar el seleccionado
+        setTallerSeleccionado(taller);
     }, [taller]);
-
-
 
     const handleCantidadChange = (e) => {
         const nuevaCantidad = parseInt(e.target.value);
@@ -132,8 +156,8 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
         setAcompanantes(nuevos);
     };
 
-    const precioBase = taller?.precio ?? 0;
-    const precioReserva = (taller?.precio ?? 0) / 2;
+    const precioBase = tallerSeleccionado?.precio ?? 0;
+    const precioReserva = (tallerSeleccionado?.precio ?? 0) / 2;
     const precioTarjeta = Math.round(precioBase * 1.1);
     const total =
         metodoPago === "tarjeta"
@@ -152,12 +176,19 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
             return;
         }
 
+        // Debug: Log del taller que se va a enviar
+        console.log('MercadoPago - Taller seleccionado:', {
+            id: tallerSeleccionado.id,
+            nombre: tallerSeleccionado.nombre,
+            fecha: tallerSeleccionado.fecha,
+        });
+
         setIsLoadingMercadoPago(true);
 
         const payload = {
-            tallerId: taller.id,
-            titulo: taller.nombre,
-            descripcion: `Inscripción al taller: ${taller.nombre} (${cantidadPersonas} persona(s))`,
+            tallerId: tallerSeleccionado.id,
+            titulo: tallerSeleccionado.nombre,
+            descripcion: `Inscripción al taller: ${tallerSeleccionado.nombre} (${cantidadPersonas} persona(s))`,
             cantidad: cantidadPersonas,
             precioUnitario: precioTarjeta,
             referido: referido,
@@ -199,7 +230,7 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
             const responseData = await response.json();
 
             if (response.ok && responseData?.mercadopago?.init_point) {
-                const link = `${window.location.origin}/taller/${taller.id}/referido/${responseData.referido}`;
+                const link = `${window.location.origin}/taller/${tallerSeleccionado.id}/referido/${responseData.referido}`;
                 setLinkReferido(link);
                 window.location.href = responseData.mercadopago.init_point;
             } else {
@@ -231,6 +262,13 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
             return;
         }
 
+        // Debug: Log del taller que se va a enviar
+        console.log('Transferencia - Taller seleccionado:', {
+            id: tallerSeleccionado.id,
+            nombre: tallerSeleccionado.nombre,
+            fecha: tallerSeleccionado.fecha,
+        });
+
         setIsLoadingTransferencia(true);
 
         try {
@@ -242,7 +280,7 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
                     'X-CSRF-TOKEN': document.querySelector('meta[name=\"csrf-token\"]').getAttribute('content'),
                 },
                 body: JSON.stringify({
-                    tallerId: taller.id,
+                    tallerId: tallerSeleccionado.id,
                     nombre: datosCliente.nombre,
                     apellido: datosCliente.apellido,
                     email: datosCliente.email,
@@ -273,7 +311,7 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
 
             const data = await response.json();
             if (data.success && data.referido) {
-                const link = `${window.location.origin}/taller/${taller.id}/referido/${data.referido}`;
+                const link = `${window.location.origin}/taller/${tallerSeleccionado.id}/referido/${data.referido}`;
                 setLinkReferido(link);
                 setShowSuccessDialog(true);
             }
@@ -402,7 +440,26 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
         return Object.keys(nuevosErrores).length === 0;
     };
 
-    const pageTitle = taller?.nombre ? `${taller.nombre} - Inscripción${formStatus ? ` (${formStatus})` : ''}` : 'Inscripción a Taller';
+    // Función para formatear la fecha con día de la semana
+    const formatFecha = (fecha) => {
+        const d = dayjs(fecha);
+        const dias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+        return `${dias[d.day()]} ${d.format('DD-MM-YYYY')}`;
+    };
+
+    // Función para generar el texto de la opción de taller
+    const getTallerOptionText = (t) => {
+        const fechaFormateada = formatFecha(t.fecha);
+        let status = '';
+        if (t.esPasado) {
+            status = ' (Finalizado)';
+        } else if (t.cupoLleno) {
+            status = ' (Completo)';
+        }
+        return `${fechaFormateada}${status}`;
+    };
+
+    const pageTitle = subcategoria?.nombre ?? 'Inscripción a Taller';
 
     return (
         <>
@@ -411,21 +468,55 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
                 <Breadcrumbs items={breadcrumbItems} />
                 <div className="max-w-3xl mx-auto">
                     <h1 className="text-3xl md:text-4xl font-bold text-center mb-8">
-                        {taller?.nombre ?? 'Taller'} - Inscripción
+                        {subcategoria?.nombre.toUpperCase() ?? 'Taller'} - Inscripción
                         {formStatus && <span className="text-red-500"> ({formStatus})</span>}
                     </h1>
                     
+                    {/* Selector de taller por fecha */}
+                    {talleresDisponibles.length > 1 && (
+                        <div className="mb-6">
+                            <Label className="text-lg">Elegí la fecha del taller:</Label>
+                            <Select
+                                value={tallerSeleccionado?.id || ''}
+                                onValueChange={(value) => {
+                                    const nuevo = talleresDisponibles.find(t => t.id === parseInt(value));
+                                    if (nuevo) setTallerSeleccionado(nuevo);
+                                }}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Seleccioná una fecha" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {talleresDisponibles.map((t) => (
+                                        <SelectItem 
+                                            key={t.id} 
+                                            value={t.id} 
+                                            disabled={t.cupoLleno || t.esPasado}
+                                        >
+                                            {getTallerOptionText(t)}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            {isFormDisabled && (
+                                <p className="text-center text-red-500 font-bold text-xl py-4 bg-red-100 rounded-md">
+                                    {formStatus}
+                                </p>
+                            )}
+                        </div>
+                    )}
+
                     <div className={`space-y-6 ${isFormDisabled ? 'opacity-50 pointer-events-none' : ''}`}>
                         <p className="text-gray-600 text-center text-base ">
                             <Calendar className="w-5 h-5 text-black inline" />{" "}
-                            <strong>{taller?.fecha ?? 'Fecha por confirmar'}</strong> |{" "}
+                            <strong>{tallerSeleccionado?.fecha ? formatFecha(tallerSeleccionado.fecha) : 'Fecha por confirmar'}</strong> |{" "}
                             <Clock className="w-5 h-5 text-black inline" />{" "}
                             <strong>
-                                {taller?.hora ? dayjs(taller.hora, "HH:mm:ss").format("HH:mm") : '--:--'}
-                                {taller?.horaFin ? ` - ${dayjs(taller.horaFin, "HH:mm:ss").format("HH:mm")}` : ''}
+                                {tallerSeleccionado?.hora ?? '--:--'}
+                                {tallerSeleccionado?.horaFin ? ` - ${tallerSeleccionado.horaFin}` : ''}
                             </strong>{" "}
                             | <MapPin className="w-5 h-5 inline text-black" />{" "}
-                            <strong>{taller?.ubicacion ?? 'Ubicación por confirmar'}</strong>
+                            <strong>{tallerSeleccionado?.ubicacion ?? 'Ubicación por confirmar'}</strong>
                         </p>
 
                         <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -476,7 +567,19 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
 
                         <div className="mt-10 space-y-6">
                             <div>
-                                <Label>Cantidad de personas (incluyéndote):</Label>
+                                <div className="flex items-center gap-2">
+                                    <Label>Cantidad de personas (incluyéndote):</Label>
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger>
+                                                <HelpCircle className="h-4 w-4 text-gray-500" />
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>Indica el número total de personas que asistirán al taller, incluyéndote a ti.</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                </div>
                                 <Input
                                     type="number"
                                     value={cantidadPersonas}
@@ -515,36 +618,66 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
                                         }
                                     />
                                     {errores.apellido && <p className="text-red-500 text-sm">{errores.apellido}</p>}
-                                    <Input
-                                        className={`h-12 ${errores.email ? 'border-red-500' : ''}`}
-                                        placeholder="Email"
-                                        type="email"
-                                        value={datosCliente.email}
-                                        onChange={(e) =>
-                                            setDatosCliente({
-                                                ...datosCliente,
-                                                email: e.target.value,
-                                            })
-                                        }
-                                    />
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <Label>Email:</Label>
+                                            <TooltipProvider>
+                                                <Tooltip>
+                                                    <TooltipTrigger>
+                                                        <HelpCircle className="h-4 w-4 text-gray-500" />
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                        <p>Recibirás la confirmación y los detalles del taller en este email.</p>
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            </TooltipProvider>
+                                        </div>
+                                        <Input
+                                            className={`h-12 ${errores.email ? 'border-red-500' : ''}`}
+                                            placeholder="Email"
+                                            type="email"
+                                            value={datosCliente.email}
+                                            onChange={(e) =>
+                                                setDatosCliente({
+                                                    ...datosCliente,
+                                                    email: e.target.value,
+                                                })
+                                            }
+                                        />
+                                    </div>
                                     {errores.email && <p className="text-red-500 text-sm">{errores.email}</p>}
-                                    <Input
-                                        className="h-12"
-                                        placeholder="Teléfono (opcional)"
-                                        type="tel"
-                                        value={datosCliente.telefono}
-                                        onChange={(e) =>
-                                            setDatosCliente({
-                                                ...datosCliente,
-                                                telefono: e.target.value,
-                                            })
-                                        }
-                                    />
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <Label>Teléfono:</Label>
+                                            <TooltipProvider>
+                                                <Tooltip>
+                                                    <TooltipTrigger>
+                                                        <HelpCircle className="h-4 w-4 text-gray-500" />
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                        <p>Te contactaremos por este número solo en caso de cambios importantes en el taller.</p>
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            </TooltipProvider>
+                                        </div>
+                                        <Input
+                                            className="h-12"
+                                            placeholder="Teléfono (opcional)"
+                                            type="tel"
+                                            value={datosCliente.telefono}
+                                            onChange={(e) =>
+                                                setDatosCliente({
+                                                    ...datosCliente,
+                                                    telefono: e.target.value,
+                                                })
+                                            }
+                                        />
+                                    </div>
 
                                     <div className="space-y-4 mt-4 mx-auto w-full">
                                         <Label className="text-lg">Elegí tu menú:</Label>
                                         <div className="grid sm:grid-cols-2 md:grid-cols-3  gap-4 mt-2 ">
-                                            {taller.menus.map((menu) => (
+                                            {tallerSeleccionado.menus.map((menu) => (
                                                 <div
                                                     key={menu.id}
                                                     className="prose"
@@ -596,18 +729,45 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
                                         />
                                         {errores[`acompanante_apellido_${i}`] && <p className="text-red-500 text-sm">{errores[`acompanante_apellido_${i}`]}</p>}
                                         
-                                        <Input
-                                            className="h-12"
-                                            placeholder="Email (opcional)"
-                                            type="email"
-                                            value={a.email}
-                                            onChange={(e) => {
-                                                const nuevos = [...acompanantes];
-                                                nuevos[i].email = e.target.value;
-                                                setAcompanantes(nuevos);
-                                            }}
-                                        />
-                                        
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <Label>Email del acompañante:</Label>
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger>
+                                                            <HelpCircle className="h-4 w-4 text-gray-500" />
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            <p>El email del acompañante se utilizará para enviar información específica sobre el taller y recordatorios.</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
+                                            </div>
+                                            <Input
+                                                className="h-12"
+                                                placeholder="Email (opcional)"
+                                                type="email"
+                                                value={a.email}
+                                                onChange={(e) => {
+                                                    const nuevos = [...acompanantes];
+                                                    nuevos[i].email = e.target.value;
+                                                    setAcompanantes(nuevos);
+                                                }}
+                                            />
+                                        </div>
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <Label>Teléfono del acompañante:</Label>
+                                            <TooltipProvider>
+                                                <Tooltip>
+                                                    <TooltipTrigger>
+                                                        <HelpCircle className="h-4 w-4 text-gray-500" />
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                        <p>Solo se utilizará para contactar al acompañante en caso de emergencias o cambios de último momento.</p>
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            </TooltipProvider>
+                                        </div>
                                         <Input
                                             className="h-12"
                                             placeholder="Teléfono (opcional)"
@@ -620,13 +780,18 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
                                             }}
                                         />
                                         
-                                        <div className="space-y-4 mt-4">
+                                        <div className="space-y-4 mt-4 mx-auto w-full">
                                             <Label className="text-lg">Elegí un menú para el acompañante {i+1}:</Label>
-                                            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 mt-2">
-                                                {taller.menus.map((menu) => (
-                                                    <CardMenu
-                                                        key={menu.id}
+                                            <div className="grid sm:grid-cols-2 md:grid-cols-3  gap-4 mt-2 ">
+                                                {tallerSeleccionado.menus.map((menu) => (
+                                                    
+                                                    <div
+                                                    key={menu.id}
+                                                    className="prose"
+                                                >
+                                                        <CardMenu
                                                         menu={menu}
+                                                        
                                                         seleccionado={a.menu === String(menu.id)}
                                                         onSelect={(id) => {
                                                             const nuevosAcompanantes = [...acompanantes];
@@ -634,6 +799,7 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
                                                             setAcompanantes(nuevosAcompanantes);
                                                         }}
                                                     />
+                                                    </div>
                                                 ))}
                                             </div>
                                             {errores[`acompanante_menu_${i}`] && <p className="text-red-500 text-sm">{errores[`acompanante_menu_${i}`]}</p>}
@@ -793,7 +959,8 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
                                     </Button>
                                 </div>
                                 <p className="text-sm text-gray-500 mt-2">
-                                    Comparte este link con tus amigos para que se inscriban contigo
+                                    Comparte este link con tus amigos para que se inscriban contigo. <br></br>
+                                    *Opción para pagar por separado.
                                 </p>
                             </div>
 
@@ -814,6 +981,9 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
                         ref={recaptchaV2Ref}               
                     />
                 )}
+            </div>
+            <div className="mt-8 text-center text-sm text-gray-500">
+                <p>Al inscribirte, estás aceptando nuestros <a href="/terminos" className="underline">Términos y Condiciones</a>.</p>
             </div>
         </>
     );

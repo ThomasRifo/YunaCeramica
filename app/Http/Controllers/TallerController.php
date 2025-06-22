@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Storage;
 use App\Mail\ConfirmacionInscripcionTaller;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Mail\TallerNotification;
+use Illuminate\Support\Facades\Cache;
 
 class TallerController extends Controller
 {
@@ -286,39 +287,66 @@ public function talleresClient()
 
 public function tallerView()
 {
-    // Obtenemos la parte final de la URL
     $url = request()->path();
-
-    // Definimos ID de subcategoría basado en la URL
-    $subcategoriaId = null;
-    $slug = null;
-
-    if ($url === 'talleres-ceramica-y-gin') {
-        $subcategoriaId = 1;
-        $slug = 'ceramica-y-gin';
-    } elseif ($url === 'talleres-ceramica-y-cafe') {
-        $subcategoriaId = 2;
-        $slug = 'ceramica-y-cafe';
-    } else {
-        abort(404, 'Taller no encontrado');
-    }
-
-    // Buscamos el taller más reciente que cumpla condiciones
-    $taller = Taller::with('subcategoria')
-    ->where('activo', true)
-        ->where('idSubcategoria', $subcategoriaId)
-        ->orderBy('fecha', 'desc')
+    $slug = str_replace('talleres-', '', $url);
+    $subcategoria = Subcategoria::where('url', $slug)
+        ->where('activo', true)
         ->first();
-
-    if (!$taller) {
-        abort(404, 'Taller no disponible');
+    if (!$subcategoria) {
+        abort(404, "No se encontró la subcategoría '{$slug}'");
     }
-
-    // Traemos las imágenes asociadas al slug
+    
+    // Primero buscar talleres futuros
+    $talleres = Taller::with('subcategoria')
+        ->where('activo', true)
+        ->where('idSubcategoria', $subcategoria->id)
+        ->where('fecha', '>=', now()->startOfDay())
+        ->orderBy('fecha', 'asc')
+        ->get();
+    
+    // Si no hay talleres futuros, buscar el taller pasado más reciente
+    if ($talleres->isEmpty()) {
+        $talleres = Taller::with('subcategoria')
+            ->where('activo', true)
+            ->where('idSubcategoria', $subcategoria->id)
+            ->where('fecha', '<', now()->startOfDay())
+            ->orderBy('fecha', 'desc')
+            ->limit(1)
+            ->get();
+    }
+    
+    $talleres = $talleres->map(function($taller) {
+        // Calcular si hay cupos disponibles
+        $cupoDisponible = $taller->cantInscriptos < $taller->cupoMaximo;
+        
+        // Calcular si el evento es pasado (si es el mismo día no es pasado)
+        $esPasado = $taller->fecha < now()->startOfDay();
+        
+        // Formatear hora y horaFin para eliminar los segundos
+        $hora = $taller->hora ? \Carbon\Carbon::parse($taller->hora)->format('H:i') : null;
+        $horaFin = $taller->horaFin ? \Carbon\Carbon::parse($taller->horaFin)->format('H:i') : null;
+        
+        return [
+            'fecha' => $taller->fecha,
+            'ubicacion' => $taller->ubicacion,
+            'hora' => $hora,
+            'horaFin' => $horaFin,
+            'precio' => $taller->precio,
+            'idSubcategoria' => $taller->idSubcategoria,
+            'subcategoria' => $taller->subcategoria,
+            'cupoDisponible' => $cupoDisponible,
+            'esPasado' => $esPasado,
+        ];
+    });
+    
     $imagenes = ImagenTaller::where('slug', $slug)
         ->orderBy('orden')
         ->get();
-
+    
+    if ($imagenes->count() < 3) {
+        Log::warning("Faltan imágenes para el taller {$slug}. Se encontraron {$imagenes->count()} de 3 necesarias");
+    }
+    
     $archivos = Storage::disk('public')->files('piezas/parapintar');
     $imagenesPiezas = collect($archivos)
         ->map(function($file) {
@@ -326,45 +354,65 @@ public function tallerView()
         })
         ->values()
         ->toArray();
-
-
+    
     return Inertia::render('Talleres/TallerView', [
-        'taller' => $taller,
+        'talleresDisponibles' => $talleres,
         'imagenes' => $imagenes,
         'slug' => $slug,
         'imagenesPiezas' => $imagenesPiezas,
+        'subcategoria' => $subcategoria,
     ]);
 }
 public function formInscripcion($slug)
 {
-    $taller = Taller::with([
+    // Buscar la subcategoría por slug
+    $subcategoria = Subcategoria::where('url', $slug)
+        ->where('activo', true)
+        ->first();
+
+    if (!$subcategoria) {
+        abort(404, "No se encontró la subcategoría '{$slug}'");
+    }
+
+    // Buscar todos los talleres futuros de la subcategoría
+    $talleresDisponibles = Taller::with([
         'menus' => function ($query) {
-            $query->select('menus.id', 'menus.nombre')
-                  ->withPivot('html');
+            $query->select('menus.id', 'menus.nombre')->withPivot('html');
         },
         'subcategoria:id,nombre,url'
     ])
-    ->select([
-        'id',
-        'nombre',
-        'fecha',
-        'hora',
-        'horaFin',
-        'precio',
-        'ubicacion',
-        'cupoMaximo',
-        'cantInscriptos'
-    ])
     ->where('activo', true)
-    ->orderBy('fecha', 'desc')
-    ->whereHas('subcategoria', function ($query) use ($slug) {
-        $query->where('url', $slug);
-    })
-    ->firstOrFail();
+    ->where('idSubcategoria', $subcategoria->id)
+    ->where('fecha', '>=', now()->startOfDay())
+    ->orderBy('fecha', 'asc')
+    ->get()
+    ->map(function ($taller) {
+        $cupoLleno = $taller->cantInscriptos >= $taller->cupoMaximo;
+        $esPasado = $taller->fecha < now()->startOfDay();
 
+        return [
+            'id' => $taller->id,
+            'nombre' => $taller->nombre,
+            'fecha' => $taller->fecha,
+            'hora' => $taller->hora ? \Carbon\Carbon::parse($taller->hora)->format('H:i') : null,
+            'horaFin' => $taller->horaFin ? \Carbon\Carbon::parse($taller->horaFin)->format('H:i') : null,
+            'precio' => $taller->precio,
+            'ubicacion' => $taller->ubicacion,
+            'menus' => $taller->menus,
+            'subcategoria' => $taller->subcategoria,
+            'cupoLleno' => $cupoLleno,
+            'esPasado' => $esPasado,
+        ];
+    });
+
+    // Seleccionar el taller por defecto: el más cercano y no completo
+    $tallerDefault = $talleresDisponibles->firstWhere('cupoLleno', false) ?? $talleresDisponibles->first();
+    
     return Inertia::render('Talleres/FormInscripcion', [
-        'taller' => $taller,
-        'slug' => $slug
+        'taller' => $tallerDefault,
+        'talleresDisponibles' => $talleresDisponibles,
+        'slug' => $slug,
+        'subcategoria' => $subcategoria,
     ]);
 }
 
@@ -675,7 +723,7 @@ public function updateMenusHtml(Request $request, $id)
         try {
             $taller = Taller::findOrFail($id);
             // Filtrar solo los clientes confirmados (idEstadoPago 2 o 3)
-            $participantes = $taller->tallerClientes()->with('cliente')->whereIn('idEstadoPago', [2, 3])->get();
+            $participantes = $taller->tallerClientes()->with(['cliente', 'acompaniantes'])->whereIn('idEstadoPago', [2, 3])->get();
 
             Log::info('Iniciando envío de emails para taller: ' . $taller->nombre);
             Log::info('Número de participantes: ' . $participantes->count());
@@ -687,30 +735,50 @@ public function updateMenusHtml(Request $request, $id)
             ]);
 
             $emailsEncolados = 0;
+            $emailsEnviados = []; // Array para trackear emails ya enviados
+
             foreach ($participantes as $participante) {
-                $email = $participante->email_cliente ?? $participante->cliente->email;
-                if ($email) {
-                    Log::info('Encolando email para: ' . $email);
-                    Mail::to($email)->queue(new TallerNotification(
+                // Procesar email del tallerCliente
+                $emailTitular = $participante->email_cliente ?? $participante->cliente->email;
+                if ($emailTitular && !in_array($emailTitular, $emailsEnviados)) {
+                    Log::info('Encolando email para titular: ' . $emailTitular);
+                    Mail::to($emailTitular)->queue(new TallerNotification(
                         $emailData['title'],
                         $emailData['content'],
                         $emailData['includeReview']
                     ));
                     $emailsEncolados++;
+                    $emailsEnviados[] = $emailTitular;
+                }
+
+                // Procesar emails de acompañantes
+                foreach ($participante->acompaniantes as $acompaniante) {
+                    $emailAcompaniante = $acompaniante->email;
+                    // Solo enviar si tiene email y no es igual al del titular
+                    if ($emailAcompaniante && !in_array($emailAcompaniante, $emailsEnviados)) {
+                        Log::info('Encolando email para acompañante: ' . $emailAcompaniante);
+                        Mail::to($emailAcompaniante)->queue(new TallerNotification(
+                            $emailData['title'],
+                            $emailData['content'],
+                            $emailData['includeReview']
+                        ));
+                        $emailsEncolados++;
+                        $emailsEnviados[] = $emailAcompaniante;
+                    }
                 }
             }
 
             Log::info('Emails encolados: ' . $emailsEncolados);
 
             return response()->json([
-                'message' => 'Emails encolados correctamente',
+                'message' => 'Emails enviados correctamente',
                 'emailsEncolados' => $emailsEncolados
             ]);
         } catch (\Exception $e) {
             Log::error('Error al encolar emails: ' . $e->getMessage());
             Log::error($e->getTraceAsString());
             return response()->json([
-                'error' => 'Error al encolar los emails: ' . $e->getMessage()
+                'error' => 'Error al enviar los emails: ' . $e->getMessage()
             ], 500);
         }
     }

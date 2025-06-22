@@ -26,6 +26,12 @@ class Taller extends Model
         'cantInscriptos',
     ];
 
+    protected $hidden = [
+        
+        'created_at',
+        'updated_at',
+        'idSubcategoria',
+    ];
     public function subcategoria()
     {
         return $this->belongsTo(Subcategoria::class, 'idSubcategoria');

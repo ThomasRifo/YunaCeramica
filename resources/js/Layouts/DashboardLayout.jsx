@@ -26,16 +26,17 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { useEffect } from 'react';
 
 
+
 const NAVIGATION = [
   { kind: "header", title: "Main items" },
   { segment: "dashboard", title: "Dashboard", icon: <DashboardIcon /> },
+  { segment: "../dashboard/subcategorias", title: "Categorías", icon: <CategoryIcon/> },
   {
     segment: "tienda",
     title: "Tienda",
     icon: <StoreIcon />,
     children: [
       { segment: "../dashboard/productos", title: "Productos", icon: <DescriptionIcon /> },
-      { segment: "../dashboard/categorias", title: "Categorías", icon: <CategoryIcon /> },
       { segment: "clientes", title: "Clientes", icon: <GroupsIcon /> },
       { segment: "ventas", title: "Ventas", icon: <SellIcon /> },
     ],

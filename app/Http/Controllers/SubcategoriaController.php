@@ -12,7 +12,20 @@ class SubcategoriaController extends Controller
      */
     public function index()
     {
-        //
+        $subcategorias = \App\Models\Subcategoria::with(['categoria', 'imagenes' => function($q) {
+            $q->orderBy('orden', 'asc');
+        }])->get();
+
+        // Mapear para traer solo la imagen de menor orden
+        $subcategorias = $subcategorias->map(function($subcat) {
+            $subcat->imagen_url = $subcat->imagenes->first()->urlImagen ?? null;
+            $subcat->categoria_nombre = $subcat->categoria->nombre ?? null;
+            return $subcat;
+        });
+
+        return inertia('Dashboard/Categorias/Index', [
+            'subcategorias' => $subcategorias,
+        ]);
     }
 
     /**

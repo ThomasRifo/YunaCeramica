@@ -27,11 +27,15 @@ Route::get('/productos', [ProductoController::class, 'index'])->name('productos'
 
 Route::get('/talleres', [TallerController::class, 'talleresClient'])->name('talleres');
 
-Route::get('/talleres-ceramica-y-gin', [TallerController::class, 'tallerView']);
-Route::get('/talleres-ceramica-y-cafe', [TallerController::class, 'tallerView']);
+// Ruta de inscripción debe ir ANTES que la ruta general para evitar conflictos
 Route::get('/talleres-{slug}-inscripcion', [TallerController::class, 'formInscripcion'])
     ->where('slug', '[A-Za-z0-9\-]+')
     ->name('taller.inscripcion');
+
+// Ruta dinámica para talleres basada en el slug de la subcategoría
+Route::get('/talleres-{slug}', [TallerController::class, 'tallerView'])
+    ->where('slug', '[A-Za-z0-9\-]+')
+    ->name('taller.view');
 
 Route::middleware(['auth'])->group(function () {
     // Rutas de perfil
@@ -78,6 +82,9 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         Route::post('/archivos/upload', [App\Http\Controllers\ArchivosController::class, 'upload'])->name('archivos.upload');
         Route::post('/archivos/upload-parapintar', [App\Http\Controllers\ArchivosController::class, 'uploadPiezasParaPintar'])->name('archivos.upload.parapintar');
         Route::post('/archivos/upload-realizadas', [App\Http\Controllers\ArchivosController::class, 'uploadPiezasRealizadas'])->name('archivos.upload.realizadas');
+
+        // Rutas de Subcategorías
+        Route::get('/subcategorias', [\App\Http\Controllers\SubcategoriaController::class, 'index'])->name('subcategorias.index');
     });
 
 Route::post('/dashboard/talleres/actualizar-estados-pago', [TallerController::class, 'actualizarEstadosPagoMasivo'])->name('dashboard.talleres.actualizarEstadosPagoMasivo');

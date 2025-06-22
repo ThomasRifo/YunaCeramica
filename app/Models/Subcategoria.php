@@ -15,21 +15,28 @@ class Subcategoria extends Model
         'nombre',
         'descripcion',
         'url',
+        
+        
+        
+    ];
+    protected $hidden = [
+        'id',
         'orden',
         'activo',
         'idCategoria',
+        'created_at',
+        'updated_at',
     ];
-
     public function categoria()
     {
         return $this->belongsTo(Categoria::class, 'idCategoria');
     }
     public function imagenes()
-{
-    return $this->hasMany(ImagenSubcategoriaController::class, 'idSubcategoria');
-}
-public function taller()
-{
-    return $this->hasMany(TallerController::class, 'taller');
-}
+    {
+        return $this->hasMany(\App\Models\ImagenSubcategoria::class, 'idSubcategoria');
+    }
+    public function talleres()
+    {
+        return $this->hasMany(Taller::class, 'idSubcategoria');
+    }
 }

@@ -32,10 +32,20 @@ class TallerNotification extends Mailable
     public function build()
     {
         $logoPath = public_path('storage/uploads/yunalogowhite192.png');
+        
         return $this->subject($this->title)
                     ->view('emails.taller-notification')
+                    ->text('emails.taller-notification-text') // Versión en texto plano
                     ->with([
                         'logoPath' => $logoPath,
-                    ]);
+                    ])
+                    ->replyTo(config('mail.from.address'), config('mail.from.name'))
+                    ->priority(1) // Alta prioridad
+                    ->withSwiftMessage(function ($message) {
+                        $message->getHeaders()
+                            ->addTextHeader('X-MC-Tags', 'taller-notification')
+                            ->addTextHeader('X-MC-Track', 'opens,clicks')
+                            ->addTextHeader('List-Unsubscribe', '<mailto:' . config('mail.from.address') . '?subject=unsubscribe>');
+                    });
     }
 } 
