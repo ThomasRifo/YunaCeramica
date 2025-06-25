@@ -12,18 +12,16 @@ class Subcategoria extends Model
     use HasFactory;
 
     protected $fillable = [
+        'id',
         'nombre',
         'descripcion',
+        'activo',
         'url',
-        
-        
+        'idCategoria',
+        'orden',
         
     ];
     protected $hidden = [
-        'id',
-        'orden',
-        'activo',
-        'idCategoria',
         'created_at',
         'updated_at',
     ];

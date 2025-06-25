@@ -575,7 +575,7 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
                                                 <HelpCircle className="h-4 w-4 text-gray-500" />
                                             </TooltipTrigger>
                                             <TooltipContent>
-                                                <p>Indica el número total de personas que asistirán al taller, incluyéndote a ti.</p>
+                                                <p>Indica el número total de personas que deseas inscribir y efectuar el pago. En caso de que quieras realizar el pago por separado, podés hacerlo compartiendo con tu acompañante el link de referido que te daremos luego que te inscribas.</p>
                                             </TooltipContent>
                                         </Tooltip>
                                     </TooltipProvider>
@@ -655,7 +655,7 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
                                                         <HelpCircle className="h-4 w-4 text-gray-500" />
                                                     </TooltipTrigger>
                                                     <TooltipContent>
-                                                        <p>Te contactaremos por este número solo en caso de cambios importantes en el taller.</p>
+                                                        <p>Nos comunicaremos por este medio en situaciones que requieran una conversación dinámica.</p>
                                                     </TooltipContent>
                                                 </Tooltip>
                                             </TooltipProvider>
@@ -763,7 +763,7 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
                                                         <HelpCircle className="h-4 w-4 text-gray-500" />
                                                     </TooltipTrigger>
                                                     <TooltipContent>
-                                                        <p>Solo se utilizará para contactar al acompañante en caso de emergencias o cambios de último momento.</p>
+                                                        <p>Nos comunicaremos por este medio en situaciones que requieran una conversación dinámica.</p>
                                                     </TooltipContent>
                                                 </Tooltip>
                                             </TooltipProvider>

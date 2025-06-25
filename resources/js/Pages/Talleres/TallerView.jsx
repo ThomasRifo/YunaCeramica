@@ -62,6 +62,25 @@ export default function TallerView({ imagenes, pagoAprobado: pagoAprobadoProp, i
     tipoHoraFin: typeof tallerReferencia.horaFin,
   });
 
+  // Lógica mejorada para determinar el estado del evento
+  const hayTalleresFuturos = talleresDisponibles.some(taller => {
+    // Un taller es futuro si su fecha es mayor o igual a mañana (no hoy)
+    const fechaTaller = dayjs(taller.fecha);
+    const manana = dayjs().add(1, 'day').startOf('day');
+    return fechaTaller.isAfter(manana) || fechaTaller.isSame(manana);
+  });
+
+  const hayCuposDisponibles = talleresDisponibles.some(taller => {
+    const fechaTaller = dayjs(taller.fecha);
+    const manana = dayjs().add(1, 'day').startOf('day');
+    const esFuturo = fechaTaller.isAfter(manana) || fechaTaller.isSame(manana);
+    return esFuturo && taller.cupoDisponible;
+  });
+
+  // Determinar el estado del evento
+  const eventoFinalizado = !hayTalleresFuturos;
+  const cupoLleno = hayTalleresFuturos && !hayCuposDisponibles;
+
   const breadcrumbItems = [
     {
       label: 'Talleres',
@@ -135,14 +154,14 @@ export default function TallerView({ imagenes, pagoAprobado: pagoAprobadoProp, i
               }}
               transition={{ duration: 0.3 }}
             >
-              {tallerReferencia.esPasado ? (
+              {eventoFinalizado ? (
                 <button
                   className="inline-block bg-black text-white font-semibold py-3 px-6 rounded-lg text-xl shadow-lg cursor-not-allowed opacity-70"
                   disabled
                 >
                   Evento finalizado
                 </button>
-              ) : !tallerReferencia.cupoDisponible ? (
+              ) : cupoLleno ? (
                 <button
                   className="inline-block bg-black text-white font-semibold py-3 px-6 rounded-lg text-xl shadow-lg cursor-not-allowed opacity-70"
                   disabled
@@ -234,14 +253,14 @@ export default function TallerView({ imagenes, pagoAprobado: pagoAprobadoProp, i
               } : false}
               transition={{ duration: 0.5 }}
             >
-              {tallerReferencia.esPasado ? (
+              {eventoFinalizado ? (
                 <button
                   className="inline-block w-1/2 bg-gray-400 text-white font-semibold py-3 px-6 rounded-lg text-2xl shadow-lg cursor-not-allowed opacity-70"
                   disabled
                 >
                   Evento finalizado
                 </button>
-              ) : !tallerReferencia.cupoDisponible ? (
+              ) : cupoLleno ? (
                 <button
                   className="inline-block w-1/2 bg-gray-400 text-white font-semibold py-3 px-6 rounded-lg text-2xl shadow-lg cursor-not-allowed opacity-70"
                   disabled
