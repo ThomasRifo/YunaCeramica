@@ -209,6 +209,8 @@ public function view($id)
         return $tc->idEstadoPago === 1; // 1 = pendiente
     })->values()->all();
 
+
+
     return Inertia::render('Dashboard/Talleres/View', [
         'taller' => $taller,
         'tallerClientesPagados' => $tallerClientesPagados,
@@ -225,29 +227,39 @@ public function talleresClient()
         ->take(20)
         ->get();
 
-    // Obtener talleres activos
-    $talleres = Taller::where('activo', true)
-        ->orderBy('fecha', 'asc')
-        ->get(['id', 'nombre', 'descripcion', 'fecha', 'hora', 'ubicacion', 'precio', 'idSubcategoria', 'cupoMaximo', 'cantInscriptos']);
+    // Obtener todas las subcategorías de talleres (categoría 2 = Talleres)
+    $subcategoriasTalleres = Subcategoria::where('idCategoria', 2)
+        ->where('activo', true)
+        ->get();
 
-    // Verificar talleres futuros por tipo
-    $ceramicaYCafeFuturos = Taller::where('activo', true)
-        ->where('idSubcategoria', 2) // ID de Cerámica y Café
-        ->where('fecha', '>=', now()->startOfDay())
-        ->exists();
+    $estadoTalleres = [];
 
-    $ceramicaYGinFuturos = Taller::where('activo', true)
-        ->where('idSubcategoria', 1) // ID de Cerámica y Gin
-        ->where('fecha', '>=', now()->startOfDay())
-        ->exists();
+    // Procesar cada subcategoría de manera dinámica
+    foreach ($subcategoriasTalleres as $subcategoria) {
+        $slug = $subcategoria->url;
+        $idSubcategoria = $subcategoria->id;
+        
+        // Verificar si hay talleres futuros para esta subcategoría
+        $talleresFuturos = Taller::where('activo', true)
+            ->where('idSubcategoria', $idSubcategoria)
+            ->where('fecha', '>=', now()->startOfDay())
+            ->get();
 
-    // Determinar el estado de cada tipo de taller
-    $estadoTalleres = [
-        'ceramicaYCafe' => 'disponible',
-        'ceramicaYCafeFuturos' => $ceramicaYCafeFuturos,
-        'ceramicaYGin' => 'disponible',
-        'ceramicaYGinFuturos' => $ceramicaYGinFuturos
-    ];
+        $tieneTalleresFuturos = $talleresFuturos->isNotEmpty();
+        
+        // Verificar si todos los talleres futuros están completos
+        $todosCompletos = $tieneTalleresFuturos && 
+            $talleresFuturos->every(function($taller) {
+                return $taller->cantInscriptos >= $taller->cupoMaximo;
+            });
+
+        // Crear las claves dinámicas basadas en el slug
+        $claveFuturos = $slug . 'Futuros';
+        $claveEstado = $slug;
+        
+        $estadoTalleres[$claveFuturos] = $tieneTalleresFuturos;
+        $estadoTalleres[$claveEstado] = $todosCompletos ? 'cupo_lleno' : 'disponible';
+    }
 
     $archivos = Storage::disk('public')->files('piezas/realizadas');
     $imagenesPiezas = collect($archivos)
@@ -257,30 +269,18 @@ public function talleresClient()
         ->values()
         ->toArray();
 
-    // Verificar cupos llenos para Cerámica y Café
-    $tallerCafe = Taller::where('activo', true)
-        ->where('idSubcategoria', 2)
-        ->orderBy('created_at', 'desc')
-        ->first();
-    
-    if ($tallerCafe && $tallerCafe->cantInscriptos >= $tallerCafe->cupoMaximo) {
-        $estadoTalleres['ceramicaYCafe'] = 'cupo_lleno';
-    }
-
-    // Verificar cupos llenos para Cerámica y Gin
-    $tallerGin = Taller::where('activo', true)
-        ->where('idSubcategoria', 1)
-        ->orderBy('created_at', 'desc')
-        ->first();
-    
-    if ($tallerGin && $tallerGin->cantInscriptos >= $tallerGin->cupoMaximo) {
-        $estadoTalleres['ceramicaYGin'] = 'cupo_lleno';
-    }
-
     return Inertia::render('Talleres/Index', [
         'talleres' => $estadoTalleres,
         'reviews' => $reviews,
-        'imagenesPiezas' => $imagenesPiezas, //pintadas
+        'imagenesPiezas' => $imagenesPiezas,
+        'subcategorias' => $subcategoriasTalleres->map(function($subcat) {
+            return [
+                'slug' => $subcat->url,
+                'nombre' => $subcat->nombre,
+                'imagen' => '/storage/uploads/' . $subcat->url . '.webp',
+                'link' => '/talleres-' . $subcat->url,
+            ];
+        }),
     ]);
 }
 
@@ -320,7 +320,7 @@ public function tallerView()
         $cupoDisponible = $taller->cantInscriptos < $taller->cupoMaximo;
         
         // Calcular si el evento es pasado (si es el mismo día no es pasado)
-        $esPasado = $taller->fecha < now()->startOfDay();
+        $esPasado = \Carbon\Carbon::parse($taller->fecha)->lt(now()->startOfDay());
         
         // Formatear hora y horaFin para eliminar los segundos
         $hora = $taller->hora ? \Carbon\Carbon::parse($taller->hora)->format('H:i') : null;
@@ -388,7 +388,7 @@ public function formInscripcion($slug)
     ->get()
     ->map(function ($taller) {
         $cupoLleno = $taller->cantInscriptos >= $taller->cupoMaximo;
-        $esPasado = $taller->fecha < now()->startOfDay();
+        $esPasado = \Carbon\Carbon::parse($taller->fecha)->lt(now()->startOfDay());
 
         return [
             'id' => $taller->id,

@@ -24,13 +24,14 @@ class Taller extends Model
         'ubicacion',
         'activo',
         'cantInscriptos',
+        'idSubcategoria',
     ];
 
     protected $hidden = [
         
         'created_at',
         'updated_at',
-        'idSubcategoria',
+        
     ];
     public function subcategoria()
     {

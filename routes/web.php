@@ -98,7 +98,7 @@ Route::middleware('auth')->group(function () {
 
 
 
-Route::get('/pago-success', fn() => Inertia::render('Pagos/Success'))->name('pago.success');
+Route::get('/pago-success', fn() => Inertia::render('Pagos/Success'))->name('pagomp.success');
 Route::get('/pago-failure', fn() => Inertia::render('Pagos/Failure'))->name('pago.failure');
 Route::get('/pago-pending', fn() => Inertia::render('Pagos/Pending'))->name('pago.pending');
 

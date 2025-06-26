@@ -1,4 +1,4 @@
-import { Box, Breadcrumbs, Link, Typography, Button, Card, CardActions } from '@mui/material';
+import { Box, Breadcrumbs, Link, Typography, Button, Card, CardActions, Snackbar, Alert } from '@mui/material';
 import ReactQuill from 'react-quill';
 import { useForm, router } from '@inertiajs/react';
 import 'react-quill/dist/quill.snow.css';
@@ -22,6 +22,7 @@ export default function EditImagenesCropper({ slug, imagenes }) {
 
   const [previewUrls, setPreviewUrls] = useState({});
   const [resetTriggers, setResetTriggers] = useState({});
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
   // Cuando el cropper termina, actualiza el blob y el preview
   const handleCropComplete = (blob, index) => {
@@ -76,9 +77,10 @@ export default function EditImagenesCropper({ slug, imagenes }) {
     router.post(route('dashboard.paginas.talleres.imagenes.update', { slug }), formData, {
       forceFormData: true,
       onSuccess: () => {
-        console.log('Actualizado correctamente');
+        setSnackbar({ open: true, message: '¡Cambios guardados correctamente!', severity: 'success' });
       },
       onError: (errors) => {
+        setSnackbar({ open: true, message: 'Error al guardar los cambios', severity: 'error' });
         console.error(errors);
       }
     });
@@ -154,6 +156,22 @@ export default function EditImagenesCropper({ slug, imagenes }) {
           </Button>
         </div>
       </form>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+          elevation={6}
+          variant="filled"
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </div>
   );
 } 

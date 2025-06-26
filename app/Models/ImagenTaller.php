@@ -11,12 +11,13 @@ class ImagenTaller extends Model
     protected $table = 'imagenes_taller';
 
     protected $fillable = [
+        'id',
         'slug', 'orden', 'imagen', 'texto', 'crop_x', 'crop_y', 'zoom',
     ];
     protected $hidden = [
-        'id',
-        'slug',
-        'orden',
+        
+        
+        
         'created_at',
         'updated_at',
     ];

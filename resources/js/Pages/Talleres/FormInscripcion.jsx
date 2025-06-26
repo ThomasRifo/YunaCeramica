@@ -76,7 +76,6 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
     const [showPending, setShowPending] = useState(false);
     const [errores, setErrores] = useState({});
     const recaptchaV2Ref = useRef();
-    const [referido, setReferido] = useState(null);
     const [showV2, setShowV2] = useState(false);
     const [accionPendiente, setAccionPendiente] = useState(null);
     const [v2Token, setV2Token] = useState(null);
@@ -99,13 +98,26 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
     const [isFormDisabled, setIsFormDisabled] = useState(false);
     const [formStatus, setFormStatus] = useState("");
 
-    const [tallerSeleccionado, setTallerSeleccionado] = useState(taller);
+    // Filtrar solo talleres futuros (mañana o después)
+    const talleresFuturos = talleresDisponibles.filter(t => !t.esPasado);
+
+    // Encontrar el próximo taller disponible (con cupo)
+    const proximoTallerDisponible = talleresFuturos.find(t => !t.cupoLleno) || talleresFuturos[0];
+
+    // Estado del evento global
+    const noHayTalleresFuturos = talleresFuturos.length === 0;
+    const noHayCuposDisponibles = talleresFuturos.length > 0 && !talleresFuturos.some(t => !t.cupoLleno);
+
+    const [tallerSeleccionado, setTallerSeleccionado] = useState(proximoTallerDisponible || {});
+
+    const [referido, setReferido] = useState(null);
 
     useEffect(() => {
         if (typeof window !== "undefined") {
             const params = new URLSearchParams(window.location.search);
             if (params.get("pago") === "failure") setShowFailure(true);
             if (params.get("pago") === "pending") setShowPending(true);
+            if (params.get("pago") === "success") setShowSuccessDialog(true);
         }
     }, []);
 
@@ -116,25 +128,28 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
     }, [referidoProp]);
 
     useEffect(() => {
-        if (!tallerSeleccionado?.id) return;
-
-        // Ahora usamos las propiedades que vienen del backend
-        if (tallerSeleccionado.cupoLleno && !tallerSeleccionado.esPasado) {
-            setIsFormDisabled(true);
-            setFormStatus("COMPLETO");
-        } else if (tallerSeleccionado.esPasado) {
+        if (noHayTalleresFuturos) {
             setIsFormDisabled(true);
             setFormStatus("EVENTO FINALIZADO");
-        } else {
-            setIsFormDisabled(false);
+        } else if (noHayCuposDisponibles) {
+            setIsFormDisabled(true);
             setFormStatus("");
+        } else {
+            // Verificar el taller específico seleccionado
+            if (tallerSeleccionado?.cupoLleno) {
+                setIsFormDisabled(true);
+                setFormStatus("CUPO LLENO");
+            } else {
+                setIsFormDisabled(false);
+                setFormStatus("");
+            }
         }
-    }, [tallerSeleccionado]);
+    }, [tallerSeleccionado, noHayTalleresFuturos, noHayCuposDisponibles]);
 
     useEffect(() => {
-        // Si cambia el taller por defecto (por ejemplo, al cambiar de slug), actualizar el seleccionado
-        setTallerSeleccionado(taller);
-    }, [taller]);
+        // Actualizar el taller seleccionado cuando cambia el prop
+        setTallerSeleccionado(proximoTallerDisponible || {});
+    }, [proximoTallerDisponible]);
 
     const handleCantidadChange = (e) => {
         const nuevaCantidad = parseInt(e.target.value);
@@ -148,6 +163,7 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
                 email: "",
                 telefono: "",
                 menu: "",
+                menus: tallerSeleccionado?.menus || [],
             });
         }
         while (nuevos.length > nuevaCantidad - 1) {
@@ -155,6 +171,16 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
         }
         setAcompanantes(nuevos);
     };
+
+    // Cuando cambia el taller seleccionado, actualizo los menús de los acompañantes
+    useEffect(() => {
+        setAcompanantes((prev) =>
+            prev.map((a) => ({
+                ...a,
+                menus: tallerSeleccionado?.menus || [],
+            }))
+        );
+    }, [tallerSeleccionado]);
 
     const precioBase = tallerSeleccionado?.precio ?? 0;
     const precioReserva = (tallerSeleccionado?.precio ?? 0) / 2;
@@ -328,6 +354,7 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
 
 
     const handleInscripcionConCaptcha = async (accion) => {
+        // Comenta cualquier llamada, validación o chequeo de captcha, score, o bloqueos relacionados.
         try {
             // Ejecutar reCAPTCHA v3
             const v3Token = await window.grecaptcha.execute(recaptchaV3Key, { action: "submit" });
@@ -451,10 +478,8 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
     const getTallerOptionText = (t) => {
         const fechaFormateada = formatFecha(t.fecha);
         let status = '';
-        if (t.esPasado) {
-            status = ' (Finalizado)';
-        } else if (t.cupoLleno) {
-            status = ' (Completo)';
+        if (t.cupoLleno) {
+            status = ' (Sin cupo)';
         }
         return `${fechaFormateada}${status}`;
     };
@@ -469,17 +494,18 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
                 <div className="max-w-3xl mx-auto">
                     <h1 className="text-3xl md:text-4xl font-bold text-center mb-8">
                         {subcategoria?.nombre.toUpperCase() ?? 'Taller'} - Inscripción
-                        {formStatus && <span className="text-red-500"> ({formStatus})</span>}
+                        {noHayCuposDisponibles && <span className="text-red-500"> (CUPO LLENO)</span>}
+                        {noHayTalleresFuturos && <span className="text-red-500"> (EVENTO FINALIZADO)</span>}
                     </h1>
                     
                     {/* Selector de taller por fecha */}
-                    {talleresDisponibles.length > 1 && (
+                    {talleresFuturos.length > 1 && (
                         <div className="mb-6">
                             <Label className="text-lg">Elegí la fecha del taller:</Label>
                             <Select
                                 value={tallerSeleccionado?.id || ''}
                                 onValueChange={(value) => {
-                                    const nuevo = talleresDisponibles.find(t => t.id === parseInt(value));
+                                    const nuevo = talleresFuturos.find(t => t.id === parseInt(value));
                                     if (nuevo) setTallerSeleccionado(nuevo);
                                 }}
                             >
@@ -487,11 +513,11 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
                                     <SelectValue placeholder="Seleccioná una fecha" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {talleresDisponibles.map((t) => (
+                                    {talleresFuturos.map((t) => (
                                         <SelectItem 
                                             key={t.id} 
                                             value={t.id} 
-                                            disabled={t.cupoLleno || t.esPasado}
+                                            disabled={t.cupoLleno}
                                         >
                                             {getTallerOptionText(t)}
                                         </SelectItem>
@@ -728,7 +754,6 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
                                             }}
                                         />
                                         {errores[`acompanante_apellido_${i}`] && <p className="text-red-500 text-sm">{errores[`acompanante_apellido_${i}`]}</p>}
-                                        
                                         <div>
                                             <div className="flex items-center gap-2 mb-1">
                                                 <Label>Email del acompañante:</Label>
@@ -744,8 +769,8 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
                                                 </TooltipProvider>
                                             </div>
                                             <Input
-                                                className="h-12"
-                                                placeholder="Email (opcional)"
+                                                className={`h-12 ${errores[`acompanante_email_${i}`] ? 'border-red-500' : ''}`}
+                                                placeholder="Email"
                                                 type="email"
                                                 value={a.email}
                                                 onChange={(e) => {
@@ -755,50 +780,50 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
                                                 }}
                                             />
                                         </div>
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <Label>Teléfono del acompañante:</Label>
-                                            <TooltipProvider>
-                                                <Tooltip>
-                                                    <TooltipTrigger>
-                                                        <HelpCircle className="h-4 w-4 text-gray-500" />
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                        <p>Nos comunicaremos por este medio en situaciones que requieran una conversación dinámica.</p>
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                            </TooltipProvider>
+                                        {errores[`acompanante_email_${i}`] && <p className="text-red-500 text-sm">{errores[`acompanante_email_${i}`]}</p>}
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <Label>Teléfono:</Label>
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger>
+                                                            <HelpCircle className="h-4 w-4 text-gray-500" />
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            <p>Nos comunicaremos por este medio en situaciones que requieran una conversación dinámica.</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
+                                            </div>
+                                            <Input
+                                                className="h-12"
+                                                placeholder="Teléfono (opcional)"
+                                                type="tel"
+                                                value={a.telefono}
+                                                onChange={(e) => {
+                                                    const nuevos = [...acompanantes];
+                                                    nuevos[i].telefono = e.target.value;
+                                                    setAcompanantes(nuevos);
+                                                }}
+                                            />
                                         </div>
-                                        <Input
-                                            className="h-12"
-                                            placeholder="Teléfono (opcional)"
-                                            type="tel"
-                                            value={a.telefono}
-                                            onChange={(e) => {
-                                                const nuevos = [...acompanantes];
-                                                nuevos[i].telefono = e.target.value;
-                                                setAcompanantes(nuevos);
-                                            }}
-                                        />
-                                        
                                         <div className="space-y-4 mt-4 mx-auto w-full">
-                                            <Label className="text-lg">Elegí un menú para el acompañante {i+1}:</Label>
+                                            <Label className="text-lg">Elegí tu menú:</Label>
                                             <div className="grid sm:grid-cols-2 md:grid-cols-3  gap-4 mt-2 ">
-                                                {tallerSeleccionado.menus.map((menu) => (
-                                                    
+                                                {(a.menus || []).map((menu) => (
                                                     <div
-                                                    key={menu.id}
-                                                    className="prose"
-                                                >
+                                                        key={menu.id}
+                                                        className="prose"
+                                                    >
                                                         <CardMenu
-                                                        menu={menu}
-                                                        
-                                                        seleccionado={a.menu === String(menu.id)}
-                                                        onSelect={(id) => {
-                                                            const nuevosAcompanantes = [...acompanantes];
-                                                            nuevosAcompanantes[i].menu = String(id);
-                                                            setAcompanantes(nuevosAcompanantes);
-                                                        }}
-                                                    />
+                                                            menu={menu}
+                                                            seleccionado={a.menu === String(menu.id)}
+                                                            onSelect={(id) => {
+                                                                const nuevos = [...acompanantes];
+                                                                nuevos[i].menu = String(id);
+                                                                setAcompanantes(nuevos);
+                                                            }}
+                                                        />
                                                     </div>
                                                 ))}
                                             </div>
@@ -851,7 +876,7 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
                                 {metodoPago === 'tarjeta' && (
                                     <Button
                                         className="h-12 w-full"
-                                        onClick={() => handleInscripcionConCaptcha(handlePagoMercadoPago)}
+                                        onClick={() => handlePagoMercadoPago()}
                                         disabled={isLoadingMercadoPago || !datosCliente.nombre || !datosCliente.apellido || !datosCliente.email || !datosCliente.menu}
                                     >
                                         {isLoadingMercadoPago ? "Procesando..." : "Pagar con MercadoPago"}
@@ -975,15 +1000,12 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
                 </Dialog>
 
                 {showV2 && (
-                    <ReCAPTCHA                    
-                        sitekey={recaptchaV2Key}           
+                    <ReCAPTCHA
+                        sitekey={recaptchaV2Key}
+                        ref={recaptchaV2Ref}
                         onChange={handleV2Change}
-                        ref={recaptchaV2Ref}               
                     />
                 )}
-            </div>
-            <div className="mt-8 text-center text-sm text-gray-500">
-                <p>Al inscribirte, estás aceptando nuestros <a href="/terminos" className="underline">Términos y Condiciones</a>.</p>
             </div>
         </>
     );

@@ -42,6 +42,13 @@ export default function TallerView({ imagenes, pagoAprobado: pagoAprobadoProp, i
     };
   }, []);
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("pago") === "success") setShowModal(true);
+    }
+  }, []);
+
   // Debug: Log de props recibidas
   console.log('TallerView - Props recibidas:', {
     imagenes: imagenes?.length,

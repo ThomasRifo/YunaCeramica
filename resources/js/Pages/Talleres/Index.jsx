@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import ReviewsSection from '@/Components/ReviewsSection';
 import PiecesCarousel from '@/Components/Taller/PiecesCarousel';
 
-export default function TalleresIndex({ reviews, talleres, imagenesPiezas }) {
+export default function TalleresIndex({ reviews, talleres, imagenesPiezas, subcategorias }) {
   return (
     <>
       <Head>
@@ -79,103 +79,57 @@ export default function TalleresIndex({ reviews, talleres, imagenesPiezas }) {
             Elegí tu experiencia
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 px-4 sm:px-16 py-8">
-            {/* Cerámica y Café */}
-            {talleres?.ceramicaYCafeFuturos ? (
-              <Link href="talleres-ceramica-y-cafe" className="group relative" aria-label="Taller de Cerámica y Café">
-                <AspectRatio ratio={2 / 1.8} className="relative rounded-xl overflow-hidden shadow-lg">
-                  <img
-                    src="/storage/uploads/ceramica-y-cafe.webp" 
-                    alt="Taller de Cerámica y Café - Aprende cerámica mientras disfrutas de un delicioso café"
-                    className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
-                    loading="lazy"
-                  />
-                  <div className="absolute inset-0 bg-black/30 flex p-10 justify-center items-center">
-                    <h3 className="text-white text-end text-4xl md:text-6xl font-semibold">
-                      CERÁMICA <br /> & CAFÉ
-                    </h3>
-                  </div>
-                  {talleres?.ceramicaYCafe === 'cupo_lleno' && (
-                    <div className="absolute inset-0 bg-white/50 flex p-8 items-end justify-center">
-                      <div className="text-center bg-black/70 rounded-xl md:p-4 p-3 md:mb-20 mb-6 w-full">
-                        <span className="text-white md:text-4xl text-3xl font-normal">COMPLETO</span>
+            {subcategorias.map((subcat) => {
+              const tieneFuturos = talleres?.[subcat.slug + 'Futuros'];
+              const estado = talleres?.[subcat.slug];
+              return tieneFuturos ? (
+                <Link key={subcat.slug} href={subcat.link} className="group relative" aria-label={subcat.nombre}>
+                  <AspectRatio ratio={2 / 1.8} className="relative rounded-xl overflow-hidden shadow-lg">
+                    <img
+                      src={subcat.imagen}
+                      alt={`Taller de ${subcat.nombre} - Aprende cerámica en Yuna`}
+                      className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-black/30 flex p-10 justify-center items-center">
+                      <h3 className="text-white text-end text-4xl md:text-6xl font-semibold whitespace-pre-line">
+                        {subcat.nombre.toUpperCase()}
+                      </h3>
+                    </div>
+                    {estado === 'cupo_lleno' && (
+                      <div className="absolute inset-0 bg-white/50 flex p-8 items-end justify-center">
+                        <div className="text-center bg-black/70 rounded-xl md:p-4 p-3 md:mb-20 mb-6 w-full">
+                          <span className="text-white md:text-4xl text-3xl font-normal">COMPLETO</span>
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </AspectRatio>
-              </Link>
-            ) : (
-              <div className="group relative" aria-label="Taller de Cerámica y Café - Próximamente">
-                 <Link href="talleres-ceramica-y-cafe" className="group relative" aria-label="Taller de Cerámica y Café">
-                <AspectRatio ratio={2 / 1.8} className="relative rounded-xl overflow-hidden shadow-lg">
-                  <img
-                    src="/storage/uploads/ceramica-y-cafe.webp" 
-                    alt="Taller de Cerámica y Café - Próximamente"
-                    className="object-cover w-full h-full"
-                    loading="lazy"
-                  />
-                  <div className="absolute inset-0 bg-black/30 flex p-10 justify-center items-center">
-                    <h3 className="text-white text-end text-4xl md:text-6xl font-semibold">
-                      CERÁMICA <br /> & CAFÉ
-                    </h3>
-                  </div>
-                  <div className="absolute inset-0 bg-white/50 flex p-8 items-end justify-center">
-                    <div className="text-center bg-black/70 rounded-xl md:p-4 p-3 md:mb-20 mb-6 w-full">
-                      <span className="text-white md:text-4xl text-3xl font-normal">PRÓXIMAMENTE</span>
-                    </div>
-                  </div>
-                </AspectRatio>
+                    )}
+                  </AspectRatio>
                 </Link>
-              </div>
-            )}
-
-            {/* Cerámica y Gin */}
-            {talleres?.ceramicaYGinFuturos ? (
-              <Link href="/talleres-ceramica-y-gin" className="group relative" aria-label="Taller de Cerámica y Gin">
-                <AspectRatio ratio={2 / 1.8} className="relative rounded-xl overflow-hidden shadow-lg">
-                  <img
-                    src="/storage/uploads/ceramica-y-gin.webp"
-                    alt="Taller de Cerámica y Gin - Experiencia única combinando cerámica con degustación de gin"
-                    className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
-                    loading="lazy"
-                  />
-                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                    <h2 className="text-white text-end text-4xl md:text-6xl font-semibold">
-                      CERÁMICA <br /> & GIN
-                    </h2>
-                  </div>
-                  {talleres?.ceramicaYGin === 'cupo_lleno' && (
-                    <div className="absolute inset-0 bg-white/50 flex p-8 items-end justify-center">
-                      <div className="text-center bg-black/70 rounded-xl md:p-4 p-3 md:mb-20 mb-6 w-full">
-                        <span className="text-white md:text-4xl text-3xl font-normal">COMPLETO</span>
+              ) : (
+                <div key={subcat.slug} className="group relative" aria-label={`Taller de ${subcat.nombre} - Próximamente`}>
+                  <Link href={subcat.link} className="group relative" aria-label={subcat.nombre}>
+                    <AspectRatio ratio={2 / 1.8} className="relative rounded-xl overflow-hidden shadow-lg">
+                      <img
+                        src={subcat.imagen}
+                        alt={`Taller de ${subcat.nombre} - Próximamente`}
+                        className="object-cover w-full h-full"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 bg-black/30 flex p-10 justify-center items-center">
+                        <h3 className="text-white text-end text-4xl md:text-6xl font-semibold whitespace-pre-line">
+                          {subcat.nombre.toUpperCase()}
+                        </h3>
                       </div>
-                    </div>
-                  )}
-                </AspectRatio>
-              </Link>
-            ) : (
-              <div className="group relative" aria-label="Taller de Cerámica y Gin - Próximamente">
-                <Link href="/talleres-ceramica-y-gin" className="group relative" aria-label="Taller de Cerámica y Gin">
-                <AspectRatio ratio={2 / 1.8} className="relative rounded-xl overflow-hidden shadow-lg">
-                  <img
-                    src="/storage/uploads/ceramica-y-gin.webp"
-                    alt="Taller de Cerámica y Gin - Próximamente"
-                    className="object-cover w-full h-full"
-                    loading="lazy"
-                  />
-                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                    <h2 className="text-white text-end text-4xl md:text-6xl font-semibold">
-                      CERÁMICA <br /> & GIN
-                    </h2>
-                  </div>
-                  <div className="absolute inset-0 bg-white/50 flex p-8 items-end justify-center">
-                    <div className="text-center bg-black/70 rounded-xl md:p-4 p-3 md:mb-20 mb-6 w-full">
-                      <span className="text-white md:text-4xl text-3xl font-normal">PRÓXIMAMENTE</span>
-                    </div>
-                  </div>
-                </AspectRatio>
-                </Link>
-              </div>
-            )}
+                      <div className="absolute inset-0 bg-white/50 flex p-8 items-end justify-center">
+                        <div className="text-center bg-black/70 rounded-xl md:p-4 p-3 md:mb-20 mb-6 w-full">
+                          <span className="text-white md:text-4xl text-3xl font-normal">PRÓXIMAMENTE</span>
+                        </div>
+                      </div>
+                    </AspectRatio>
+                  </Link>
+                </div>
+              );
+            })}
           </div>
         </section>
 
