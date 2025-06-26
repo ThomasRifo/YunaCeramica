@@ -10,6 +10,7 @@ class CaptchaController extends Controller
 {
     public function validarCaptcha(Request $request)
     {
+        \Log::info('--- INICIO validarCaptcha ---', ['request' => $request->all()]);
         try {
             $secretV3 = env('RECAPTCHA_SECRET_V3');
             $secretV2 = env('RECAPTCHA_SECRET_V2');
