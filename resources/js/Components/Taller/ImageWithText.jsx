@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { AspectRatio } from "@/Components/ui/aspect-ratio";
 import OptimizedImage from "@/Components/Taller/OptimizedImage";
 
-export default function ImageWithText({ image, title, description, extraContent, crop, zoom, optimizedUrls }) {
+export default function ImageWithText({ image, title, description, extraContent, crop, zoom, optimizedUrls, isLCP }) {
     return (
       <div className="flex w-2xl flex-col md:flex-row md:items-start items-center mx-auto gap-8">
         <div className=" w-36 " ></div>
@@ -23,13 +23,14 @@ export default function ImageWithText({ image, title, description, extraContent,
                                 aspectRatio={1.4 / 1.5}
                                 alt={title || "Imagen del taller"}
                                 fallbackSrc={image}
+                                isLCP={isLCP}
                             />
                         ) : image ? (
                             <img
                                 src={image}
                                 alt={title || "Imagen del taller"}
                                 className="w-full h-full object-cover"
-                                loading="lazy"
+                                {...(isLCP ? { fetchpriority: "high" } : { loading: "lazy" })}
                             />
                         ) : (
                             <div className="w-full h-full bg-gray-300" />

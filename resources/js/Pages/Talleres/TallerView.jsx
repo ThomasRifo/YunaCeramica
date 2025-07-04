@@ -193,6 +193,7 @@ export default function TallerView({ imagenes, pagoAprobado: pagoAprobadoProp, i
             title="Nuestra Experiencia"
             description={imagenes[0]?.texto}
             extraContent={extraInfo}
+            isLCP={true}
           />
 
           <ImageWithText
