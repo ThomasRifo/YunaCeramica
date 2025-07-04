@@ -49,25 +49,9 @@ export default function TallerView({ imagenes, pagoAprobado: pagoAprobadoProp, i
     }
   }, []);
 
-  // Debug: Log de props recibidas
-  console.log('TallerView - Props recibidas:', {
-    imagenes: imagenes?.length,
-    slug,
-    subcategoria,
-    talleresDisponibles: talleresDisponibles?.length,
-    talleresDisponiblesData: talleresDisponibles,
-  });
 
   // Usar el primer taller para mostrar info general (precio, horario, etc.)
   const tallerReferencia = talleresDisponibles[0] || {};
-
-  // Debug específico para horarios
-  console.log('TallerView - Datos de horario:', {
-    hora: tallerReferencia.hora,
-    horaFin: tallerReferencia.horaFin,
-    tipoHora: typeof tallerReferencia.hora,
-    tipoHoraFin: typeof tallerReferencia.horaFin,
-  });
 
   // Lógica mejorada para determinar el estado del evento
   const hayTalleresFuturos = talleresDisponibles.some(taller => {
@@ -204,6 +188,7 @@ export default function TallerView({ imagenes, pagoAprobado: pagoAprobadoProp, i
             image={`/storage/talleres/${imagenes[0]?.urlImagen}`}
             crop={{ x: imagenes[0]?.crop_x ?? 0, y: imagenes[0]?.crop_y ?? 0 }}
             zoom={imagenes[0]?.zoom ?? 1}
+            optimizedUrls={imagenes[0]?.optimizedUrls}
             aspectRatio={1.4/1.5}
             title="Nuestra Experiencia"
             description={imagenes[0]?.texto}
@@ -214,6 +199,7 @@ export default function TallerView({ imagenes, pagoAprobado: pagoAprobadoProp, i
             image={`/storage/talleres/${imagenes[1]?.urlImagen}`}
             crop={{ x: imagenes[1]?.crop_x ?? 0, y: imagenes[1]?.crop_y ?? 0 }}
             zoom={imagenes[1]?.zoom ?? 1}
+            optimizedUrls={imagenes[1]?.optimizedUrls}
             aspectRatio={1.4/1.5}
             title="¿Qué incluye?"
             description={imagenes[1]?.texto}
@@ -224,6 +210,7 @@ export default function TallerView({ imagenes, pagoAprobado: pagoAprobadoProp, i
             image={`/storage/talleres/${imagenes[2]?.urlImagen}`}
             crop={{ x: imagenes[2]?.crop_x ?? 0, y: imagenes[2]?.crop_y ?? 0 }}
             zoom={imagenes[2]?.zoom ?? 1}
+            optimizedUrls={imagenes[2]?.optimizedUrls}
             aspectRatio={1.4/1.5}
             title=""
             description={imagenes[2]?.texto}
@@ -292,7 +279,10 @@ export default function TallerView({ imagenes, pagoAprobado: pagoAprobadoProp, i
         {/* Mapa */}
         {tallerReferencia.ubicacion && (
           <div id="ubicacion" className="pt-16">
-            <LocationMap direccion={tallerReferencia.ubicacion} />
+            <figure>
+  <LocationMap direccion={tallerReferencia.ubicacion} />
+  <figcaption className="sr-only">Mapa de ubicación del taller: {tallerReferencia.ubicacion}</figcaption>
+</figure>
           </div>
         )}
       </div>

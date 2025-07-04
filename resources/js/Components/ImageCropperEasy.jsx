@@ -6,7 +6,7 @@ import Slider from '@mui/material/Slider';
 
 const ImageCropperEasy = ({
   initialImage = '',
-  aspectRatio = 1,
+  aspectRatio = 1.4/1.5,
   initialCrop = { x: 0, y: 0 },
   initialZoom = 1,
   onCropChange,
@@ -72,7 +72,7 @@ const ImageCropperEasy = ({
     <Card className={`w-full max-w-2xl mx-auto ${className}`}>
       <CardContent className="p-4">
         <div className="space-y-2">
-          <div className="relative w-full" style={{ aspectRatio: aspectRatio, minHeight: 220 }}>
+          <div className="relative w-full" style={{ aspectRatio: aspectRatio, minHeight: 220, maxWidth: `calc(100% * ${aspectRatio})` }}>
             {image ? (
               <Cropper
                 image={image}

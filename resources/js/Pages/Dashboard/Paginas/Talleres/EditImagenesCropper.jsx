@@ -4,6 +4,7 @@ import { useForm, router } from '@inertiajs/react';
 import 'react-quill/dist/quill.snow.css';
 import { useState, useEffect } from 'react';
 import ImageCropperEasy from '@/Components/ImageCropperEasy';
+import CircularProgress from '@mui/material/CircularProgress';
 
 const DEFAULT_IMAGE = '/images/default-placeholder.png';
 
@@ -23,6 +24,8 @@ export default function EditImagenesCropper({ slug, imagenes }) {
   const [previewUrls, setPreviewUrls] = useState({});
   const [resetTriggers, setResetTriggers] = useState({});
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [guardando, setGuardando] = useState(false);
+  const [loadingDots, setLoadingDots] = useState('');
 
   // Cuando el cropper termina, actualiza el blob y el preview
   const handleCropComplete = (blob, index) => {
@@ -62,6 +65,7 @@ export default function EditImagenesCropper({ slug, imagenes }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setGuardando(true);
     const formData = new FormData();
     data.imagenes.forEach((img, index) => {
       formData.append(`imagenes[${index}][id]`, img.id);
@@ -78,11 +82,14 @@ export default function EditImagenesCropper({ slug, imagenes }) {
       forceFormData: true,
       onSuccess: () => {
         setSnackbar({ open: true, message: '¡Cambios guardados correctamente!', severity: 'success' });
+        setGuardando(false);
       },
       onError: (errors) => {
         setSnackbar({ open: true, message: 'Error al guardar los cambios', severity: 'error' });
+        setGuardando(false);
         console.error(errors);
-      }
+      },
+      onFinish: () => setGuardando(false)
     });
   };
 
@@ -91,6 +98,17 @@ export default function EditImagenesCropper({ slug, imagenes }) {
       Object.values(previewUrls).forEach(url => URL.revokeObjectURL(url));
     };
   }, [previewUrls]);
+
+  useEffect(() => {
+    if (guardando) {
+      const interval = setInterval(() => {
+        setLoadingDots(prev => prev.length < 3 ? prev + '.' : '');
+      }, 500);
+      return () => clearInterval(interval);
+    } else {
+      setLoadingDots('');
+    }
+  }, [guardando]);
 
   return (
     <div className="max-w-4xl mx-auto p-6">
@@ -151,8 +169,21 @@ export default function EditImagenesCropper({ slug, imagenes }) {
           right: 32,
           zIndex: 1000,
         }}>
-          <Button variant="contained" type="submit" disabled={processing} size="large" sx={{ boxShadow: 3 }}>
-            Guardar cambios
+          <Button
+            variant="contained"
+            type="submit"
+            disabled={processing || guardando}
+            size="large"
+            sx={{ boxShadow: 3, minWidth: 220, maxWidth: 220, justifyContent: 'center' }}
+          >
+            {guardando ? (
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+                <CircularProgress size={22} color="inherit" sx={{ mr: 1 }} />
+                <span style={{ display: 'inline-block', minWidth: 110, textAlign: 'left' }}>
+                  Guardando<span style={{ display: 'inline-block', minWidth: 24 }}>{loadingDots}</span>
+                </span>
+              </span>
+            ) : 'Guardar cambios'}
           </Button>
         </div>
       </form>

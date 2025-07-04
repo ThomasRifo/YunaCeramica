@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Storage;
 use App\Mail\ConfirmacionInscripcionTaller;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Mail\TallerNotification;
+use App\Services\ImageOptimizationService;
 use Illuminate\Support\Facades\Cache;
 
 class TallerController extends Controller
@@ -346,6 +347,33 @@ public function tallerView()
     if ($imagenes->count() < 3) {
         Log::warning("Faltan imágenes para el taller {$slug}. Se encontraron {$imagenes->count()} de 3 necesarias");
     }
+
+    // Optimizar imágenes con el servicio
+    $imageService = new ImageOptimizationService();
+    $imagenesOptimizadas = $imagenes->map(function($imagen) use ($imageService) {
+        $crop = [
+            'x' => $imagen->crop_x ?? 0,
+            'y' => $imagen->crop_y ?? 0
+        ];
+        $zoom = $imagen->zoom ?? 1;
+        
+        $optimizedUrls = $imageService->getOptimizedImageUrl(
+            'talleres/' . $imagen->urlImagen,
+            $crop,
+            $zoom
+        );
+        
+        return [
+            'id' => $imagen->id,
+            'urlImagen' => $imagen->urlImagen,
+            'texto' => $imagen->texto,
+            'orden' => $imagen->orden,
+            'crop_x' => $imagen->crop_x,
+            'crop_y' => $imagen->crop_y,
+            'zoom' => $imagen->zoom,
+            'optimizedUrls' => $optimizedUrls
+        ];
+    });
     
     $archivos = Storage::disk('public')->files('piezas/parapintar');
     $imagenesPiezas = collect($archivos)
@@ -357,7 +385,7 @@ public function tallerView()
     
     return Inertia::render('Talleres/TallerView', [
         'talleresDisponibles' => $talleres,
-        'imagenes' => $imagenes,
+        'imagenes' => $imagenesOptimizadas,
         'slug' => $slug,
         'imagenesPiezas' => $imagenesPiezas,
         'subcategoria' => $subcategoria,
@@ -451,6 +479,7 @@ public function updateMenusHtml(Request $request, $id)
      */
     public function actualizarEstadosPagoMasivo(Request $request)
     {
+        \Log::info('Entrando a actualizarEstadosPagoMasivo', ['request' => $request->all()]);
         try {
             $data = $request->validate([
                 'cambios' => 'required|array',
@@ -533,6 +562,11 @@ public function updateMenusHtml(Request $request, $id)
                 'message' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
+            Log::error('Error en actualizarEstadosPagoMasivo', [
+                'exception' => $e,
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             DB::rollBack();
             return response()->json([
                 'success' => false, 

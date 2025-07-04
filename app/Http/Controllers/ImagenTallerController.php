@@ -7,6 +7,7 @@ use App\Models\ImagenTaller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
+use App\Services\ImageOptimizationService;
 
 class ImagenTallerController extends Controller
 {
@@ -30,6 +31,7 @@ class ImagenTallerController extends Controller
     public function update(Request $request, $slug)
     {
         $imagenesInput = $request->input('imagenes', []);
+        $imageService = new ImageOptimizationService();
 
         foreach ($imagenesInput as $index => $imgData) {
             $imagenTaller = ImagenTaller::findOrFail($imgData['id']);
@@ -42,7 +44,7 @@ class ImagenTallerController extends Controller
                     Storage::disk('public')->delete('talleres/' . $imagenTaller->urlImagen);
                 }
 
-                $filename = $slug . '-' . now()->format('YmdHis') . '-' . $index . '.' . $file->extension();
+                $filename = $slug . '-' . $index . '.' . $file->extension();
                 $path = $file->storeAs('talleres', $filename, 'public');
 
                 $imagenTaller->urlImagen = basename($path);
@@ -53,6 +55,20 @@ class ImagenTallerController extends Controller
             $imagenTaller->crop_y = $imgData['crop_y'] ?? null;
             $imagenTaller->zoom = $imgData['zoom'] ?? null;
             $imagenTaller->save();
+
+            // Limpiar imágenes optimizadas viejas
+            if ($imagenTaller->urlImagen) {
+                $imageService->cleanupOptimizedImages('talleres/' . $imagenTaller->urlImagen);
+                // Regenerar imágenes optimizadas con los nuevos valores
+                $imageService->processImage(
+                    'talleres/' . $imagenTaller->urlImagen,
+                    [
+                        'x' => $imagenTaller->crop_x ?? 0,
+                        'y' => $imagenTaller->crop_y ?? 0
+                    ],
+                    $imagenTaller->zoom ?? 1
+                );
+            }
         }
 
         return redirect()->back()->with('success', 'Imágenes y textos actualizados correctamente.');

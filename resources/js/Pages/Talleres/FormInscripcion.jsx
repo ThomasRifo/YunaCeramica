@@ -41,16 +41,6 @@ dayjs.extend(customParseFormat);
 export default function FormInscripcion({ taller = {}, slug = '', referido: referidoProp = null, talleresDisponibles = [], subcategoria }) {
     
     // Debug: Log de props recibidas
-    console.log('FormInscripcion - Props recibidas:', {
-        taller,
-        slug,
-        referido: referidoProp,
-        tallerId: taller?.id,
-        tallerNombre: taller?.nombre,
-        tallerFecha: taller?.fecha,
-        cupoLleno: taller?.cupoLleno,
-        esPasado: taller?.esPasado,
-    });
     
     const { toast } = useToast();
     const [cantidadPersonas, setCantidadPersonas] = useState(1);
@@ -195,12 +185,7 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
             return;
         }
 
-        // Debug: Log del taller que se va a enviar
-        console.log('MercadoPago - Taller seleccionado:', {
-            id: tallerSeleccionado.id,
-            nombre: tallerSeleccionado.nombre,
-            fecha: tallerSeleccionado.fecha,
-        });
+        
 
         setIsLoadingMercadoPago(true);
 
@@ -281,12 +266,6 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
             return;
         }
 
-        // Debug: Log del taller que se va a enviar
-        console.log('Transferencia - Taller seleccionado:', {
-            id: tallerSeleccionado.id,
-            nombre: tallerSeleccionado.nombre,
-            fecha: tallerSeleccionado.fecha,
-        });
 
         setIsLoadingTransferencia(true);
 
