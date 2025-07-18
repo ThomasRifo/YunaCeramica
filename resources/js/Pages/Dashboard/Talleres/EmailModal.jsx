@@ -16,7 +16,8 @@ export default function EmailModal({ open, onClose, onSend, isLoading }) {
     const [emailData, setEmailData] = useState({
         title: '',
         content: '',
-        includeReview: false
+        includeReview: false,
+        soloSenados: false,
     });
 
     const handleChange = (field) => (event) => {
@@ -30,6 +31,13 @@ export default function EmailModal({ open, onClose, onSend, isLoading }) {
         setEmailData(prev => ({
             ...prev,
             includeReview: event.target.checked
+        }));
+    };
+
+    const handleSoloSenadosChange = (event) => {
+        setEmailData(prev => ({
+            ...prev,
+            soloSenados: event.target.checked
         }));
     };
 
@@ -71,6 +79,15 @@ export default function EmailModal({ open, onClose, onSend, isLoading }) {
                             />
                         }
                         label="Incluir sección de reseña"
+                    />
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                checked={emailData.soloSenados}
+                                onChange={handleSoloSenadosChange}
+                            />
+                        }
+                        label="Enviar solo a los que falta abonar."
                     />
                 </Box>
             </DialogContent>

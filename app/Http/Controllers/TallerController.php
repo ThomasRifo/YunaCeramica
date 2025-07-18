@@ -756,8 +756,11 @@ public function updateMenusHtml(Request $request, $id)
     {
         try {
             $taller = Taller::findOrFail($id);
-            // Filtrar solo los clientes confirmados (idEstadoPago 2 o 3)
-            $participantes = $taller->tallerClientes()->with(['cliente', 'acompaniantes'])->whereIn('idEstadoPago', [2, 3])->get();
+            // Si viene soloSenados en true, solo a los señados (idEstadoPago == 2)
+            $soloSenados = $request->boolean('soloSenados', false);
+            $estados = $soloSenados ? [2] : [2, 3];
+            // Filtrar solo los clientes según el estado
+            $participantes = $taller->tallerClientes()->with(['cliente', 'acompaniantes'])->whereIn('idEstadoPago', $estados)->get();
 
             Log::info('Iniciando envío de emails para taller: ' . $taller->nombre);
             Log::info('Número de participantes: ' . $participantes->count());
