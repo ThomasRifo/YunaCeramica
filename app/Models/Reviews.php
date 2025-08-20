@@ -13,12 +13,14 @@ class Reviews extends Model
 
     protected $fillable = [
         'nombre',
-        
+        'apellido',
         'taller',
-        
         'mensaje',
-        
+        'valoracion',
+        'habilitada',
         'fecha_publicacion',
+        'email',
+        'idTallerCliente',
     ];
     protected $hidden = [
         'id',

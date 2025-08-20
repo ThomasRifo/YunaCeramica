@@ -9,6 +9,7 @@ use App\Http\Controllers\PagoController;
 use App\Http\Controllers\TallerClienteController;
 use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\ImageController;
+use App\Http\Controllers\ReviewsController;
 use App\Http\Controllers\ContactoController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -98,7 +99,7 @@ Route::middleware('auth')->group(function () {
 
 
 
-Route::get('/pago-success', fn() => Inertia::render('Pagos/Success'))->name('pagomp.success');
+Route::get('/pago-success', fn() => Inertia::render('Pagos/Success'))->name('pago.success');
 Route::get('/pago-failure', fn() => Inertia::render('Pagos/Failure'))->name('pago.failure');
 Route::get('/pago-pending', fn() => Inertia::render('Pagos/Pending'))->name('pago.pending');
 
@@ -131,5 +132,10 @@ Route::get('/talleres/{id}/descargar-lista', [TallerController::class, 'descarga
 Route::get('/taller/{id}/referido/{codigoReferido}', [App\Http\Controllers\TallerController::class, 'referido'])->name('taller.referido');
 
 Route::post('/dashboard/talleres/{id}/send-email', [TallerController::class, 'sendEmail'])->name('dashboard.taller.send-email');
+
+// Reseñas via invitación
+Route::get('/reviews/invitation/{token}', [ReviewsController::class, 'showInviteForm'])->name('reviews.invite');
+Route::post('/reviews/submit', [ReviewsController::class, 'submit'])->name('reviews.submit');
+Route::get('/reviews/thanks', function () { return Inertia::render('Talleres/ReviewThanks'); })->name('reviews.thanks');
 
 require __DIR__.'/auth.php';

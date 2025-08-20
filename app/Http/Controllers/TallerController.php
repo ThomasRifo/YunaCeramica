@@ -20,6 +20,8 @@ use Illuminate\Support\Facades\Storage;
 use App\Mail\ConfirmacionInscripcionTaller;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Mail\TallerNotification;
+use App\Models\ReviewInvite;
+use Illuminate\Support\Str;
 use App\Services\ImageOptimizationService;
 use Illuminate\Support\Facades\Cache;
 
@@ -479,7 +481,7 @@ public function updateMenusHtml(Request $request, $id)
      */
     public function actualizarEstadosPagoMasivo(Request $request)
     {
-        \Log::info('Entrando a actualizarEstadosPagoMasivo', ['request' => $request->all()]);
+        Log::info('Entrando a actualizarEstadosPagoMasivo', ['request' => $request->all()]);
         try {
             $data = $request->validate([
                 'cambios' => 'required|array',
@@ -779,10 +781,22 @@ public function updateMenusHtml(Request $request, $id)
                 $emailTitular = $participante->email_cliente ?? $participante->cliente->email;
                 if ($emailTitular && !in_array($emailTitular, $emailsEnviados)) {
                     Log::info('Encolando email para titular: ' . $emailTitular);
+                    $reviewLink = null;
+                    if (!empty($emailData['includeReview'])) {
+                        $invite = ReviewInvite::create([
+                            'idTallerCliente' => $participante->id,
+                            'email' => $emailTitular,
+                            'nombre' => trim($participante->nombre_cliente . ' ' . $participante->apellido_cliente),
+                            'token' => Str::random(40),
+                            'expires_at' => now()->addDays(30),
+                        ]);
+                        $reviewLink = route('reviews.invite', ['token' => $invite->token]);
+                    }
                     Mail::to($emailTitular)->queue(new TallerNotification(
                         $emailData['title'],
                         $emailData['content'],
-                        $emailData['includeReview']
+                        !empty($emailData['includeReview']),
+                        $reviewLink
                     ));
                     $emailsEncolados++;
                     $emailsEnviados[] = $emailTitular;
@@ -794,10 +808,22 @@ public function updateMenusHtml(Request $request, $id)
                     // Solo enviar si tiene email y no es igual al del titular
                     if ($emailAcompaniante && !in_array($emailAcompaniante, $emailsEnviados)) {
                         Log::info('Encolando email para acompañante: ' . $emailAcompaniante);
+                        $reviewLink = null;
+                        if (!empty($emailData['includeReview'])) {
+                            $invite = ReviewInvite::create([
+                                'idTallerCliente' => $participante->id,
+                                'email' => $emailAcompaniante,
+                                'nombre' => trim($acompaniante->nombre . ' ' . $acompaniante->apellido),
+                                'token' => Str::random(40),
+                                'expires_at' => now()->addDays(30),
+                            ]);
+                            $reviewLink = route('reviews.invite', ['token' => $invite->token]);
+                        }
                         Mail::to($emailAcompaniante)->queue(new TallerNotification(
                             $emailData['title'],
                             $emailData['content'],
-                            $emailData['includeReview']
+                            !empty($emailData['includeReview']),
+                            $reviewLink
                         ));
                         $emailsEncolados++;
                         $emailsEnviados[] = $emailAcompaniante;

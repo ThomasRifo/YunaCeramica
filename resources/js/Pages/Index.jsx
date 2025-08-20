@@ -1,7 +1,19 @@
-import { Head, Link } from '@inertiajs/react';
+import React, { useEffect } from 'react';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { useToast } from '@/Components/ui/use-toast';
 import { AspectRatio } from "@/Components/ui/aspect-ratio"
 
 export default function Index() {
+  const { toast } = useToast();
+  const { props } = usePage();
+  const success = props?.flash?.success;
+
+  useEffect(() => {
+    if (typeof success === 'string' && success.length) {
+      toast({ title: '¡Gracias!', description: success, variant: 'success' });
+    }
+  }, [success]);
+
   return (
     <>
       <Head title="Inicio" />

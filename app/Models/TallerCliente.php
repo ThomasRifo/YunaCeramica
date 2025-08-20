@@ -41,6 +41,11 @@ class TallerCliente extends Model
         return $this->belongsTo(Taller::class, 'idTaller');
     }
 
+    public function reviewInvites()
+    {
+        return $this->hasMany(\App\Models\ReviewInvite::class, 'idTallerCliente');
+    }
+
     public function cliente()
     {
         return $this->belongsTo(User::class, 'idCliente');

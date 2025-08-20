@@ -27,13 +27,16 @@
                                 {!! nl2br(e($content)) !!}
                             </div>
 
-                            @if ($includeReview)
+                            @if (!empty($includeReview) && !empty($reviewLink))
                                 <div
                                     style="margin: 30px 0; padding: 20px; background: #4a5568; border-radius: 8px; color: #e2e8f0; font-size: 15px;">
-                                    <h3 style="color: #ffffff; margin-top: 0;">¿Cómo fue tu experiencia?</h3>
+                                    <h3 style="color: #ffffff; margin-top: 0;">Contanos tu experiencia!</h3>
                                     <p style="margin-bottom: 20px;">
-                                        Nos encantaría conocer tu opinión sobre el taller. Tu feedback nos ayuda a
-                                        mejorar y seguir creando experiencias únicas.
+                                        Nos encantaría conocer tu opinión y que nos recomiendes para que más personas se animen a vivir esta experiencia.
+                                        !Tu reseña nos ayuda a seguir creando momentos únicos!
+                                    </p>
+                                    <p style="font-size: 13px">
+                                        Tu reseña será publicada en nuestro sitio web para que otras personas lean la recomendación.
                                     </p>
                                     <a href="{{ $reviewLink }}"
                                         style="display: inline-block; background: #0d9488; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">

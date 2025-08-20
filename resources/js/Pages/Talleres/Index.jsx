@@ -1,6 +1,7 @@
 // resources/js/Pages/Talleres/Index.jsx
-
-import { Head, Link } from '@inertiajs/react';
+import React, { useEffect } from 'react';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { useToast } from '@/Components/ui/use-toast';
 
 import { AspectRatio } from "@/Components/ui/aspect-ratio"
 import { cn } from '@/lib/utils';
@@ -8,6 +9,15 @@ import ReviewsSection from '@/Components/ReviewsSection';
 import PiecesCarousel from '@/Components/Taller/PiecesCarousel';
 
 export default function TalleresIndex({ reviews, talleres, imagenesPiezas, subcategorias }) {
+  const { toast } = useToast();
+  const { props } = usePage();
+  const success = props?.flash?.success;
+
+  useEffect(() => {
+    if (typeof success === 'string' && success.length) {
+      toast({ title: '¡Gracias!', description: success, variant: 'success' });
+    }
+  }, [success]);
   return (
     <>
       <Head>
