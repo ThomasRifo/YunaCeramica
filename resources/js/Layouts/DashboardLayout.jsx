@@ -8,6 +8,7 @@ import StoreIcon from "@mui/icons-material/Store";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import GroupsIcon from "@mui/icons-material/Groups";
 import DescriptionIcon from "@mui/icons-material/Description";
+import ReviewsIcon from '@mui/icons-material/Reviews';
 import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
 import CategoryIcon from "@mui/icons-material/Category";
 import ConstructionIcon from "@mui/icons-material/Construction";
@@ -42,6 +43,7 @@ const NAVIGATION = [
     ],
   },
   { segment: "dashboard/pedidos", title: "Pedidos", icon: <ShoppingCartIcon /> },
+  { segment: "dashboard/reviews", title: "Reseñas", icon: <ReviewsIcon /> },
   { segment: "dashboard/talleres", title: "Talleres", icon: <ConstructionIcon /> },
   { kind: "divider" },
   { kind: "header", title: "Configuraciones" },

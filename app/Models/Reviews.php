@@ -22,10 +22,14 @@ class Reviews extends Model
         'email',
         'idTallerCliente',
     ];
+    
+    protected $casts = [
+        'habilitada' => 'boolean',
+        'fecha_publicacion' => 'datetime',
+    ];
+    
     protected $hidden = [
-        'id',
         'apellido',
-        'habilitada',
         'valoracion',
         'created_at',
         'updated_at',

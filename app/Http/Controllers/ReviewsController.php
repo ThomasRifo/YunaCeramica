@@ -106,4 +106,130 @@ class ReviewsController extends Controller
 
         return redirect()->route('talleres')->with('success', '¡Gracias! Tu reseña se envió correctamente.');
     }
+
+    public function indexDashboard()
+    {
+        $pendingReviews = Reviews::where('habilitada', false)->orderBy('fecha_publicacion', 'desc')->get();
+        $enabledReviews = Reviews::where('habilitada', true)->orderBy('fecha_publicacion', 'desc')->get();
+        
+        return Inertia::render('Dashboard/Reviews/Index', [
+            'pendingReviews' => $pendingReviews,
+            'enabledReviews' => $enabledReviews
+        ]);
+    }
+
+    public function indexEnabledDashboard()
+    {
+        $reviews = Reviews::where('habilitada', true)->orderBy('fecha_publicacion', 'desc')->get();
+        
+        return Inertia::render('Dashboard/Reviews/Index', [
+            'enabledReviews' => $reviews
+        ]);
+    }
+
+    /**
+     * Cambiar el estado de habilitación de una reseña (habilitar/deshabilitar)
+     */
+    public function toggleStatus($id)
+    {
+        try {
+            $review = Reviews::findOrFail($id);
+            
+            // Cambiar el estado actual
+            $newStatus = !$review->habilitada;
+            $review->update(['habilitada' => $newStatus]);
+            
+            $message = $newStatus 
+                ? 'Reseña habilitada correctamente' 
+                : 'Reseña deshabilitada correctamente';
+            
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'habilitada' => $newStatus
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al cambiar el estado de la reseña'
+            ], 500);
+        }
+    }
+
+    /**
+     * Habilitar una reseña específica
+     */
+    public function enable($id)
+    {
+        try {
+            $review = Reviews::findOrFail($id);
+            $review->update(['habilitada' => true]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Reseña habilitada correctamente',
+                'habilitada' => true
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al habilitar la reseña'
+            ], 500);
+        }
+    }
+
+    /**
+     * Deshabilitar una reseña específica
+     */
+    public function disable($id)
+    {
+        try {
+            $review = Reviews::findOrFail($id);
+            $review->update(['habilitada' => false]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Reseña deshabilitada correctamente',
+                'habilitada' => false
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al deshabilitar la reseña'
+            ], 500);
+        }
+    }
+
+    /**
+     * Eliminar una reseña permanentemente
+     */
+    public function delete($id)
+    {
+        try {
+            $review = Reviews::findOrFail($id);
+            $review->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Reseña eliminada correctamente'
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al eliminar la reseña'
+            ], 500);
+        }
+    }
+
+    /**
+     * Función legacy para compatibilidad (mantener por si acaso)
+     */
+    public function approve($id)
+    {
+        return $this->toggleStatus($id);
+    }
 }

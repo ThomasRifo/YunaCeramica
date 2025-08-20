@@ -79,11 +79,26 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         Route::get('/talleres/{id}', [TallerController::class, 'view'])->name('talleres.view');    
         Route::put('/taller-cliente/{id}/actualizar-pago', [TallerClienteController::class, 'actualizarPago'])->name('taller.actualizarPago');
 
+        
+      
+
         Route::get('/archivos', [App\Http\Controllers\ArchivosController::class, 'index'])->name('archivos.index');
         Route::post('/archivos/upload', [App\Http\Controllers\ArchivosController::class, 'upload'])->name('archivos.upload');
         Route::post('/archivos/upload-parapintar', [App\Http\Controllers\ArchivosController::class, 'uploadPiezasParaPintar'])->name('archivos.upload.parapintar');
         Route::post('/archivos/upload-realizadas', [App\Http\Controllers\ArchivosController::class, 'uploadPiezasRealizadas'])->name('archivos.upload.realizadas');
-
+        // Rutas de Reviews
+        Route::get('/reviews', [ReviewsController::class, 'indexDashboard'])->name('reviews.index.dashboard');
+        Route::get('/reviews/enabled', [ReviewsController::class, 'indexEnabledDashboard'])->name('reviews.enabled.dashboard');
+        
+        // Acciones de Reviews
+        Route::put('/reviews/{id}/toggle-status', [ReviewsController::class, 'toggleStatus'])->name('reviews.toggle-status');
+        Route::put('/reviews/{id}/enable', [ReviewsController::class, 'enable'])->name('reviews.enable');
+        Route::put('/reviews/{id}/disable', [ReviewsController::class, 'disable'])->name('reviews.disable');
+        Route::delete('/reviews/{id}', [ReviewsController::class, 'delete'])->name('reviews.delete');
+        
+        // Ruta legacy para compatibilidad
+        Route::put('/reviews/{id}/approve', [ReviewsController::class, 'approve'])->name('reviews.approve');
+        
         // Rutas de Subcategorías
         Route::get('/subcategorias', [\App\Http\Controllers\SubcategoriaController::class, 'index'])->name('subcategorias.index');
     });
