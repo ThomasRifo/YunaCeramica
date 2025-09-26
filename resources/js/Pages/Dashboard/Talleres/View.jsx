@@ -494,7 +494,6 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
             color="primary"
             startIcon={<DownloadIcon />}
             onClick={() => window.open(route('talleres.descargar-lista', taller.id), '_blank')}
-            disabled
           >
             Descargar Lista de Participantes
           </Button>
