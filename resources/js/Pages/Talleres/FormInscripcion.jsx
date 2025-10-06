@@ -93,7 +93,7 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
 
     const [tallerSeleccionado, setTallerSeleccionado] = useState(proximoTallerDisponible || {});
 
-    const [referido, setReferido] = useState(null);
+    const [referido, setReferido] = useState(referidoProp);
 
     useEffect(() => {
         if (typeof window !== "undefined") {
@@ -111,14 +111,9 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
     }, [referidoProp]);
 
     useEffect(() => {
-        if (noHayTalleresFuturos) {
-            setIsFormDisabled(true);
-            setFormStatus("EVENTO FINALIZADO");
-        } else if (noHayCuposDisponibles) {
-            setIsFormDisabled(true);
-            setFormStatus("");
-        } else {
-            // Verificar el taller específico seleccionado
+        // Si venimos desde un enlace de referido (tenemos taller específico), usar validación diferente
+        if (taller && taller.id) {
+            // Validación para enlace de referido: solo verificar el taller específico
             if (tallerSeleccionado?.cupoLleno) {
                 setIsFormDisabled(true);
                 setFormStatus("CUPO LLENO");
@@ -126,13 +121,38 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
                 setIsFormDisabled(false);
                 setFormStatus("");
             }
+        } else {
+            // Validación para flujo normal: usar las validaciones globales
+            if (noHayTalleresFuturos) {
+                setIsFormDisabled(true);
+                setFormStatus("EVENTO FINALIZADO");
+            } else if (noHayCuposDisponibles) {
+                setIsFormDisabled(true);
+                setFormStatus("");
+            } else {
+                // Verificar el taller específico seleccionado
+                if (tallerSeleccionado?.cupoLleno) {
+                    setIsFormDisabled(true);
+                    setFormStatus("CUPO LLENO");
+                } else {
+                    setIsFormDisabled(false);
+                    setFormStatus("");
+                }
+            }
         }
-    }, [tallerSeleccionado, noHayTalleresFuturos, noHayCuposDisponibles]);
+    }, [tallerSeleccionado, noHayTalleresFuturos, noHayCuposDisponibles, taller]);
 
     useEffect(() => {
         // Actualizar el taller seleccionado cuando cambia el prop
         setTallerSeleccionado(proximoTallerDisponible || {});
     }, [proximoTallerDisponible]);
+
+    // Manejar cuando viene un taller específico desde el enlace de referido
+    useEffect(() => {
+        if (taller && taller.id) {
+            setTallerSeleccionado(taller);
+        }
+    }, [taller]);
 
     const handleCantidadChange = (e) => {
         const nuevaCantidad = parseInt(e.target.value);
@@ -389,12 +409,13 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
                 <div className="max-w-3xl mx-auto">
                     <h1 className="text-3xl md:text-4xl font-bold text-center mb-8">
                         {subcategoria?.nombre.toUpperCase() ?? 'Taller'} - Inscripción
-                        {noHayCuposDisponibles && <span className="text-red-500"> (CUPO LLENO)</span>}
-                        {noHayTalleresFuturos && <span className="text-red-500"> (EVENTO FINALIZADO)</span>}
+                        {!taller?.id && noHayCuposDisponibles && <span className="text-red-500"> (CUPO LLENO)</span>}
+                        {!taller?.id && noHayTalleresFuturos && <span className="text-red-500"> (EVENTO FINALIZADO)</span>}
+                        {taller?.id && tallerSeleccionado?.cupoLleno && <span className="text-red-500"> (CUPO LLENO)</span>}
                     </h1>
                     
-                    {/* Selector de taller por fecha */}
-                    {talleresFuturos.length > 1 && (
+                    {/* Selector de taller por fecha - solo mostrar si no venimos desde enlace de referido */}
+                    {!taller?.id && talleresFuturos.length > 1 && (
                         <div className="mb-6">
                             <Label className="text-lg">Elegí la fecha del taller:</Label>
                             <Select
@@ -598,7 +619,7 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
                                     <div className="space-y-4 mt-4 mx-auto w-full">
                                         <Label className="text-lg">Elegí tu menú:</Label>
                                         <div className="grid sm:grid-cols-2 md:grid-cols-3  gap-4 mt-2 ">
-                                            {tallerSeleccionado.menus.map((menu) => (
+                                            {(tallerSeleccionado.menus || []).map((menu) => (
                                                 <div
                                                     key={menu.id}
                                                     className="prose"

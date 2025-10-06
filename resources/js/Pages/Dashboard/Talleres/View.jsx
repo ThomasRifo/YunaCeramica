@@ -224,12 +224,25 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
     }
   });
   
+  // Crear mapeo de códigos de referido a groupId
+  const referidoToGroupId = {};
+  let currentGroupId = 0;
+  
+  // Primero, asignar groupIds únicos a cada código de referido
+  tallerClientesPagados.forEach(tc => {
+    const referido = tc.referido || `individual-${tc.id}`;
+    if (!referidoToGroupId[referido]) {
+      referidoToGroupId[referido] = ++currentGroupId;
+    }
+  });
+
   // Generar filas para pagados/parciales con numeración correlativa
   const rowsPagados = [];
-  let groupIdPagados = 0;
   let numeroCorrelativo = 1;
   tallerClientesPagados.forEach((tc) => {
-    groupIdPagados++;
+    const referido = tc.referido || `individual-${tc.id}`;
+    const groupId = referidoToGroupId[referido];
+    
     const baseRow = {
       numero: numeroCorrelativo++,
       id: `tc-${tc.id}`,
@@ -243,7 +256,7 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
       email: tc.email_cliente || tc.cliente?.email,
       telefono: tc.telefono_cliente || tc.cliente?.telefono,
       metodoPago: tc.metodo_pago?.nombre || 'No especificado',
-      group: groupIdPagados,
+      group: groupId,
       clienteId: tc.id,
     };
     rowsPagados.push(baseRow);
@@ -261,7 +274,7 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
           email: a.email,
           telefono: a.telefono,
           metodoPago: tc.metodo_pago?.nombre || 'No especificado',
-          group: groupIdPagados,
+          group: groupId,
           clienteId: tc.id,
         });
       });
@@ -361,11 +374,24 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
     );
   };
 
+  // Crear mapeo de códigos de referido a groupId para pendientes
+  const referidoToGroupIdPendientes = {};
+  let currentGroupIdPendientes = 0;
+  
+  // Primero, asignar groupIds únicos a cada código de referido para pendientes
+  tallerClientesPendientes.forEach(tc => {
+    const referido = tc.referido || `individual-${tc.id}`;
+    if (!referidoToGroupIdPendientes[referido]) {
+      referidoToGroupIdPendientes[referido] = ++currentGroupIdPendientes;
+    }
+  });
+
   // Generar filas para pendientes
   const rowsPendientes = [];
-  let groupIdPendientes = 0;
   tallerClientesPendientes.forEach((tc) => {
-    groupIdPendientes++;
+    const referido = tc.referido || `individual-${tc.id}`;
+    const groupId = referidoToGroupIdPendientes[referido];
+    
     const baseRow = {
       id: `tc-${tc.id}`,
       realId: tc.id,
@@ -378,7 +404,7 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
       email: tc.email_cliente || tc.cliente?.email,
       telefono: tc.telefono_cliente || tc.cliente?.telefono,
       metodoPago: tc.metodo_pago?.nombre || 'No especificado',
-      group: groupIdPendientes,
+      group: groupId,
       clienteId: tc.id,
     };
     rowsPendientes.push(baseRow);
@@ -395,7 +421,7 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
           email: a.email,
           telefono: a.telefono,
           metodoPago: tc.metodo_pago?.nombre || 'No especificado',
-          group: groupIdPendientes,
+          group: groupId,
           clienteId: tc.id,
         });
       });

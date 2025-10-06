@@ -131,17 +131,8 @@ class MercadoPagoController extends Controller
                 'referido' => $request->input('referido') ?? $codigoReferido,
             ]);
 
-            // Si el cliente fue referido, actualizar el referido_por
-            if ($request->input('referido')) {
-                $referidor = TallerCliente::where('idTaller', $validatedData['tallerId'])
-                    ->where('referido', $request->input('referido'))
-                    ->first();
-                
-                if ($referidor) {
-                    $tallerCliente->referido_por = $referidor->id;
-                    $tallerCliente->save();
-                }
-            }
+            // El sistema de referidos funciona solo con el campo 'referido'
+            // No necesitamos referido_por para el funcionamiento actual
 
             if ($validatedData['cantidad'] > 1) {
                 foreach ($validatedData['participantes'] as $index => $participanteData) {
