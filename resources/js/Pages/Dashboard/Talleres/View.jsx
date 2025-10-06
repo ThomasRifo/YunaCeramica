@@ -280,6 +280,21 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
       });
     }
   });
+
+  // Ordenar las filas para que los participantes con mismo referido aparezcan juntos
+  rowsPagados.sort((a, b) => {
+    // Primero por group (código de referido)
+    if (a.group !== b.group) {
+      return a.group - b.group;
+    }
+    // Dentro del mismo grupo, clientes primero, luego acompañantes
+    if (a.tipo !== b.tipo) {
+      return a.tipo === 'cliente' ? -1 : 1;
+    }
+    // Si son del mismo tipo, mantener orden original
+    return 0;
+  });
+
   // Resumen de menús
   rowsPagados.forEach(row => {
     const menu = row.menu || 'Sin seleccionar';
@@ -426,6 +441,20 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
         });
       });
     }
+  });
+
+  // Ordenar las filas pendientes para que los participantes con mismo referido aparezcan juntos
+  rowsPendientes.sort((a, b) => {
+    // Primero por group (código de referido)
+    if (a.group !== b.group) {
+      return a.group - b.group;
+    }
+    // Dentro del mismo grupo, clientes primero, luego acompañantes
+    if (a.tipo !== b.tipo) {
+      return a.tipo === 'cliente' ? -1 : 1;
+    }
+    // Si son del mismo tipo, mantener orden original
+    return 0;
   });
 
   const handleSendEmail = async (emailData) => {
