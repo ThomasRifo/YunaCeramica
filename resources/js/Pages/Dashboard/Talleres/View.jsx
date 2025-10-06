@@ -282,16 +282,48 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
   });
 
   // Ordenar las filas para que los participantes con mismo referido aparezcan juntos
+  // pero manteniendo cada cliente con sus acompañantes
   rowsPagados.sort((a, b) => {
     // Primero por group (código de referido)
     if (a.group !== b.group) {
       return a.group - b.group;
     }
-    // Dentro del mismo grupo, clientes primero, luego acompañantes
+    
+    // Dentro del mismo grupo:
+    // Si uno es cliente y otro acompañante, verificar si son de la misma "familia"
     if (a.tipo !== b.tipo) {
-      return a.tipo === 'cliente' ? -1 : 1;
+      if (a.tipo === 'cliente' && b.tipo === 'acompaniante') {
+        // Si el acompañante pertenece a este cliente, acompañante va después
+        if (b.clienteId === a.realId) {
+          return -1; // cliente primero
+        }
+        // Si no pertenece a este cliente, comparar por clienteId
+        return a.realId - b.clienteId;
+      }
+      if (a.tipo === 'acompaniante' && b.tipo === 'cliente') {
+        // Si el acompañante pertenece a este cliente, acompañante va después
+        if (a.clienteId === b.realId) {
+          return 1; // cliente primero
+        }
+        // Si no pertenece a este cliente, comparar por clienteId
+        return a.clienteId - b.realId;
+      }
     }
-    // Si son del mismo tipo, mantener orden original
+    
+    // Si son del mismo tipo o no hay relación cliente-acompañante
+    if (a.tipo === b.tipo) {
+      // Mantener orden por clienteId (orden de inscripción)
+      if (a.tipo === 'cliente') {
+        return a.realId - b.realId;
+      } else {
+        // Para acompañantes, ordenar por clienteId primero, luego por su propio ID
+        if (a.clienteId !== b.clienteId) {
+          return a.clienteId - b.clienteId;
+        }
+        return a.realId - b.realId;
+      }
+    }
+    
     return 0;
   });
 
@@ -444,16 +476,48 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
   });
 
   // Ordenar las filas pendientes para que los participantes con mismo referido aparezcan juntos
+  // pero manteniendo cada cliente con sus acompañantes
   rowsPendientes.sort((a, b) => {
     // Primero por group (código de referido)
     if (a.group !== b.group) {
       return a.group - b.group;
     }
-    // Dentro del mismo grupo, clientes primero, luego acompañantes
+    
+    // Dentro del mismo grupo:
+    // Si uno es cliente y otro acompañante, verificar si son de la misma "familia"
     if (a.tipo !== b.tipo) {
-      return a.tipo === 'cliente' ? -1 : 1;
+      if (a.tipo === 'cliente' && b.tipo === 'acompaniante') {
+        // Si el acompañante pertenece a este cliente, acompañante va después
+        if (b.clienteId === a.realId) {
+          return -1; // cliente primero
+        }
+        // Si no pertenece a este cliente, comparar por clienteId
+        return a.realId - b.clienteId;
+      }
+      if (a.tipo === 'acompaniante' && b.tipo === 'cliente') {
+        // Si el acompañante pertenece a este cliente, acompañante va después
+        if (a.clienteId === b.realId) {
+          return 1; // cliente primero
+        }
+        // Si no pertenece a este cliente, comparar por clienteId
+        return a.clienteId - b.realId;
+      }
     }
-    // Si son del mismo tipo, mantener orden original
+    
+    // Si son del mismo tipo o no hay relación cliente-acompañante
+    if (a.tipo === b.tipo) {
+      // Mantener orden por clienteId (orden de inscripción)
+      if (a.tipo === 'cliente') {
+        return a.realId - b.realId;
+      } else {
+        // Para acompañantes, ordenar por clienteId primero, luego por su propio ID
+        if (a.clienteId !== b.clienteId) {
+          return a.clienteId - b.clienteId;
+        }
+        return a.realId - b.realId;
+      }
+    }
+    
     return 0;
   });
 
