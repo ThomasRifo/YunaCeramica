@@ -33,7 +33,7 @@
                                     <h3 style="color: #ffffff; margin-top: 0;">Contanos tu experiencia!</h3>
                                     <p style="margin-bottom: 20px;">
                                         Nos encantaría conocer tu opinión y que nos recomiendes para que más personas se animen a vivir esta experiencia.
-                                        !Tu reseña nos ayuda a seguir creando momentos únicos!
+                                        ¡Tu reseña nos ayuda a seguir creando momentos únicos!
                                     </p>
                                     <p style="font-size: 13px">
                                         Tu reseña será publicada en nuestro sitio web para que otras personas lean la recomendación.

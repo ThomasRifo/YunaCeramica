@@ -616,28 +616,30 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
                                         />
                                     </div>
 
-                                    <div className="space-y-4 mt-4 mx-auto w-full">
-                                        <Label className="text-lg">Elegí tu menú:</Label>
-                                        <div className="grid sm:grid-cols-2 md:grid-cols-3  gap-4 mt-2 ">
-                                            {(tallerSeleccionado.menus || []).map((menu) => (
-                                                <div
-                                                    key={menu.id}
-                                                    className="prose"
-                                                >
-                                                    <CardMenu
-                                                        menu={menu}
-                                                        seleccionado={datosCliente.menu === String(menu.id)}
-                                                        onSelect={(id) => {
-                                                            setDatosCliente({
-                                                                ...datosCliente,
-                                                                menu: String(id),
-                                                            });
-                                                        }}
-                                                    />
-                                                </div>
-                                            ))}
+                                    {tallerSeleccionado.menus && tallerSeleccionado.menus.length > 0 && (
+                                        <div className="space-y-4 mt-4 mx-auto w-full">
+                                            <Label className="text-lg">Elegí tu menú:</Label>
+                                            <div className="grid sm:grid-cols-2 md:grid-cols-3  gap-4 mt-2 ">
+                                                {(tallerSeleccionado.menus || []).map((menu) => (
+                                                    <div
+                                                        key={menu.id}
+                                                        className="prose"
+                                                    >
+                                                        <CardMenu
+                                                            menu={menu}
+                                                            seleccionado={datosCliente.menu === String(menu.id)}
+                                                            onSelect={(id) => {
+                                                                setDatosCliente({
+                                                                    ...datosCliente,
+                                                                    menu: String(id),
+                                                                });
+                                                            }}
+                                                        />
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </div>
-                                    </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -723,7 +725,8 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
                                                 }}
                                             />
                                         </div>
-                                        <div className="space-y-4 mt-4 mx-auto w-full">
+                                        {tallerSeleccionado.menus && tallerSeleccionado.menus.length > 0 && (
+                                            <div className="space-y-4 mt-4 mx-auto w-full">
                                             <Label className="text-lg">Elegí tu menú:</Label>
                                             <div className="grid sm:grid-cols-2 md:grid-cols-3  gap-4 mt-2 ">
                                                 {(a.menus || []).map((menu) => (
@@ -745,6 +748,7 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
                                             </div>
                                             {errores[`acompanante_menu_${i}`] && <p className="text-red-500 text-sm">{errores[`acompanante_menu_${i}`]}</p>}
                                         </div>
+                                        )}
                                     </div>
                                 </div>
                             ))}

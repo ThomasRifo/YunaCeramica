@@ -97,8 +97,7 @@ export default function TallerView({ imagenes, pagoAprobado: pagoAprobadoProp, i
   const precios = (
     <div className="mt-6 space-y-2 text-gray-800">
       <div className="flex items-center gap-2">
-        <DollarSign className="w-5 h-5 text-black" />
-        <span>El valor es de <strong> ${tallerReferencia.precio?.toLocaleString("es-AR") } </strong>por persona abonando con <strong>transferencia</strong> </span>
+        <span>El valor es de <strong> ${tallerReferencia.precio?.toLocaleString("es-AR") } </strong>por persona abonando con <strong>transferencia</strong>, abonando con tarjeta hay un 10% de recargo.</span>
       </div>
     </div>
   );
