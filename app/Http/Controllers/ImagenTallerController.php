@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\ImagenTaller;
+use App\Models\Subcategoria;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -13,7 +14,15 @@ class ImagenTallerController extends Controller
 {
     public function index()
     {
-        return Inertia::render('Dashboard/Paginas/Talleres/Index');
+        // Obtener todas las subcategorías de la categoría Talleres (idCategoria = 2)
+        $subcategorias = Subcategoria::where('idCategoria', 2)
+            ->where('activo', true)
+            ->orderBy('orden')
+            ->get(['id', 'nombre', 'url']);
+        
+        return Inertia::render('Dashboard/Paginas/Talleres/Index', [
+            'subcategorias' => $subcategorias,
+        ]);
     }
 
     public function edit($slug)

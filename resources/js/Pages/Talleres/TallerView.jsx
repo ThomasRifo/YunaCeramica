@@ -50,6 +50,60 @@ export default function TallerView({ imagenes, pagoAprobado: pagoAprobadoProp, i
   }, []);
 
 
+  // Fallback hardcodeado: usar las de ceramica-y-gin para las que falten
+  const imagenesFallback = [
+    {
+      urlImagen: 'ceramica-y-gin-0.jpg',
+      crop_x: 0,
+      crop_y: 0,
+      zoom: 1,
+      texto: '',
+      optimizedUrls: null
+    },
+    {
+      urlImagen: 'ceramica-y-gin-1.png',
+      crop_x: 0,
+      crop_y: 0,
+      zoom: 1,
+      texto: '',
+      optimizedUrls: null
+    },
+    {
+      urlImagen: 'ceramica-y-gin-2.jpg',
+      crop_x: 0,
+      crop_y: 0,
+      zoom: 1,
+      texto: '',
+      optimizedUrls: null
+    }
+  ];
+
+  // Construir array final: usar imágenes existentes y completar con fallback solo para las que falten
+  const imagenesFinales = [];
+  
+  for (let i = 0; i < 3; i++) {
+    // Buscar imagen en la posición i (por orden)
+    const imagenExistente = imagenes && Array.isArray(imagenes) 
+      ? imagenes.find(img => img.orden === i) || imagenes[i]
+      : null;
+    
+    // Si existe y tiene urlImagen válido, usarla completa
+    if (imagenExistente && imagenExistente.urlImagen) {
+      imagenesFinales[i] = imagenExistente;
+    } else {
+      // Si no hay imagen pero hay texto en la imagen existente, usar fallback con el texto de ceramica-y-pinta
+      if (imagenExistente && imagenExistente.texto) {
+        imagenesFinales[i] = {
+          ...imagenesFallback[i],
+          texto: imagenExistente.texto // Mantener el texto de ceramica-y-pinta
+        };
+      } else {
+        // Si no hay nada, usar fallback completo
+        imagenesFinales[i] = imagenesFallback[i];
+      }
+    }
+  }
+
   // Usar el primer taller para mostrar info general (precio, horario, etc.)
   const tallerReferencia = talleresDisponibles[0] || {};
 
@@ -184,36 +238,36 @@ export default function TallerView({ imagenes, pagoAprobado: pagoAprobadoProp, i
         {/* Secciones de Imagen + Texto */}
         <div className="space-y-16 md:mt-24 mt-8">
           <ImageWithText
-            image={`/storage/talleres/${imagenes[0]?.urlImagen}`}
-            crop={{ x: imagenes[0]?.crop_x ?? 0, y: imagenes[0]?.crop_y ?? 0 }}
-            zoom={imagenes[0]?.zoom ?? 1}
-            optimizedUrls={imagenes[0]?.optimizedUrls}
+            image={`/storage/talleres/${imagenesFinales[0]?.urlImagen}`}
+            crop={{ x: imagenesFinales[0]?.crop_x ?? 0, y: imagenesFinales[0]?.crop_y ?? 0 }}
+            zoom={imagenesFinales[0]?.zoom ?? 1}
+            optimizedUrls={imagenesFinales[0]?.optimizedUrls}
             aspectRatio={1.4/1.5}
             title="Nuestra Experiencia"
-            description={imagenes[0]?.texto}
+            description={imagenesFinales[0]?.texto}
             extraContent={extraInfo}
             isLCP={true}
           />
 
           <ImageWithText
-            image={`/storage/talleres/${imagenes[1]?.urlImagen}`}
-            crop={{ x: imagenes[1]?.crop_x ?? 0, y: imagenes[1]?.crop_y ?? 0 }}
-            zoom={imagenes[1]?.zoom ?? 1}
-            optimizedUrls={imagenes[1]?.optimizedUrls}
+            image={`/storage/talleres/${imagenesFinales[1]?.urlImagen}`}
+            crop={{ x: imagenesFinales[1]?.crop_x ?? 0, y: imagenesFinales[1]?.crop_y ?? 0 }}
+            zoom={imagenesFinales[1]?.zoom ?? 1}
+            optimizedUrls={imagenesFinales[1]?.optimizedUrls}
             aspectRatio={1.4/1.5}
             title="¿Qué incluye?"
-            description={imagenes[1]?.texto}
+            description={imagenesFinales[1]?.texto}
             reverse
           />
 
           <ImageWithText
-            image={`/storage/talleres/${imagenes[2]?.urlImagen}`}
-            crop={{ x: imagenes[2]?.crop_x ?? 0, y: imagenes[2]?.crop_y ?? 0 }}
-            zoom={imagenes[2]?.zoom ?? 1}
-            optimizedUrls={imagenes[2]?.optimizedUrls}
+            image={`/storage/talleres/${imagenesFinales[2]?.urlImagen}`}
+            crop={{ x: imagenesFinales[2]?.crop_x ?? 0, y: imagenesFinales[2]?.crop_y ?? 0 }}
+            zoom={imagenesFinales[2]?.zoom ?? 1}
+            optimizedUrls={imagenesFinales[2]?.optimizedUrls}
             aspectRatio={1.4/1.5}
             title=""
-            description={imagenes[2]?.texto}
+            description={imagenesFinales[2]?.texto}
             extraContent={precios}
           />
         </div>

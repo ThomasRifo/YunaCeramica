@@ -342,9 +342,40 @@ public function tallerView()
         ];
     });
     
+    // Buscar imágenes con el slug actual
     $imagenes = ImagenTaller::where('slug', $slug)
         ->orderBy('orden')
         ->get();
+    
+    // Si no hay suficientes imágenes, usar fallback del slug anterior (cirujeada temporal)
+    // Mapeo de slugs nuevos a slugs viejos
+    $fallbackSlugs = [
+        'ceramica-y-pinta' => 'ceramica-y-gin',
+        // Agregar más mapeos aquí si es necesario
+    ];
+    
+    if ($imagenes->isEmpty() && isset($fallbackSlugs[$slug])) {
+        // Si no hay ninguna imagen con el slug nuevo, usar todas las del fallback
+        $fallbackSlug = $fallbackSlugs[$slug];
+        $imagenes = ImagenTaller::where('slug', $fallbackSlug)
+            ->orderBy('orden')
+            ->get();
+    } elseif ($imagenes->count() < 3 && isset($fallbackSlugs[$slug])) {
+        // Si hay algunas pero no todas, completar con las del fallback
+        $fallbackSlug = $fallbackSlugs[$slug];
+        $imagenesFallback = ImagenTaller::where('slug', $fallbackSlug)
+            ->orderBy('orden')
+            ->get();
+        
+        // Completar las imágenes faltantes con las del fallback
+        for ($i = $imagenes->count(); $i < 3; $i++) {
+            $imagenFallback = $imagenesFallback->where('orden', $i)->first();
+            if ($imagenFallback) {
+                // Agregar la imagen del fallback directamente (usa el mismo urlImagen)
+                $imagenes->push($imagenFallback);
+            }
+        }
+    }
     
     if ($imagenes->count() < 3) {
         Log::warning("Faltan imágenes para el taller {$slug}. Se encontraron {$imagenes->count()} de 3 necesarias");
