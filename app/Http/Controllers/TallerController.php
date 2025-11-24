@@ -619,13 +619,13 @@ public function updateMenusHtml(Request $request, $id)
             'telefono' => 'nullable|string',
             'cantidadPersonas' => 'required|integer|min:1',
             'esReserva' => 'required|boolean',
-            'menu_id' => 'required|exists:menus,id',
+            'menu_id' => 'nullable',
             'participantes' => 'nullable|array',
             'participantes.*.nombre' => 'required|string',
             'participantes.*.apellido' => 'required|string',
             'participantes.*.email' => 'nullable|email',
             'participantes.*.telefono' => 'nullable|string',
-            'participantes.*.menu_id' => 'required|exists:menus,id',
+            'participantes.*.menu_id' => 'nullable',
             'referido' => 'nullable|string',
         ]);
 
@@ -633,6 +633,9 @@ public function updateMenusHtml(Request $request, $id)
 
         // Generar código de referido único si no viene uno
         $codigoReferido = $request->input('referido') ?? strtoupper(substr(md5(uniqid()), 0, 8));
+
+        // Si no viene menu_id o está vacío, usar el menú con id 3
+        $menuId = $request->menu_id ?: 3;
 
         // Crear el taller cliente con estado pendiente
         $tallerCliente = TallerCliente::create([
@@ -643,7 +646,7 @@ public function updateMenusHtml(Request $request, $id)
             'telefono_cliente' => $request->telefono,
             'cantPersonas' => $request->cantidadPersonas,
             'idEstadoPago' => 1, // 1 = Pendiente
-            'idMenu' => $request->menu_id,
+            'idMenu' => $menuId,
             'idMetodoPago' => 1, // 1 = Transferencia
             'fecha' => now(), // Fecha de inscripción
             'referido' => $codigoReferido,
@@ -653,13 +656,15 @@ public function updateMenusHtml(Request $request, $id)
         if ($request->has('participantes') && count($request->participantes) > 1) {
             foreach ($request->participantes as $index => $participante) {
                 if ($index === 0) continue; // El primero es el titular
+                // Si no viene menu_id o está vacío, usar el menú con id 3
+                $menuIdAcompaniante = $participante['menu_id'] ?: 3;
                 Acompaniante::create([
                     'idTallerCliente' => $tallerCliente->id,
                     'nombre' => $participante['nombre'],
                     'apellido' => $participante['apellido'],
                     'email' => $participante['email'],
                     'telefono' => $participante['telefono'] ?? null,
-                    'idMenu' => $participante['menu_id'],
+                    'idMenu' => $menuIdAcompaniante,
                 ]);
             }
         }

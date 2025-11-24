@@ -209,6 +209,9 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
 
         setIsLoadingMercadoPago(true);
 
+        // Si no hay menú seleccionado, usar el menú con id 3
+        const menuIdCliente = datosCliente.menu || "3";
+
         const payload = {
             tallerId: tallerSeleccionado.id,
             titulo: tallerSeleccionado.nombre,
@@ -229,14 +232,14 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
                     apellido: datosCliente.apellido,
                     email: datosCliente.email,
                     telefono: datosCliente.telefono,
-                    menu_id: datosCliente.menu,
+                    menu_id: menuIdCliente,
                 },
                 ...acompanantes.map(a => ({
                     nombre: a.nombre,
                     apellido: a.apellido,
                     email: a.email,
                     telefono: a.telefono,
-                    menu_id: a.menu,
+                    menu_id: a.menu || "3",
                 }))
             ]
         };
@@ -290,6 +293,9 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
         setIsLoadingTransferencia(true);
 
         try {
+            // Si no hay menú seleccionado, usar el menú con id 3
+            const menuIdCliente = datosCliente.menu || "3";
+            
             const response = await fetch('/talleres/transferencia', {
                 method: 'POST',
                 headers: {
@@ -305,7 +311,7 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
                     telefono: datosCliente.telefono,
                     cantidadPersonas,
                     esReserva: metodoPago === 'reserva',
-                    menu_id: datosCliente.menu,
+                    menu_id: menuIdCliente,
                     metodoPago,
                     referido: referido,
                     participantes: [
@@ -314,14 +320,14 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
                             apellido: datosCliente.apellido,
                             email: datosCliente.email,
                             telefono: datosCliente.telefono,
-                            menu_id: datosCliente.menu,
+                            menu_id: menuIdCliente,
                         },
                         ...acompanantes.map(a => ({
                             nombre: a.nombre,
                             apellido: a.apellido,
                             email: a.email,
                             telefono: a.telefono,
-                            menu_id: a.menu,
+                            menu_id: a.menu || "3",
                         }))
                     ]
                 })
@@ -369,13 +375,11 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
         if (!datosCliente.nombre) nuevosErrores.nombre = "El nombre es obligatorio";
         if (!datosCliente.apellido) nuevosErrores.apellido = "El apellido es obligatorio";
         if (!datosCliente.email) nuevosErrores.email = "El email es obligatorio";
-        if (!datosCliente.menu) nuevosErrores.menu = "Selecciona un menú";
 
         // Validar datos de los acompañantes
         acompanantes.forEach((a, i) => {
             if (!a.nombre) nuevosErrores[`acompanante_nombre_${i}`] = "El nombre es obligatorio";
             if (!a.apellido) nuevosErrores[`acompanante_apellido_${i}`] = "El apellido es obligatorio";
-            if (!a.menu) nuevosErrores[`acompanante_menu_${i}`] = "Selecciona un menú";
         });
 
         setErrores(nuevosErrores);
@@ -797,7 +801,7 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
                                     <Button
                                         className="h-12 w-full"
                                         onClick={handlePagoMercadoPago}
-                                        disabled={isLoadingMercadoPago || !datosCliente.nombre || !datosCliente.apellido || !datosCliente.email || !datosCliente.menu}
+                                        disabled={isLoadingMercadoPago || !datosCliente.nombre || !datosCliente.apellido || !datosCliente.email}
                                     >
                                         {isLoadingMercadoPago ? "Procesando..." : "Pagar con MercadoPago"}
                                     </Button>
@@ -807,7 +811,7 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
                                     <Button
                                         className="h-12 w-full bg-green-600 hover:bg-green-700"
                                         onClick={handleTransferencia}
-                                        disabled={isLoadingTransferencia || !datosCliente.nombre || !datosCliente.apellido || !datosCliente.email || !datosCliente.menu}
+                                        disabled={isLoadingTransferencia || !datosCliente.nombre || !datosCliente.apellido || !datosCliente.email}
                                     >
                                         {isLoadingTransferencia ? (
                                             <div className="flex items-center space-x-2">
