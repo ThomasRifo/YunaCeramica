@@ -255,6 +255,9 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
             });
 
             const responseData = await response.json();
+            
+            console.log('Response status:', response.status);
+            console.log('Response data:', responseData);
 
             if (response.ok && responseData?.mercadopago?.init_point) {
                 const link = `${window.location.origin}/taller/${tallerSeleccionado.id}/referido/${responseData.referido}`;
@@ -269,9 +272,10 @@ export default function FormInscripcion({ taller = {}, slug = '', referido: refe
                 });
             }
         } catch (error) {
+            console.error('Error al crear preferencia:', error);
             toast({
                 title: "Error de red",
-                description: "Ocurrió un error de red o al procesar la solicitud. Por favor, intenta de nuevo.",
+                description: error.message || "Ocurrió un error de red o al procesar la solicitud. Por favor, intenta de nuevo.",
                 variant: "destructive",
             });
         } finally {

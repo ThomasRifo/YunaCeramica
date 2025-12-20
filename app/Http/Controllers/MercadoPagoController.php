@@ -77,6 +77,18 @@ class MercadoPagoController extends Controller
             // Generar código de referido único
             $codigoReferido = strtoupper(substr(md5(uniqid()), 0, 8));
 
+            // Asegurar que APP_URL tenga protocolo y puerto si es necesario
+            $appUrl = env('APP_URL', 'http://localhost:8000');
+            if (!preg_match('/^https?:\/\//', $appUrl)) {
+                $appUrl = 'http://' . $appUrl;
+            }
+            // Si es localhost sin puerto, agregar puerto 8000 (solo en desarrollo)
+            if (strpos($appUrl, 'localhost') !== false && strpos($appUrl, ':') === false) {
+                $appUrl = str_replace('localhost', 'localhost:8000', $appUrl);
+            }
+            // Remover barra final si existe
+            $appUrl = rtrim($appUrl, '/');
+
             $preference_request_data = [
                 'items' => [
                     [
@@ -94,14 +106,18 @@ class MercadoPagoController extends Controller
                     'email' => $validatedData['datos_cliente']['email'],
                 ],
                 'back_urls' => [
-                    'success' => env('APP_URL') . '/talleres-' . $taller->subcategoria->url . '?pago=success',
-                    'failure' => env('APP_URL') . '/talleres-' . $taller->subcategoria->url . '-inscripcion?pago=failure',
-                    'pending' => env('APP_URL') . '/talleres-' . $taller->subcategoria->url . '-inscripcion?pago=pending',
+                    'success' => $appUrl . '/talleres-' . $taller->subcategoria->url . '?pago=success',
+                    'failure' => $appUrl . '/talleres-' . $taller->subcategoria->url . '-inscripcion?pago=failure',
+                    'pending' => $appUrl . '/talleres-' . $taller->subcategoria->url . '-inscripcion?pago=pending',
                 ],
-                'auto_return' => 'approved',
-                'notification_url' => route('mercadopago.notifications'),
+                'notification_url' => $appUrl . '/api/mercadopago/notifications',
                 'external_reference' => $externalReference,
             ];
+            
+            // Solo agregar auto_return si no es localhost (MercadoPago requiere URLs públicas)
+            if (strpos($appUrl, 'localhost') === false && strpos($appUrl, '127.0.0.1') === false) {
+                $preference_request_data['auto_return'] = 'approved';
+            }
             if (!empty($validatedData['datos_cliente']['telefono'])) {
                 $preference_request_data['payer']['phone'] = [
                     'number' => $validatedData['datos_cliente']['telefono']
@@ -167,7 +183,29 @@ class MercadoPagoController extends Controller
             }
             
             $preference_client = new PreferenceClient();
-            $created_preference = $preference_client->create($preference_request_data);
+            
+            try {
+                $created_preference = $preference_client->create($preference_request_data);
+            } catch (\MercadoPago\Exceptions\MPApiException $e) {
+                DB::rollBack();
+                $apiResponse = $e->getApiResponse();
+                $errorContent = $apiResponse ? $apiResponse->getContent() : null;
+                Log::error('MP API Exception al crear preferencia: ' . $e->getMessage());
+                Log::error('Error content: ' . json_encode($errorContent));
+                Log::error('Request data: ' . json_encode($preference_request_data));
+                return response()->json([
+                    'message' => 'Error al crear preferencia de MercadoPago: ' . $e->getMessage(),
+                    'details' => $errorContent,
+                ], 500);
+            } catch (\Exception $e) {
+                DB::rollBack();
+                Log::error('Error al crear preferencia MP (antes del if): ' . $e->getMessage());
+                Log::error('Stack trace: ' . $e->getTraceAsString());
+                Log::error('Request data: ' . json_encode($preference_request_data));
+                return response()->json([
+                    'message' => 'Error al crear preferencia de MercadoPago: ' . $e->getMessage(),
+                ], 500);
+            }
 
             if ($created_preference && $created_preference->id && $created_preference->init_point) {
                 $tallerCliente->update(['preference_id_mp' => $created_preference->id]);
@@ -205,16 +243,20 @@ class MercadoPagoController extends Controller
             DB::rollBack();
             $errorMessage = 'Error con MercadoPago: ' . $e->getMessage();
             $errorDetails = $e->getApiResponse() ? $e->getApiResponse()->getContent() : null;
-            Log::error('❌ MP API Exception en createPreference: ' . $errorMessage . ' - ' . json_encode($errorDetails), (array)$errorDetails);
+            Log::error('MP API Exception en createPreference: ' . $errorMessage);
+            Log::error('Error details: ' . json_encode($errorDetails));
+            Log::error('Stack trace: ' . $e->getTraceAsString());
             return response()->json([
                 'message' => $errorMessage,
                 'details' => $errorDetails,
             ], 400);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('❌ Error general al crear preferencia de MP: ' . $e->getMessage() . ' Stack: ' . $e->getTraceAsString());
+            Log::error('Error general al crear preferencia de MP: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            Log::error('Exception class: ' . get_class($e));
             return response()->json([
-                'message' => 'Ocurrió un error inesperado. Por favor, intenta de nuevo.',
+                'message' => 'Ocurrió un error inesperado: ' . $e->getMessage(),
             ], 500);
         }
     }

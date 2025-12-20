@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, usePage } from "@inertiajs/react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/Components/ui/button";
-import { Menu } from "lucide-react";
+import { Menu, ShoppingCart } from "lucide-react";
 import Dropdown from "@/Components/Dropdown";
 
 export default function NavbarClient({ children }) {
@@ -70,6 +70,13 @@ export default function NavbarClient({ children }) {
                             Talleres
                         </Link>
                         <Link href="/contacto">Contacto</Link>
+                        <Link
+                            href="/carrito"
+                            className="relative"
+                            title="Carrito de compras"
+                        >
+                            <ShoppingCart className="w-6 h-6" />
+                        </Link>
                         {!user ? (
                             <Link 
                                 className={cn(
@@ -151,6 +158,9 @@ export default function NavbarClient({ children }) {
                         </Link>
                         <Link href="/contacto" onClick={() => setMenuOpen(false)}>
                             Contacto
+                        </Link>
+                        <Link href="/carrito" onClick={() => setMenuOpen(false)}>
+                            Carrito
                         </Link>
                         {!user ? (
                             <Link href="/login" onClick={() => setMenuOpen(false)}>

@@ -9,6 +9,7 @@ class Compra extends Model
     protected $fillable = [
         'idCliente',
         'idEstado',
+        'idEstadoPago',
         'total',
         'calle',
         'numero',
@@ -16,12 +17,21 @@ class Compra extends Model
         'provincia',
         'codigoPostal',
         'email',
+        'nombre',
+        'apellido',
         'telefono',
         'piso',
         'departamento',
         'observaciones',
         'tracking',
         'idMetodoPago',
+        'tipo_entrega',
+        'costo_envio',
+        'external_reference_mp',
+        'preference_id_mp',
+        'payment_id_mp',
+        'monto_total_pagado_mp',
+        'datos_pago_mp',
     ];
 
     // Relación: Compra pertenece a un Cliente (User)

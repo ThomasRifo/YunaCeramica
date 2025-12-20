@@ -16,6 +16,7 @@ class MetodosPagoSeeder extends Seeder
         DB::table('metodos_pago')->insertOrIgnore([
             ['id' => 1, 'nombre' => 'Transferencia', 'descripcion' => 'Transferencia bancaria'],
             ['id' => 2, 'nombre' => 'Mercado Pago', 'descripcion' => 'Tarjeta de crédito, débito, o dinero disponible en tu cuenta'],
+            ['id' => 3, 'nombre' => 'Efectivo', 'descripcion' => 'Pago en efectivo al momento de la entrega'],
         ]);
     }
 }

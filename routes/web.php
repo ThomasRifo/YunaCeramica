@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\ProductoController;
+use App\Http\Controllers\CarritoController;
+use App\Http\Controllers\CompraController;
 use App\Http\Controllers\TallerController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ImagenTallerController;
@@ -25,6 +27,26 @@ Route::get('/', function () {
 });
 
 Route::get('/productos', [ProductoController::class, 'index'])->name('productos');
+Route::get('/productos/{slug}', [ProductoController::class, 'show'])->name('productos.show');
+
+// Rutas del Carrito
+Route::get('/carrito', [CarritoController::class, 'index'])->name('carrito');
+Route::post('/carrito/agregar', [CarritoController::class, 'add'])->name('carrito.add');
+Route::put('/carrito/{idProducto}', [CarritoController::class, 'update'])->name('carrito.update');
+Route::delete('/carrito/{idProducto}', [CarritoController::class, 'remove'])->name('carrito.remove');
+Route::delete('/carrito/vaciar', [CarritoController::class, 'clear'])->name('carrito.clear');
+
+// Rutas de Checkout y Compras
+Route::get('/checkout', [CompraController::class, 'checkout'])->name('checkout');
+Route::post('/compras/transferencia', [CompraController::class, 'procesarTransferencia'])->name('compras.transferencia');
+Route::post('/compras/efectivo', [CompraController::class, 'procesarEfectivo'])->name('compras.efectivo');
+
+// Rutas de confirmación de compra
+Route::get('/productos/compra/success', [CompraController::class, 'success'])->name('compras.success');
+Route::get('/productos/compra/failure', [CompraController::class, 'failure'])->name('compras.failure');
+Route::get('/productos/compra/pending', [CompraController::class, 'pending'])->name('compras.pending');
+
+// Dashboard: Compras
 
 Route::get('/talleres', [TallerController::class, 'talleresClient'])->name('talleres');
 
@@ -52,6 +74,10 @@ Route::middleware(['auth', 'verified', 'role:admin'])
     ->prefix('dashboard')
     ->name('dashboard.')  
     ->group(function () {
+        // Compras
+        Route::get('/compras', [CompraController::class, 'dashboardIndex'])->name('compras.index');
+        Route::get('/compras/{id}', [CompraController::class, 'dashboardShow'])->name('compras.show');
+        Route::put('/compras/{id}', [CompraController::class, 'update'])->name('compras.update');
         
         Route::prefix('/paginas/talleres')
         ->name('paginas.')
@@ -79,8 +105,13 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         Route::get('/talleres/{id}', [TallerController::class, 'view'])->name('talleres.view');    
         Route::put('/taller-cliente/{id}/actualizar-pago', [TallerClienteController::class, 'actualizarPago'])->name('taller.actualizarPago');
 
-        
-      
+        // Rutas de Productos
+        Route::get('/productos', [ProductoController::class, 'indexDashboard'])->name('productos.index');
+        Route::get('/productos/create', [ProductoController::class, 'create'])->name('productos.create');
+        Route::post('/productos', [ProductoController::class, 'store'])->name('productos.store');
+        Route::get('/productos/{id}/edit', [ProductoController::class, 'edit'])->name('productos.edit');
+        Route::put('/productos/{id}', [ProductoController::class, 'update'])->name('productos.update');
+        Route::delete('/productos/{id}', [ProductoController::class, 'destroy'])->name('productos.destroy');
 
         Route::get('/archivos', [App\Http\Controllers\ArchivosController::class, 'index'])->name('archivos.index');
         Route::post('/archivos/upload', [App\Http\Controllers\ArchivosController::class, 'upload'])->name('archivos.upload');
