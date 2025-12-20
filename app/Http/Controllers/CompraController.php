@@ -60,6 +60,11 @@ class CompraController extends Controller
         // Obtener métodos de pago activos
         $metodosPago = MetodoPago::where('activo', true)->get(['id', 'nombre', 'descripcion']);
 
+        // Obtener provincias activas
+        $provincias = \App\Models\Provincia::where('activo', true)
+            ->orderBy('nombre')
+            ->get(['id', 'nombre']);
+
         // Obtener tipo de entrega y costo de envío de sessionStorage (se pasará desde el frontend)
         $tipoEntrega = request()->get('tipo_entrega', 'retiro');
         $costoEnvio = $tipoEntrega === 'envio' ? 5000 : 0; // TODO: Hacer configurable
@@ -72,6 +77,7 @@ class CompraController extends Controller
             'total' => $total,
             'tipoEntrega' => $tipoEntrega,
             'metodosPago' => $metodosPago,
+            'provincias' => $provincias,
             'cantidadItems' => count($productos),
         ]);
     }

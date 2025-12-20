@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,  
             SubcategoriasSeeder::class,
             MetodosPagoSeeder::class,
+            ProvinciasSeeder::class,
         ]);
     }
 }

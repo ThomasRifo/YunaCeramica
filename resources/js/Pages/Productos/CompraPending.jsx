@@ -50,14 +50,12 @@ export default function CompraPending({ compra }) {
               >
                 Seguir Comprando
               </Link>
-              {compra && (
-                <Link
-                  href="/mis-compras"
-                  className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
-                >
-                  Ver Mis Compras
-                </Link>
-              )}
+              <Link
+                href="/"
+                className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+              >
+                Volver al Inicio
+              </Link>
             </div>
           </div>
         </div>

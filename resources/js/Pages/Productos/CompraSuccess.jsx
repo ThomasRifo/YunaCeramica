@@ -147,10 +147,10 @@ export default function CompraSuccess({ compra }) {
                 Seguir Comprando
               </Link>
               <Link
-                href="/mis-compras"
+                href="/"
                 className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
               >
-                Ver Mis Compras
+                Volver al Inicio
               </Link>
             </div>
           </div>

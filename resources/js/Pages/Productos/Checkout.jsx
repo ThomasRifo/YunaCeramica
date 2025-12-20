@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { ArrowLeft, ShoppingCart, CreditCard, Banknote, Wallet } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-export default function Checkout({ items, subtotal, costoEnvio, total, tipoEntrega, metodosPago, cantidadItems }) {
+export default function Checkout({ items, subtotal, costoEnvio, total, tipoEntrega, metodosPago, provincias, cantidadItems }) {
   const { toast } = useToast();
   const [datosCliente, setDatosCliente] = useState({
     nombre: '',
@@ -26,6 +26,22 @@ export default function Checkout({ items, subtotal, costoEnvio, total, tipoEntre
   const [observaciones, setObservaciones] = useState('');
   const [errores, setErrores] = useState({});
   const [procesando, setProcesando] = useState(false);
+
+  // Calcular total con recargo si es MercadoPago
+  const calcularTotal = () => {
+    let totalCalculado = subtotal + costoEnvio;
+    
+    // Si es MercadoPago (ID 2), agregar 10% de recargo
+    if (metodoPago === 2) {
+      const recargo = totalCalculado * 0.10;
+      totalCalculado += recargo;
+    }
+    
+    return totalCalculado;
+  };
+
+  const totalConRecargo = calcularTotal();
+  const recargoMercadoPago = metodoPago === 2 ? (subtotal + costoEnvio) * 0.10 : 0;
 
   // Cargar datos del usuario si está autenticado
   useEffect(() => {
@@ -113,7 +129,7 @@ export default function Checkout({ items, subtotal, costoEnvio, total, tipoEntre
       },
       tipo_entrega: tipoEntrega,
       costo_envio: costoEnvio,
-      total: total,
+      total: totalConRecargo, // Usar el total con recargo si aplica
       observaciones: observaciones,
       idMetodoPago: metodoPago,
     };
@@ -427,14 +443,20 @@ export default function Checkout({ items, subtotal, costoEnvio, total, tipoEntre
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Provincia *
                       </label>
-                      <input
-                        type="text"
+                      <select
                         value={direccion.provincia}
                         onChange={(e) => setDireccion({ ...direccion, provincia: e.target.value })}
                         className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                           errores.provincia ? 'border-red-500' : 'border-gray-300'
                         }`}
-                      />
+                      >
+                        <option value="">--- Seleccionar ---</option>
+                        {provincias && provincias.map((provincia) => (
+                          <option key={provincia.id} value={provincia.nombre}>
+                            {provincia.nombre}
+                          </option>
+                        ))}
+                      </select>
                       {errores.provincia && (
                         <p className="text-red-500 text-sm mt-1">{errores.provincia}</p>
                       )}
@@ -565,9 +587,15 @@ export default function Checkout({ items, subtotal, costoEnvio, total, tipoEntre
                       <span>${costoEnvio.toLocaleString('es-AR')}</span>
                     </div>
                   )}
+                  {metodoPago === 2 && recargoMercadoPago > 0 && (
+                    <div className="flex justify-between text-gray-600">
+                      <span className="text-orange-600">Recargo MercadoPago (10%)</span>
+                      <span className="text-orange-600">${recargoMercadoPago.toLocaleString('es-AR')}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-xl font-bold text-gray-900 pt-2 border-t">
                     <span>Total</span>
-                    <span>${total.toLocaleString('es-AR')}</span>
+                    <span>${totalConRecargo.toLocaleString('es-AR')}</span>
                   </div>
                 </div>
 

@@ -1,5 +1,5 @@
 import { Head, Link } from "@inertiajs/react";
-import { XCircle, ArrowLeft } from "lucide-react";
+import { XCircle } from "lucide-react";
 
 export default function CompraFailure({ mensaje }) {
   return (
@@ -21,17 +21,16 @@ export default function CompraFailure({ mensaje }) {
 
             <div className="flex gap-4 justify-center">
               <Link
-                href="/carrito"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                href="/productos"
+                className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
               >
-                <ArrowLeft className="w-5 h-5" />
-                Volver al Carrito
+                Seguir Comprando
               </Link>
               <Link
-                href="/productos"
+                href="/"
                 className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
               >
-                Ver Productos
+                Volver al Inicio
               </Link>
             </div>
           </div>
