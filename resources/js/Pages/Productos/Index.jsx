@@ -1,15 +1,43 @@
 import { Head, Link, router } from "@inertiajs/react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 export default function ProductosIndex({ productos, subcategorias, filtros }) {
   const [busqueda, setBusqueda] = useState(filtros?.busqueda || '');
+  const timeoutRef = useRef(null);
 
-  const handleBusqueda = (e) => {
-    e.preventDefault();
-    router.get('/productos', { busqueda }, {
-      preserveState: true,
-      preserveScroll: true,
-    });
+  // Búsqueda dinámica con debounce
+  useEffect(() => {
+    // Limpiar timeout anterior si existe
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    // Crear nuevo timeout para ejecutar la búsqueda después de 500ms sin escribir
+    timeoutRef.current = setTimeout(() => {
+      const params = { ...filtros };
+      if (busqueda.trim()) {
+        params.busqueda = busqueda.trim();
+      } else {
+        delete params.busqueda;
+      }
+      
+      router.get('/productos', params, {
+        preserveState: true,
+        preserveScroll: true,
+        replace: true, // Usar replace para no agregar al historial
+      });
+    }, 500); // Esperar 500ms después de que el usuario deje de escribir
+
+    // Cleanup function
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [busqueda]); // Se ejecuta cada vez que cambia busqueda
+
+  const handleBusquedaChange = (e) => {
+    setBusqueda(e.target.value);
   };
 
   const handleFiltro = (tipo, valor) => {
@@ -41,8 +69,8 @@ export default function ProductosIndex({ productos, subcategorias, filtros }) {
             className="object-cover w-full h-full object-[center_50%]" 
           />
           <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center text-white text-center px-4">
-            <h1 className="text-4xl md:text-6xl font-bold">Nuestros Productos</h1>
-            <p className="mt-2 md:mt-4 text-2xl md:text-4xl">Cada producto es unico blablabla</p>
+            <h1 className="text-4xl md:text-5xl font-bold">Nuestros Productos</h1>
+            <p className="mt-2 md:mt-4 text-2xl md:text-2xl">Arte, barro y pincel. Explorá nuestra colección de piezas únicas diseñadas para acompañar tus rituales diarios</p>
           </div>
         </div>
 
@@ -50,21 +78,15 @@ export default function ProductosIndex({ productos, subcategorias, filtros }) {
         <div className="max-w-7xl mx-auto px-4 py-16">
           <div className="mb-8 space-y-4">
             {/* Búsqueda */}
-            <form onSubmit={handleBusqueda} className="flex gap-2">
+            <div className="flex gap-2">
               <input
                 type="text"
                 value={busqueda}
-                onChange={(e) => setBusqueda(e.target.value)}
+                onChange={handleBusquedaChange}
                 placeholder="Buscar productos..."
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <button
-                type="submit"
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-              >
-                Buscar
-              </button>
-            </form>
+            </div>
 
             {/* Filtros por Subcategoría */}
             {subcategorias && subcategorias.length > 0 && (
