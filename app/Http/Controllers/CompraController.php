@@ -405,52 +405,102 @@ class CompraController extends Controller
         $compra = Compra::with('detalles')->findOrFail($id);
         $estadoPagoAnterior = $compra->idEstadoPago;
 
-        // Actualizar estados
-        if (isset($validated['idEstadoPago'])) {
-            $compra->idEstadoPago = $validated['idEstadoPago'];
-        }
-        if (isset($validated['idEstado'])) {
-            $compra->idEstado = $validated['idEstado'];
-        }
-        if (isset($validated['tracking'])) {
-            $compra->tracking = $validated['tracking'];
-        }
+        DB::beginTransaction();
+        try {
+            // Actualizar estados
+            if (isset($validated['idEstadoPago'])) {
+                $compra->idEstadoPago = $validated['idEstadoPago'];
+            }
+            if (isset($validated['idEstado'])) {
+                $compra->idEstado = $validated['idEstado'];
+            }
+            if (isset($validated['tracking'])) {
+                $compra->tracking = $validated['tracking'];
+            }
 
-        $compra->save();
+            // Si el estado de pago cambió a "Pagado" (3), validar stock antes de descontar
+            if ($compra->idEstadoPago == 3 && $estadoPagoAnterior != 3) {
+                // Validar stock antes de descontar
+                $productosSinStock = [];
+                foreach ($compra->detalles as $detalle) {
+                    $producto = Producto::find($detalle->idProducto);
+                    if ($producto && $producto->stock < $detalle->cantidad) {
+                        $productosSinStock[] = [
+                            'nombre' => $producto->nombre,
+                            'stock_disponible' => $producto->stock,
+                            'cantidad_solicitada' => $detalle->cantidad,
+                        ];
+                    }
+                }
+                
+                // Si hay productos sin stock suficiente, no permitir el cambio y mostrar error
+                if (!empty($productosSinStock)) {
+                    DB::rollBack();
+                    $mensajeError = "No se puede confirmar el pago. Los siguientes productos no tienen stock suficiente:\n";
+                    foreach ($productosSinStock as $prod) {
+                        $mensajeError .= "- {$prod['nombre']}: Stock disponible: {$prod['stock_disponible']}, Cantidad solicitada: {$prod['cantidad_solicitada']}\n";
+                    }
+                    
+                    Log::warning('⚠️ Intento de confirmar pago con stock insuficiente', [
+                        'compra_id' => $compra->id,
+                        'productos_sin_stock' => $productosSinStock,
+                    ]);
+                    
+                    return back()->withErrors(['stock' => $mensajeError]);
+                }
+                
+                // Si hay stock suficiente, descontar
+                foreach ($compra->detalles as $detalle) {
+                    $producto = Producto::find($detalle->idProducto);
+                    if ($producto) {
+                        // Validar que el stock no quede negativo
+                        $nuevoStock = $producto->stock - $detalle->cantidad;
+                        if ($nuevoStock < 0) {
+                            DB::rollBack();
+                            Log::error('❌ Error: Intento de dejar stock negativo', [
+                                'producto_id' => $producto->id,
+                                'stock_actual' => $producto->stock,
+                                'cantidad' => $detalle->cantidad,
+                            ]);
+                            return back()->withErrors(['stock' => "Error: No hay suficiente stock del producto '{$producto->nombre}'"]);
+                        }
+                        
+                        $producto->decrement('stock', $detalle->cantidad);
+                        $producto->increment('cantVendida', $detalle->cantidad);
+                    }
+                }
 
-        // Si el estado de pago cambió a "Pagado" (3), descontar stock
-        if ($compra->idEstadoPago == 3 && $estadoPagoAnterior != 3) {
-            foreach ($compra->detalles as $detalle) {
-                $producto = Producto::find($detalle->idProducto);
-                if ($producto) {
-                    $producto->decrement('stock', $detalle->cantidad);
-                    $producto->increment('cantVendida', $detalle->cantidad);
+                // Enviar email de confirmación
+                try {
+                    Mail::to($compra->email)->send(new ConfirmacionCompra($compra));
+                } catch (\Exception $e) {
+                    Log::error('Error al enviar email de confirmación: ' . $e->getMessage());
                 }
             }
 
-            // Enviar email de confirmación
-            try {
-                Mail::to($compra->email)->send(new ConfirmacionCompra($compra));
-            } catch (\Exception $e) {
-                Log::error('Error al enviar email de confirmación: ' . $e->getMessage());
-            }
-        }
-
-        // Si se canceló un pago aprobado, restaurar stock
-        if ($estadoPagoAnterior == 3 && $compra->idEstadoPago != 3) {
-            foreach ($compra->detalles as $detalle) {
-                $producto = Producto::find($detalle->idProducto);
-                if ($producto) {
-                    $producto->increment('stock', $detalle->cantidad);
-                    $producto->decrement('cantVendida', $detalle->cantidad);
+            // Si se canceló un pago aprobado, restaurar stock
+            if ($estadoPagoAnterior == 3 && $compra->idEstadoPago != 3) {
+                foreach ($compra->detalles as $detalle) {
+                    $producto = Producto::find($detalle->idProducto);
+                    if ($producto) {
+                        $producto->increment('stock', $detalle->cantidad);
+                        $producto->decrement('cantVendida', $detalle->cantidad);
+                    }
                 }
             }
-        }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Estado actualizado correctamente',
-        ]);
+            $compra->save();
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Estado actualizado correctamente',
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error al actualizar compra: ' . $e->getMessage());
+            return back()->withErrors(['error' => 'Error al actualizar la compra: ' . $e->getMessage()]);
+        }
     }
 
     /**

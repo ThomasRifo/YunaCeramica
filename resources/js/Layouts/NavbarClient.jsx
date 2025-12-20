@@ -9,6 +9,7 @@ export default function NavbarClient({ children }) {
     const [scrolled, setScrolled] = useState(false);
     const { url } = usePage();
     const [menuOpen, setMenuOpen] = useState(false);
+    const [cantidadCarrito, setCantidadCarrito] = useState(0);
     const isTalleres =
         url.startsWith("/talleres") || url.startsWith("/talleres-");
     const user = usePage().props.auth.user;
@@ -20,6 +21,34 @@ export default function NavbarClient({ children }) {
         window.addEventListener("scroll", handleScroll);
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
+
+    // Obtener cantidad de items en el carrito
+    useEffect(() => {
+        const obtenerCantidadCarrito = async () => {
+            try {
+                const response = await fetch('/carrito/count', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    },
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    setCantidadCarrito(data.cantidad || 0);
+                }
+            } catch (error) {
+                console.error('Error al obtener cantidad del carrito:', error);
+            }
+        };
+
+        obtenerCantidadCarrito();
+
+        // Actualizar cada vez que cambie la URL (navegación)
+        const interval = setInterval(obtenerCantidadCarrito, 2000); // Actualizar cada 2 segundos
+
+        return () => clearInterval(interval);
+    }, [url]);
 
     const isGray = scrolled || !inherit;
 
@@ -76,6 +105,11 @@ export default function NavbarClient({ children }) {
                             title="Carrito de compras"
                         >
                             <ShoppingCart className="w-6 h-6" />
+                            {cantidadCarrito > 0 && (
+                                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                                    {cantidadCarrito > 99 ? '99+' : cantidadCarrito}
+                                </span>
+                            )}
                         </Link>
                         {!user ? (
                             <Link 

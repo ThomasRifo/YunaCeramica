@@ -131,7 +131,7 @@ export default function Carrito({ items: itemsProp, total: totalProp, cantidadIt
           <title>Carrito de Compras - Yuna Cerámica</title>
         </Head>
 
-        <div className="min-h-screen bg-gray-50 ">
+        <div className="min-h-screen bg-gray-50 py-32 ">
           <div className="max-w-7xl mx-auto px-4 py-16">
             <div className="text-center">
               <ShoppingCart className="w-24 h-24 text-gray-300 mx-auto mb-4" />

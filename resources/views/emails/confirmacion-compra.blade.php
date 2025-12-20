@@ -167,7 +167,6 @@
         <div class="footer">
             <p><strong>Yuna Cerámica</strong></p>
             <p>yunaceramica@gmail.com</p>
-            <p>Barrio San Lorenzo - Cipolletti</p>
         </div>
     </div>
 </body>

@@ -1,9 +1,9 @@
 import { Head, Link, router } from "@inertiajs/react";
 import { useState } from "react";
-import { ShoppingCart, Plus, Minus, CheckCircle, XCircle } from "lucide-react";
+import { ShoppingCart, Plus, Minus, CheckCircle, XCircle, ChevronDown, ChevronUp } from "lucide-react";
 
 
-export default function ProductoShow({ producto }) {
+export default function ProductoShow({ producto, metodosPago }) {
   // 1. Verificación de seguridad inmediata
   if (!producto) return <div className="p-10 text-center">Cargando producto...</div>;
 
@@ -11,6 +11,8 @@ export default function ProductoShow({ producto }) {
   const [imagenSeleccionada, setImagenSeleccionada] = useState(0);
   const [agregandoAlCarrito, setAgregandoAlCarrito] = useState(false);
   const [mensaje, setMensaje] = useState(null);
+  const [metodosPagoAbierto, setMetodosPagoAbierto] = useState(false);
+  const [formasEnvioAbierto, setFormasEnvioAbierto] = useState(false);
 
   // 2. Manejo de imágenes (evita errores si no hay imágenes)
   const imagenes = producto.imagenes && producto.imagenes.length > 0 
@@ -21,10 +23,12 @@ export default function ProductoShow({ producto }) {
     ? producto.precio * (1 - producto.descuento / 100)
     : producto.precio;
 
-  const tieneStock = producto.stock > 0;
+  // Asegurar que stock sea un número y manejar casos donde pueda ser null/undefined
+  const stock = producto.stock !== null && producto.stock !== undefined ? Number(producto.stock) : 0;
+  const tieneStock = stock > 0;
 
   const handleAgregarAlCarrito = async () => {
-    if (!tieneStock || cantidad > producto.stock) return;
+    if (!tieneStock || cantidad > stock) return;
 
     setAgregandoAlCarrito(true);
     setMensaje(null);
@@ -108,9 +112,9 @@ export default function ProductoShow({ producto }) {
                     </button>
                     <span className="px-4 font-bold">{cantidad}</span>
                     <button 
-                        onClick={() => setCantidad(Math.min(producto.stock, cantidad + 1))} 
+                        onClick={() => setCantidad(Math.min(stock, cantidad + 1))} 
                         className="p-2 px-4 hover:bg-gray-100 transition"
-                        disabled={agregandoAlCarrito || cantidad >= producto.stock}
+                        disabled={agregandoAlCarrito || cantidad >= stock}
                     >
                         +
                     </button>
@@ -118,7 +122,7 @@ export default function ProductoShow({ producto }) {
                 <button 
                     onClick={handleAgregarAlCarrito}
                     className="flex-1 bg-black text-white py-3 rounded-lg hover:bg-gray-800 transition shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                    disabled={!tieneStock || agregandoAlCarrito || cantidad > producto.stock}
+                    disabled={!tieneStock || agregandoAlCarrito || cantidad > stock}
                 >
                     {agregandoAlCarrito ? (
                         <>
@@ -150,12 +154,76 @@ export default function ProductoShow({ producto }) {
                 </div>
             )}
 
-            {/* Stock disponible */}
-            {tieneStock && (
-                <p className="text-sm text-gray-600 mt-2">
-                    Stock disponible: {producto.stock} unidades
-                </p>
-            )}
+            {/* Métodos de Pago y Formas de Envío */}
+            <div className="mt-8 space-y-3">
+              {/* Métodos de Pago */}
+              <div className="bg-gray-50 rounded-lg border border-gray-200">
+                <button
+                  onClick={() => setMetodosPagoAbierto(!metodosPagoAbierto)}
+                  className="w-full flex items-center justify-between p-3 hover:bg-gray-100 transition-colors"
+                >
+                  <h2 className="text-base font-semibold text-gray-900">Métodos de Pago</h2>
+                  {metodosPagoAbierto ? (
+                    <ChevronUp className="w-4 h-4 text-gray-600" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-gray-600" />
+                  )}
+                </button>
+                {metodosPagoAbierto && (
+                  <div className="px-3 pb-3 space-y-1.5">
+                    {metodosPago && metodosPago.map((metodo) => (
+                      <div key={metodo.id} className="flex items-start gap-2 p-2 bg-white rounded border border-gray-200">
+                        <div className="flex-1">
+                          <div className="text-xs font-medium text-gray-900">{metodo.nombre}</div>
+                          {metodo.id === 2 && (
+                            <div className="text-xs text-orange-600 font-medium mt-0.5">
+                               Recargo del 10%.
+                            </div>
+                          )}
+                          {metodo.descripcion && (
+                            <div className="text-xs text-gray-600 mt-0.5">{metodo.descripcion}</div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Formas de Envío */}
+              <div className="bg-gray-50 rounded-lg border border-gray-200">
+                <button
+                  onClick={() => setFormasEnvioAbierto(!formasEnvioAbierto)}
+                  className="w-full flex items-center justify-between p-3 hover:bg-gray-100 transition-colors"
+                >
+                  <h2 className="text-base font-semibold text-gray-900">Formas de Envío</h2>
+                  {formasEnvioAbierto ? (
+                    <ChevronUp className="w-4 h-4 text-gray-600" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-gray-600" />
+                  )}
+                </button>
+                {formasEnvioAbierto && (
+                  <div className="px-3 pb-3 space-y-1.5">
+                    <div className="p-2 bg-white rounded border border-gray-200">
+                      <div className="text-xs font-medium text-gray-900">Envío a domicilio</div>
+                      <div className="text-xs text-gray-600 mt-0.5">
+                        $5.000 - Solo en la zona
+                      </div>
+                    </div>
+                    <div className="p-2 bg-white rounded border border-gray-200">
+                      <div className="text-xs font-medium text-gray-900">Retiro en local</div>
+                      <div className="text-xs text-gray-600 mt-0.5">
+                        Barrio San Lorenzo - Cipolletti (sin costo adicional)
+                      </div>
+                      <div className="text-xs text-gray-500 mt-0.5">
+                        Los datos precisos se enviarán después de la compra
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>

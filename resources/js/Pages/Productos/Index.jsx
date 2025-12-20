@@ -109,10 +109,10 @@ export default function ProductosIndex({ productos, subcategorias, filtros }) {
                   : producto.precio;
 
                 return (
-                  <Link
+                  <div
                     key={producto.id}
-                    href={`/productos/${producto.slug}`}
-                    className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow"
+                    onClick={() => router.visit(`/productos/${producto.slug}`, { preserveState: false, preserveScroll: false })}
+                    className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow cursor-pointer"
                   >
                     <div className="relative aspect-square">
                       <img
@@ -147,11 +147,8 @@ export default function ProductosIndex({ productos, subcategorias, filtros }) {
                           </span>
                         )}
                       </div>
-                      {producto.stock > 0 && (
-                        <p className="text-sm text-gray-600 mt-2">Stock: {producto.stock}</p>
-                      )}
                     </div>
-                  </Link>
+                  </div>
                 );
               })}
             </div>
@@ -164,19 +161,34 @@ export default function ProductosIndex({ productos, subcategorias, filtros }) {
           {/* Paginación */}
           {productos && productos.links && (
             <div className="mt-8 flex justify-center">
-              <div className="flex gap-2">
-                {productos.links.map((link, index) => (
-                  <button
-                    key={index}
-                    onClick={() => link.url && router.get(link.url)}
-                    dangerouslySetInnerHTML={{ __html: link.label }}
-                    className={`px-4 py-2 rounded ${
-                      link.active
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-white text-gray-700 hover:bg-gray-100'
-                    } ${!link.url ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                  />
-                ))}
+              <div className="flex gap-2 items-center">
+                {productos.links.map((link, index) => {
+                  // Procesar el label para mostrar texto legible
+                  let label = link.label;
+                  if (label === 'pagination.previous' || label === '&laquo; Previous') {
+                    label = '← Anterior';
+                  } else if (label === 'pagination.next' || label === 'Next &raquo;') {
+                    label = 'Siguiente →';
+                  } else if (label.includes('&laquo;')) {
+                    label = label.replace('&laquo;', '←');
+                  } else if (label.includes('&raquo;')) {
+                    label = label.replace('&raquo;', '→');
+                  }
+                  
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => link.url && router.get(link.url)}
+                      className={`px-4 py-2 rounded border ${
+                        link.active
+                          ? 'bg-blue-600 text-white border-blue-600'
+                          : 'bg-white text-gray-700 hover:bg-gray-100 border-gray-300'
+                      } ${!link.url ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}

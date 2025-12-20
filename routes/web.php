@@ -31,6 +31,7 @@ Route::get('/productos/{slug}', [ProductoController::class, 'show'])->name('prod
 
 // Rutas del Carrito
 Route::get('/carrito', [CarritoController::class, 'index'])->name('carrito');
+Route::get('/carrito/count', [CarritoController::class, 'count'])->name('carrito.count');
 Route::post('/carrito/agregar', [CarritoController::class, 'add'])->name('carrito.add');
 Route::put('/carrito/{idProducto}', [CarritoController::class, 'update'])->name('carrito.update');
 Route::delete('/carrito/{idProducto}', [CarritoController::class, 'remove'])->name('carrito.remove');

@@ -67,6 +67,11 @@ class ProductoController extends Controller
             ->where('activo', true)
             ->firstOrFail();
 
+        // Obtener métodos de pago activos
+        $metodosPago = \App\Models\MetodoPago::where('activo', true)
+            ->orderBy('id')
+            ->get(['id', 'nombre', 'descripcion']);
+
         return Inertia::render('Productos/Show', [
             'producto' => [
                 'id' => $producto->id,
@@ -92,6 +97,7 @@ class ProductoController extends Controller
                     'nombre' => $producto->subcategoria->nombre,
                 ] : null,
             ],
+            'metodosPago' => $metodosPago,
         ]);
     }
 
@@ -375,5 +381,5 @@ class ProductoController extends Controller
 
     // IMPORTANTE: Redirigir de vuelta para que Inertia refresque las props
     return redirect()->back()->with('success', 'Producto agregado al carrito');
-}
+    }
 }
