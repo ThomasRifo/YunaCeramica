@@ -313,7 +313,7 @@ export default function Carrito({ items: itemsProp, total: totalProp, cantidadIt
                       <div className="flex-1">
                         <div className="font-medium text-gray-900">Envío a domicilio</div>
                         <div className="text-sm text-gray-600">${COSTO_ENVIO.toLocaleString('es-AR')}</div>
-                        <div className="text-sm text-gray-500">Solo en la zona</div>
+                        <div className="text-sm text-gray-500">Solo disponible para Cipolletti, Neuquén y Fernández Oro</div>
                       </div>
                     </label>
                   </div>

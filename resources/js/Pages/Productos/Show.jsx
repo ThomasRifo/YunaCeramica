@@ -208,7 +208,7 @@ export default function ProductoShow({ producto, metodosPago }) {
                     <div className="p-2 bg-white rounded border border-gray-200">
                       <div className="text-xs font-medium text-gray-900">Envío a domicilio</div>
                       <div className="text-xs text-gray-600 mt-0.5">
-                        $5.000 - Solo en la zona
+                        $5.000 - Solo en Cipolletti, Neuquén y Fernández Oro
                       </div>
                     </div>
                     <div className="p-2 bg-white rounded border border-gray-200">
