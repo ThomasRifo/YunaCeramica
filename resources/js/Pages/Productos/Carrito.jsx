@@ -1,6 +1,7 @@
 import { Head, Link, router } from "@inertiajs/react";
 import { useState, useEffect } from "react";
 import { ShoppingCart, Plus, Minus, Trash2, ArrowRight } from "lucide-react";
+import Modal from "@/Components/Modal";
 
 export default function Carrito({ items: itemsProp, total: totalProp, cantidadItems }) {
   const [items, setItems] = useState(itemsProp || []);
@@ -14,6 +15,11 @@ export default function Carrito({ items: itemsProp, total: totalProp, cantidadIt
     }
     return 'retiro';
   });
+  
+  // Estados para modales
+  const [modalError, setModalError] = useState({ isOpen: false, message: '' });
+  const [modalConfirmarEliminar, setModalConfirmarEliminar] = useState({ isOpen: false, idProducto: null });
+  const [modalConfirmarVaciar, setModalConfirmarVaciar] = useState({ isOpen: false });
   
   // Costo de envío (puedes ajustar este valor)
   const COSTO_ENVIO = 5000; // $5000 pesos argentinos
@@ -55,20 +61,23 @@ export default function Carrito({ items: itemsProp, total: totalProp, cantidadIt
         // Recargar la página para obtener datos actualizados
         router.reload({ only: ['items', 'total', 'cantidadItems'] });
       } else {
-        alert(data.message || 'Error al actualizar la cantidad');
+        setModalError({ isOpen: true, message: data.message || 'Error al actualizar la cantidad' });
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Error al actualizar la cantidad. Por favor, intenta de nuevo.');
+      setModalError({ isOpen: true, message: 'Error al actualizar la cantidad. Por favor, intenta de nuevo.' });
     } finally {
       setActualizando(prev => ({ ...prev, [idProducto]: false }));
     }
   };
 
   const eliminarProducto = async (idProducto) => {
-    if (!confirm('¿Estás seguro de que deseas eliminar este producto del carrito?')) {
-      return;
-    }
+    setModalConfirmarEliminar({ isOpen: true, idProducto });
+  };
+
+  const confirmarEliminarProducto = async () => {
+    const idProducto = modalConfirmarEliminar.idProducto;
+    if (!idProducto) return;
 
     setEliminando(prev => ({ ...prev, [idProducto]: true }));
 
@@ -87,21 +96,21 @@ export default function Carrito({ items: itemsProp, total: totalProp, cantidadIt
         // Recargar la página para obtener datos actualizados
         router.reload({ only: ['items', 'total', 'cantidadItems'] });
       } else {
-        alert(data.message || 'Error al eliminar el producto');
+        setModalError({ isOpen: true, message: data.message || 'Error al eliminar el producto' });
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Error al eliminar el producto. Por favor, intenta de nuevo.');
+      setModalError({ isOpen: true, message: 'Error al eliminar el producto. Por favor, intenta de nuevo.' });
     } finally {
       setEliminando(prev => ({ ...prev, [idProducto]: false }));
     }
   };
 
   const vaciarCarrito = async () => {
-    if (!confirm('¿Estás seguro de que deseas vaciar el carrito?')) {
-      return;
-    }
+    setModalConfirmarVaciar({ isOpen: true });
+  };
 
+  const confirmarVaciarCarrito = async () => {
     try {
       const response = await fetch('/carrito/vaciar', {
         method: 'DELETE',
@@ -116,11 +125,11 @@ export default function Carrito({ items: itemsProp, total: totalProp, cantidadIt
       if (response.ok) {
         router.reload({ only: ['items', 'total', 'cantidadItems'] });
       } else {
-        alert(data.message || 'Error al vaciar el carrito');
+        setModalError({ isOpen: true, message: data.message || 'Error al vaciar el carrito' });
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Error al vaciar el carrito. Por favor, intenta de nuevo.');
+      setModalError({ isOpen: true, message: 'Error al vaciar el carrito. Por favor, intenta de nuevo.' });
     }
   };
 
@@ -363,6 +372,39 @@ export default function Carrito({ items: itemsProp, total: totalProp, cantidadIt
           </div>
         </div>
       </div>
+
+      {/* Modales */}
+      <Modal
+        isOpen={modalError.isOpen}
+        onClose={() => setModalError({ isOpen: false, message: '' })}
+        title="Error"
+        message={modalError.message}
+        type="error"
+      />
+
+      <Modal
+        isOpen={modalConfirmarEliminar.isOpen}
+        onClose={() => setModalConfirmarEliminar({ isOpen: false, idProducto: null })}
+        title="Confirmar eliminación"
+        message="¿Estás seguro de que deseas eliminar este producto del carrito?"
+        type="warning"
+        showCancel={true}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        onConfirm={confirmarEliminarProducto}
+      />
+
+      <Modal
+        isOpen={modalConfirmarVaciar.isOpen}
+        onClose={() => setModalConfirmarVaciar({ isOpen: false })}
+        title="Confirmar acción"
+        message="¿Estás seguro de que deseas vaciar el carrito?"
+        type="warning"
+        showCancel={true}
+        confirmText="Vaciar carrito"
+        cancelText="Cancelar"
+        onConfirm={confirmarVaciarCarrito}
+      />
     </>
   );
 }

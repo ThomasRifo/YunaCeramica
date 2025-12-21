@@ -7,6 +7,15 @@ export default function ProductosIndex({ productos, subcategorias, filtros }) {
 
   // Búsqueda dinámica con debounce
   useEffect(() => {
+    // Solo ejecutar si la búsqueda realmente cambió (no en el mount inicial si ya hay filtros)
+    const busquedaActual = busqueda.trim();
+    const busquedaAnterior = filtros?.busqueda || '';
+    
+    // Si la búsqueda no cambió, no hacer nada
+    if (busquedaActual === busquedaAnterior) {
+      return;
+    }
+
     // Limpiar timeout anterior si existe
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
@@ -14,17 +23,25 @@ export default function ProductosIndex({ productos, subcategorias, filtros }) {
 
     // Crear nuevo timeout para ejecutar la búsqueda después de 500ms sin escribir
     timeoutRef.current = setTimeout(() => {
-      const params = { ...filtros };
-      if (busqueda.trim()) {
-        params.busqueda = busqueda.trim();
-      } else {
-        delete params.busqueda;
+      const params = {};
+      
+      // Preservar filtro de subcategoría si existe
+      if (filtros?.subcategoria) {
+        params.subcategoria = filtros.subcategoria;
       }
       
+      // Agregar búsqueda si hay texto
+      if (busquedaActual) {
+        params.busqueda = busquedaActual;
+      }
+      
+      // Resetear a página 1 cuando cambia la búsqueda
+      // (no preservar page cuando hay cambio de búsqueda)
+      
       router.get('/productos', params, {
-        preserveState: true,
-        preserveScroll: true,
-        replace: true, // Usar replace para no agregar al historial
+        preserveState: false,
+        preserveScroll: false,
+        replace: true,
       });
     }, 500); // Esperar 500ms después de que el usuario deje de escribir
 

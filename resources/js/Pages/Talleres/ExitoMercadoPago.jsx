@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Button } from "@/Components/ui/button";
 import { Copy, Check } from "lucide-react";
+import Modal from "@/Components/Modal";
 
 export default function ExitoMercadoPago({ taller, referido, nombre, apellido }) {
     const [copiado, setCopiado] = useState(false);
+    const [modalError, setModalError] = useState({ isOpen: false, message: '' });
     const linkReferido = `${window.location.origin}/taller/${taller.id}/referido/${referido}`;
 
     const copiarLink = async () => {
@@ -12,7 +14,7 @@ export default function ExitoMercadoPago({ taller, referido, nombre, apellido })
             setCopiado(true);
             setTimeout(() => setCopiado(false), 2000);
         } catch (err) {
-            alert("No se pudo copiar el link. Por favor, cópialo manualmente.");
+            setModalError({ isOpen: true, message: "No se pudo copiar el link. Por favor, cópialo manualmente." });
         }
     };
 
@@ -68,6 +70,14 @@ export default function ExitoMercadoPago({ taller, referido, nombre, apellido })
             >
                 Volver a Talleres
             </Button>
+
+            <Modal
+                isOpen={modalError.isOpen}
+                onClose={() => setModalError({ isOpen: false, message: '' })}
+                title="Error"
+                message={modalError.message}
+                type="error"
+            />
         </div>
     );
 }

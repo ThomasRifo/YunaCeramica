@@ -32,6 +32,7 @@ import { DataGrid } from '@mui/x-data-grid';
 import dayjs from 'dayjs';
 import { Download as DownloadIcon, Email as EmailIcon } from '@mui/icons-material';
 import EmailModal from './EmailModal';
+import Modal from '@/Components/Modal';
 
 export default function View({ taller, tallerClientesPagados, tallerClientesPendientes }) {
   const theme = useTheme();
@@ -48,6 +49,7 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
   const [participantePagoParcial, setParticipantePagoParcial] = useState(null);
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [modalError, setModalError] = useState({ isOpen: false, message: '' });
   const [toast, setToast] = useState({ open: false, message: '', severity: 'success' });
 
   // Declaración de todas las variables necesarias
@@ -396,10 +398,10 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
         // Opcional: recargar la página o actualizar los datos localmente
         window.location.reload();
       } else {
-        alert('Error al guardar los cambios: ' + (data.error || 'Error desconocido'));
+        setModalError({ isOpen: true, message: 'Error al guardar los cambios: ' + (data.error || 'Error desconocido') });
       }
     } catch (e) {
-      alert('Error al guardar los cambios: ' + e.message);
+      setModalError({ isOpen: true, message: 'Error al guardar los cambios: ' + e.message });
     } finally {
       setGuardando(false);
     }
@@ -802,6 +804,14 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
           {toast.message}
         </Alert>
       </Snackbar>
+
+      <Modal
+        isOpen={modalError.isOpen}
+        onClose={() => setModalError({ isOpen: false, message: '' })}
+        title="Error"
+        message={modalError.message}
+        type="error"
+      />
     </>
   );
 }
