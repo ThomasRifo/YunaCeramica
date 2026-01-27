@@ -1,6 +1,7 @@
 import { Head, Link, router } from "@inertiajs/react";
 import { useState } from "react";
 import { ShoppingCart, Plus, Minus, CheckCircle, XCircle, ChevronDown, ChevronUp } from "lucide-react";
+import Breadcrumbs from "@/Components/Breadcrumbs";
 
 
 export default function ProductoShow({ producto, metodosPago }) {
@@ -63,16 +64,25 @@ export default function ProductoShow({ producto, metodosPago }) {
     }
   };
 
+  const breadcrumbItems = [
+    {
+      label: 'Productos',
+      href: '/productos'
+    },
+    {
+      label: producto.nombre,
+      href: '#'
+    }
+  ];
+
   return (
     <>
       <Head title={`${producto.nombre} - Yuna Cerámica`} />
       
-      <div className="max-w-7xl mx-auto px-4 py-32"> 
-        <Link href="/productos" className="text-blue-600 hover:underline mb-4 inline-block">
-          ← Volver al catálogo
-        </Link>
+      <div className="max-w-7xl mx-auto px-4 py-24 md:pt-28"> 
+        <Breadcrumbs items={breadcrumbItems} />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mt-8 md:mt-16">
           {/* Imagen */}
           <div className="space-y-4">
             <div className="aspect-square bg-white rounded-xl overflow-hidden shadow-md">
@@ -162,7 +172,7 @@ export default function ProductoShow({ producto, metodosPago }) {
                   onClick={() => setMetodosPagoAbierto(!metodosPagoAbierto)}
                   className="w-full flex items-center justify-between p-3 hover:bg-gray-100 transition-colors"
                 >
-                  <h2 className="text-base font-semibold text-gray-900">Métodos de Pago</h2>
+                  <h2 className="text-xl font-semibold text-gray-900">Métodos de Pago</h2>
                   {metodosPagoAbierto ? (
                     <ChevronUp className="w-4 h-4 text-gray-600" />
                   ) : (
@@ -196,7 +206,7 @@ export default function ProductoShow({ producto, metodosPago }) {
                   onClick={() => setFormasEnvioAbierto(!formasEnvioAbierto)}
                   className="w-full flex items-center justify-between p-3 hover:bg-gray-100 transition-colors"
                 >
-                  <h2 className="text-base font-semibold text-gray-900">Formas de Envío</h2>
+                  <h2 className="text-xl font-semibold text-gray-900">Formas de Envío</h2>
                   {formasEnvioAbierto ? (
                     <ChevronUp className="w-4 h-4 text-gray-600" />
                   ) : (

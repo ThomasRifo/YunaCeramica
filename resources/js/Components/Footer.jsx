@@ -67,11 +67,11 @@ export default function Footer() {
     };
 
     return (
-        <footer loading="lazy" className="bg-black/85 text-white pt-16 pb-0">
+        <footer loading="lazy" className="bg-black/85 text-white pt-10 pb-0">
             <div className="max-w-7xl mx-auto px-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                    <div>
-                        <h3 className="text-xl font-bold mb-4">Información</h3>
+                    <div className="flex flex-col">
+                        <h3 className="text-2xl font-bold mb-4">Información</h3>
                         <div className="space-y-3">
                             <div className="flex items-center gap-2">
                                 <MapPin className="w-6 h-6" />
@@ -81,8 +81,7 @@ export default function Footer() {
                                 <Mail className="w-6 h-6" />
                                 <span>yunaceramica@gmail.com</span>
                             </div>
-
-                            <div className="flex gap-4 mb-6">
+                            <div className="flex gap-4">
                                 <a
                                     href="https://instagram.com/yunaceramica"
                                     target="_blank"
@@ -101,11 +100,11 @@ export default function Footer() {
                         </div>
                     </div>
 
-                    <div>
-                        <h3 className="text-xl font-bold mb-4">
+                    <div className="flex flex-col">
+                        <h3 className="text-2xl font-bold mb-4">
                             Enlaces Rápidos
                         </h3>
-                        <ul className="space-y-2">
+                        <ul className="space-y-3">
                             <li>
                                 <Link
                                     href="/talleres"
@@ -142,9 +141,9 @@ export default function Footer() {
                     </div>
 
                     {/* Newsletter para recibir información sobre nuevos talleres */}
-                    <div>
-                        <h3 className="text-xl font-bold mb-4">Newsletter</h3>
-                        <p className="text-gray-300 mb-4">
+                    <div className="flex flex-col">
+                        <h3 className="text-2xl font-bold mb-4">Newsletter</h3>
+                        <p className="text-gray-300 mb-3">
                             Suscríbite para recibir información sobre nuevos
                             talleres
                         </p>
@@ -184,11 +183,11 @@ export default function Footer() {
                         </form>
                     </div>
 
-                    <div className="ml-6">
-                        <h3 className="text-xl font-bold mb-4 ">
+                    <div className="flex flex-col">
+                        <h3 className="text-2xl font-bold mb-4 ">
                             Métodos de Pago
                         </h3>
-                        <div className="space-y-4">
+                        <div className="space-y-3">
                             <div className="flex items-center gap-4">
                                 <img
                                     src="/storage/uploads/MercadoPago.svg"
@@ -197,7 +196,7 @@ export default function Footer() {
                                     className="h-8"
                                 />
                                 <span title="Transferencia">
-                                    <Landmark className="w-8 h-8 text-customGray mb-2" />
+                                    <Landmark className="w-8 h-8 text-customGray" />
                                 </span>
                             </div>
                         </div>

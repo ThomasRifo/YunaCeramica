@@ -58,31 +58,10 @@ export default function Contacto() {
   };
 
   return (
-    <div className="max-w-xl mx-auto py-32 px-4">
+    <div className="max-w-xl mx-auto py-32 px-4 h-96 md:h-96 md:py-96">
       <Head title="Contacto" />
-      <h1 className="text-4xl md:text-5xl font-bold mb-6 text-center">Contacto</h1>
-      <p className="text-center text-lg mb-10 text-gray-700">¿Tenés dudas, consultas o querés comunicarte? Completá el formulario y te responderemos a la brevedad.</p>
-      <form onSubmit={handleSubmit} className="space-y-6 bg-white/80 rounded-xl shadow p-8">
-        <div>
-          <Label htmlFor="nombre">Nombre</Label>
-          <Input id="nombre" name="nombre" value={form.nombre} onChange={handleChange} required className="h-12 mt-1 border border-gray-300 focus:border-gray-400" />
-        </div>
-        <div>
-          <Label htmlFor="apellido">Apellido</Label>
-          <Input id="apellido" name="apellido" value={form.apellido} onChange={handleChange} required className="h-12 mt-1 border border-gray-300 focus:border-gray-400" />
-        </div>
-        <div>
-          <Label htmlFor="email">Email</Label>
-          <Input id="email" name="email" type="email" value={form.email} onChange={handleChange} required className="h-12 mt-1 border border-gray-300 focus:border-gray-400" />
-        </div>
-        <div>
-          <Label htmlFor="consulta">Consulta</Label>
-          <Textarea id="consulta" name="consulta" value={form.consulta} onChange={handleChange} required className="mt-1 border border-gray-300 focus:border-gray-400" rows={5} />
-        </div>
-        <Button type="submit" className="w-full h-12 text-lg" disabled={loading}>
-          {loading ? "Enviando..." : "Enviar mensaje"}
-        </Button>
-      </form>
+      <h1 className="text-6xl md:text-8xl font-bold mb-6 text-center ">PROXIMAMENTE</h1>
+      
     </div>
   );
 }

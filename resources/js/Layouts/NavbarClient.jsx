@@ -12,6 +12,8 @@ export default function NavbarClient({ children }) {
     const [cantidadCarrito, setCantidadCarrito] = useState(0);
     const isTalleres =
         url.startsWith("/talleres") || url.startsWith("/talleres-");
+    const isEventosPrivados = 
+        url.startsWith("/eventos-privados") || route().current("eventosPrivados");
     const user = usePage().props.auth.user;
 
     const inherit = ["/talleres", "/productos", "/"].includes(url);
@@ -77,7 +79,7 @@ export default function NavbarClient({ children }) {
                         />
                     </Link>
 
-                    <div className="text-base hidden md:flex place-items-center gap-14 py-4 px-4">
+                    <div className="hidden md:flex place-items-center gap-14 py-4 px-4 font-amatic font-normal text-3xl">
                         <Link href="/">Home</Link>
                         <Link
                             className={cn(
@@ -97,6 +99,15 @@ export default function NavbarClient({ children }) {
                             href="/talleres"
                         >
                             Talleres
+                        </Link>
+                        <Link
+                            className={cn(
+                                "relative transition-all duration-300 after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-full after:origin-center after:scale-x-0 after:bg-white after:transition-transform after:duration-300",
+                                isEventosPrivados && "after:scale-x-100",
+                            )}
+                            href="/eventos-privados"
+                        >
+                            Eventos Privados
                         </Link>
                         <Link href="/contacto">Contacto</Link>
                         <Link
@@ -180,7 +191,7 @@ export default function NavbarClient({ children }) {
 
                 {/* Mobile Menu */}
                 {menuOpen && (
-                    <div className="md:hidden bg-customGray text-white flex flex-col px-4 py-4 space-y-4 text-lg">
+                    <div className="md:hidden bg-customGray text-white flex flex-col px-4 py-4 space-y-4 font-amatic font-normal text-xl">
                         <Link href="/" onClick={() => setMenuOpen(false)}>
                             Home
                         </Link>
@@ -189,6 +200,9 @@ export default function NavbarClient({ children }) {
                         </Link>
                         <Link href="/talleres" onClick={() => setMenuOpen(false)}>
                             Talleres
+                        </Link>
+                        <Link href="/eventos-privados" onClick={() => setMenuOpen(false)}>
+                            Eventos Privados
                         </Link>
                         <Link href="/contacto" onClick={() => setMenuOpen(false)}>
                             Contacto

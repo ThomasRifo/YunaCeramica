@@ -17,7 +17,8 @@ export default {
     			sans: [
     				'Figtree',
                     ...defaultTheme.fontFamily.sans
-                ]
+                ],
+    			'amatic': ['Amatic SC', 'cursive']
     		},
     		colors: {
     			customGray: '#a9a9a9',

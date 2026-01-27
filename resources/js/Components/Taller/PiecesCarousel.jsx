@@ -62,7 +62,7 @@ export default function PiecesCarousel({ images, title }) {
       transition={{ duration: 1. }}
       className="relative"
     >
-      <h2 className="text-2xl md:text-3xl font-bold text-center mb-6">{title}</h2>
+      <h2 className="text-4xl md:text-5xl font-bold text-center mb-6">{title}</h2>
 
       <div className="relative">
         <Swiper

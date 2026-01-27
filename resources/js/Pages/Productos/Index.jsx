@@ -86,8 +86,8 @@ export default function ProductosIndex({ productos, subcategorias, filtros }) {
             className="object-cover w-full h-full object-[center_50%]" 
           />
           <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center text-white text-center px-4">
-            <h1 className="text-4xl md:text-5xl font-bold">Nuestros Productos</h1>
-            <p className="mt-2 md:mt-4 text-2xl md:text-2xl">Arte, barro y pincel. Explorá nuestra colección de piezas únicas diseñadas para acompañar tus rituales diarios</p>
+            <h1 className="mt-16 text-6xl md:text-7xl font-bold">Nuestros Productos</h1>
+            <p className="mt-2 text-lg md:text-3xl">Arte, barro y pincel. Explorá nuestra colección de piezas únicas diseñadas para acompañar tus rituales diarios</p>
           </div>
         </div>
 
@@ -171,7 +171,7 @@ export default function ProductosIndex({ productos, subcategorias, filtros }) {
                       )}
                     </div>
                     <div className="p-4">
-                      <h3 className="font-semibold text-lg mb-2 line-clamp-2">{producto.nombre}</h3>
+                      <h3 className="font-semibold text-2xl mb-2 line-clamp-2">{producto.nombre}</h3>
                       <div className="flex items-center gap-2">
                         {producto.descuento ? (
                           <>

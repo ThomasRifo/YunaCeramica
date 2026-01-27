@@ -76,16 +76,16 @@ export default function TalleresIndex({ reviews, talleres, imagenesPiezas, subca
             Tu navegador no soporta el formato de video.
           </video>
           <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center text-white text-center px-4">
-            <h1 className="text-5xl pt-16 md:text-6xl font-bold">Workshop de Cerámica</h1>
+            <h1 className="text-6xl pt-16 md:text-7xl font-bold">Experiencias de Cerámica</h1>
             <p className="mt-5 text-lg md:text-3xl max-w">
-              Una experiencia creativa, una pieza única, un recuerdo para toda la vida.
+              Un encuentro creativo, una pieza única, un recuerdo para toda la vida.
             </p>
           </div>
         </section>
 
         {/* Talleres Section */}
         <section className="mx-auto max-w-7xl" aria-label="Tipos de talleres disponibles">
-          <h2 className="text-center font-semibold text-2xl md:text-4xl pt-8 md:pt-14 md:pb-8">
+          <h2 className="text-center font-semibold text-4xl md:text-5xl pt-8 md:pt-14 md:pb-8">
             Elegí tu experiencia
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 px-4 sm:px-16 py-8">
@@ -102,9 +102,9 @@ export default function TalleresIndex({ reviews, talleres, imagenesPiezas, subca
                       loading="lazy"
                     />
                     <div className="absolute inset-0 bg-black/30 flex p-10 justify-center items-center">
-                      <h3 className="text-white text-end text-4xl md:text-6xl font-semibold whitespace-pre-line">
+                      <p className="text-white text-end text-4xl md:text-6xl font-semibold whitespace-pre-line">
                         {subcat.nombre.toUpperCase()}
-                      </h3>
+                      </p>
                     </div>
                     {estado === 'cupo_lleno' && (
                       <div className="absolute inset-0 bg-white/50 flex p-8 items-end justify-center">
@@ -126,9 +126,9 @@ export default function TalleresIndex({ reviews, talleres, imagenesPiezas, subca
                         loading="lazy"
                       />
                       <div className="absolute inset-0 bg-black/30 flex p-10 justify-center items-center">
-                        <h3 className="text-white text-end text-4xl md:text-6xl font-semibold whitespace-pre-line">
+                        <p className="text-white text-end text-4xl md:text-6xl font-semibold whitespace-pre-line">
                           {subcat.nombre.toUpperCase()}
-                        </h3>
+                        </p>
                       </div>
                       <div className="absolute inset-0 bg-white/50 flex p-8 items-end justify-center">
                         <div className="text-center bg-black/70 rounded-xl md:p-4 p-3 md:mb-20 mb-6 w-full">
@@ -149,7 +149,7 @@ export default function TalleresIndex({ reviews, talleres, imagenesPiezas, subca
         </section>
 
         {/* Reseñas */}
-        <section aria-label="Reseñas de nuestros talleres">
+        <section className="text-4xl md:text-5xl" aria-label="Reseñas de nuestros talleres">
           <ReviewsSection reviews={reviews} />
         </section>
       </main>

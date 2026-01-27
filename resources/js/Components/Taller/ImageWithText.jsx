@@ -49,7 +49,7 @@ export default function ImageWithText({ image, title, description, extraContent,
     <h2 className="text-2xl md:text-3xl font-bold mb-4 text-center md:text-left">{title}</h2>
 
     <div
-        className="text-gray-700 prose max-w-none text-left space-y-4"
+        className="text-gray-700 prose max-w-none text-left space-y-4 [&>p]:font-sans [&>p]:font-normal [&>ul]:font-sans [&>ol]:font-sans [&>li]:font-sans [&>span]:font-sans [&>div]:font-sans"
         dangerouslySetInnerHTML={{ __html: description }}
     />
 

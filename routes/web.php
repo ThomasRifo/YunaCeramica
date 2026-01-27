@@ -29,6 +29,10 @@ Route::get('/', function () {
 Route::get('/productos', [ProductoController::class, 'index'])->name('productos');
 Route::get('/productos/{slug}', [ProductoController::class, 'show'])->name('productos.show');
 
+Route::get('/eventos-privados', function() {
+    return Inertia::render('EventosPrivados');
+})->name('eventosPrivados');
+
 // Rutas del Carrito
 Route::get('/carrito', [CarritoController::class, 'index'])->name('carrito');
 Route::get('/carrito/count', [CarritoController::class, 'count'])->name('carrito.count');

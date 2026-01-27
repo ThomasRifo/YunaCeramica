@@ -109,8 +109,14 @@ class ReviewsController extends Controller
 
     public function indexDashboard()
     {
-        $pendingReviews = Reviews::where('habilitada', false)->orderBy('fecha_publicacion', 'desc')->get();
-        $enabledReviews = Reviews::where('habilitada', true)->orderBy('fecha_publicacion', 'desc')->get();
+        $pendingReviews = Reviews::where('habilitada', false)
+            ->orderBy('fecha_publicacion', 'desc')
+            ->get()
+            ->makeVisible(['email', 'idTallerCliente']);
+        $enabledReviews = Reviews::where('habilitada', true)
+            ->orderBy('fecha_publicacion', 'desc')
+            ->get()
+            ->makeVisible(['email', 'idTallerCliente']);
         
         return Inertia::render('Dashboard/Reviews/Index', [
             'pendingReviews' => $pendingReviews,
@@ -120,7 +126,10 @@ class ReviewsController extends Controller
 
     public function indexEnabledDashboard()
     {
-        $reviews = Reviews::where('habilitada', true)->orderBy('fecha_publicacion', 'desc')->get();
+        $reviews = Reviews::where('habilitada', true)
+            ->orderBy('fecha_publicacion', 'desc')
+            ->get()
+            ->makeVisible(['email', 'idTallerCliente']);
         
         return Inertia::render('Dashboard/Reviews/Index', [
             'enabledReviews' => $reviews
