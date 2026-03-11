@@ -27,15 +27,18 @@ import {
   TableRow,
   Snackbar,
   Alert,
+  IconButton,
+  useMediaQuery,
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import dayjs from 'dayjs';
-import { Download as DownloadIcon, Email as EmailIcon } from '@mui/icons-material';
+import { Download as DownloadIcon, Email as EmailIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import EmailModal from './EmailModal';
 import Modal from '@/Components/Modal';
 
 export default function View({ taller, tallerClientesPagados, tallerClientesPendientes }) {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [selectedParticipant, setSelectedParticipant] = useState(null);
   const [updatePagoOpen, setUpdatePagoOpen] = useState(false);
@@ -47,6 +50,9 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
   const [resultados, setResultados] = useState([]);
   const [confirmarPagoParcialOpen, setConfirmarPagoParcialOpen] = useState(false);
   const [participantePagoParcial, setParticipantePagoParcial] = useState(null);
+  const [eliminarParticipanteOpen, setEliminarParticipanteOpen] = useState(false);
+  const [participanteAEliminar, setParticipanteAEliminar] = useState(null);
+  const [editingRow, setEditingRow] = useState(null); // { tipo, rowId, resourceId, values }
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [modalError, setModalError] = useState({ isOpen: false, message: '' });
@@ -134,8 +140,44 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
   // Columnas para la tabla de pagados/parciales
   const columnsPagados = [
     { field: 'numero', headerName: '#', width: 60 },
-    { field: 'nombre', headerName: 'Nombre', flex: 1 },
-    { field: 'apellido', headerName: 'Apellido', flex: 1 },
+    {
+      field: 'nombre',
+      headerName: 'Nombre',
+      flex: 1,
+      renderCell: (params) => {
+        const isEditing = editingRow && params.row.id === editingRow.rowId && params.row.tipo === editingRow.tipo;
+        if (isEditing) {
+          return (
+            <input
+              className="border rounded px-2 py-1 w-full"
+              value={editingRow.values.nombre}
+              onChange={(e) => updateEditingField('nombre', e.target.value)}
+              onKeyDown={(e) => e.stopPropagation()}
+            />
+          );
+        }
+        return params.row.nombre;
+      },
+    },
+    {
+      field: 'apellido',
+      headerName: 'Apellido',
+      flex: 1,
+      renderCell: (params) => {
+        const isEditing = editingRow && params.row.id === editingRow.rowId && params.row.tipo === editingRow.tipo;
+        if (isEditing) {
+          return (
+            <input
+              className="border rounded px-2 py-1 w-full"
+              value={editingRow.values.apellido}
+              onChange={(e) => updateEditingField('apellido', e.target.value)}
+              onKeyDown={(e) => e.stopPropagation()}
+            />
+          );
+        }
+        return params.row.apellido;
+      },
+    },
     { 
       field: 'estadoPago', 
       headerName: 'Estado de pago', 
@@ -164,19 +206,163 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
       }
     },
     { field: 'menu', headerName: 'Menú', flex: 1 },
-    { field: 'email', headerName: 'Email', flex: 1 },
-    { field: 'telefono', headerName: 'Teléfono', flex: 1 },
+    {
+      field: 'email',
+      headerName: 'Email',
+      flex: 1,
+      renderCell: (params) => {
+        const isEditing = editingRow && params.row.id === editingRow.rowId && params.row.tipo === editingRow.tipo;
+        if (isEditing) {
+          return (
+            <input
+              className="border rounded px-2 py-1 w-full"
+              value={editingRow.values.email}
+              onChange={(e) => updateEditingField('email', e.target.value)}
+              onKeyDown={(e) => e.stopPropagation()}
+            />
+          );
+        }
+        return params.row.email;
+      },
+    },
+    {
+      field: 'telefono',
+      headerName: 'Teléfono',
+      flex: 1,
+      renderCell: (params) => {
+        const isEditing = editingRow && params.row.id === editingRow.rowId && params.row.tipo === editingRow.tipo;
+        if (isEditing) {
+          return (
+            <input
+              className="border rounded px-2 py-1 w-full"
+              value={editingRow.values.telefono}
+              onChange={(e) => updateEditingField('telefono', e.target.value)}
+              onKeyDown={(e) => e.stopPropagation()}
+            />
+          );
+        }
+        return params.row.telefono;
+      },
+    },
     { field: 'metodoPago', headerName: 'Método de pago', flex: 1 },
+    {
+      field: 'acciones',
+      headerName: 'Acciones',
+      width: 160,
+      sortable: false,
+      renderCell: (params) => {
+        if (!params.row.clienteId) return null;
+        const isEditing = editingRow && params.row.id === editingRow.rowId && params.row.tipo === editingRow.tipo;
+        if (isEditing) {
+          return (
+            <>
+              <IconButton color="success" size="small" onClick={saveEditingRow}>
+                ✓
+              </IconButton>
+              <IconButton color="error" size="small" onClick={cancelEditingRow}>
+                ×
+              </IconButton>
+            </>
+          );
+        }
+        return (
+          <>
+            <IconButton color="primary" size="small" onClick={() => startEditingRow(params.row)}>
+              ✎
+            </IconButton>
+            <IconButton
+              color="error"
+              size="small"
+              onClick={() => handleEliminarParticipante(params.row)}
+            >
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          </>
+        );
+      },
+    },
   ];
 
   // Columnas para la tabla de pendientes (agrego método de pago y select de estado)
   const columnsPendientes = [
-    { field: 'nombre', headerName: 'Nombre', flex: 1 },
-    { field: 'apellido', headerName: 'Apellido', flex: 1 },
+    {
+      field: 'nombre',
+      headerName: 'Nombre',
+      flex: 1,
+      renderCell: (params) => {
+        const isEditing = editingRow && params.row.id === editingRow.rowId && params.row.tipo === editingRow.tipo;
+        if (isEditing) {
+          return (
+            <input
+              className="border rounded px-2 py-1 w-full"
+              value={editingRow.values.nombre}
+              onChange={(e) => updateEditingField('nombre', e.target.value)}
+              onKeyDown={(e) => e.stopPropagation()}
+            />
+          );
+        }
+        return params.row.nombre;
+      },
+    },
+    {
+      field: 'apellido',
+      headerName: 'Apellido',
+      flex: 1,
+      renderCell: (params) => {
+        const isEditing = editingRow && params.row.id === editingRow.rowId && params.row.tipo === editingRow.tipo;
+        if (isEditing) {
+          return (
+            <input
+              className="border rounded px-2 py-1 w-full"
+              value={editingRow.values.apellido}
+              onChange={(e) => updateEditingField('apellido', e.target.value)}
+              onKeyDown={(e) => e.stopPropagation()}
+            />
+          );
+        }
+        return params.row.apellido;
+      },
+    },
     { field: 'estadoPago', headerName: 'Estado de pago', flex: 1 },
     { field: 'menu', headerName: 'Menú', flex: 1 },
-    { field: 'email', headerName: 'Email', flex: 1 },
-    { field: 'telefono', headerName: 'Teléfono', flex: 1 },
+    {
+      field: 'email',
+      headerName: 'Email',
+      flex: 1,
+      renderCell: (params) => {
+        const isEditing = editingRow && params.row.id === editingRow.rowId && params.row.tipo === editingRow.tipo;
+        if (isEditing) {
+          return (
+            <input
+              className="border rounded px-2 py-1 w-full"
+              value={editingRow.values.email}
+              onChange={(e) => updateEditingField('email', e.target.value)}
+              onKeyDown={(e) => e.stopPropagation()}
+            />
+          );
+        }
+        return params.row.email;
+      },
+    },
+    {
+      field: 'telefono',
+      headerName: 'Teléfono',
+      flex: 1,
+      renderCell: (params) => {
+        const isEditing = editingRow && params.row.id === editingRow.rowId && params.row.tipo === editingRow.tipo;
+        if (isEditing) {
+          return (
+            <input
+              className="border rounded px-2 py-1 w-full"
+              value={editingRow.values.telefono}
+              onChange={(e) => updateEditingField('telefono', e.target.value)}
+              onKeyDown={(e) => e.stopPropagation()}
+            />
+          );
+        }
+        return params.row.telefono;
+      },
+    },
     { field: 'metodoPago', headerName: 'Método de pago', flex: 1 },
     {
       field: 'nuevoEstado',
@@ -201,6 +387,42 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
           );
         }
         return null;
+      },
+    },
+    {
+      field: 'acciones',
+      headerName: 'Acciones',
+      width: 160,
+      sortable: false,
+      renderCell: (params) => {
+        if (!params.row.clienteId) return null;
+        const isEditing = editingRow && params.row.id === editingRow.rowId && params.row.tipo === editingRow.tipo;
+        if (isEditing) {
+          return (
+            <>
+              <IconButton color="success" size="small" onClick={saveEditingRow}>
+                ✓
+              </IconButton>
+              <IconButton color="error" size="small" onClick={cancelEditingRow}>
+                ×
+              </IconButton>
+            </>
+          );
+        }
+        return (
+          <>
+            <IconButton color="primary" size="small" onClick={() => startEditingRow(params.row)}>
+              ✎
+            </IconButton>
+            <IconButton
+              color="error"
+              size="small"
+              onClick={() => handleEliminarParticipante(params.row)}
+            >
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          </>
+        );
       },
     },
   ];
@@ -278,6 +500,7 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
           metodoPago: tc.metodo_pago?.nombre || 'No especificado',
           group: groupId,
           clienteId: tc.id,
+          acompanianteId: a.id,
         });
       });
     }
@@ -377,6 +600,33 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
     setConfirmDialogOpen(true);
   };
 
+  const handleEliminarParticipante = (row) => {
+    if (!row?.clienteId) return;
+    setParticipanteAEliminar({
+      id: row.clienteId,
+      nombre: row.nombre,
+      apellido: row.apellido,
+      email: row.email,
+    });
+    setEliminarParticipanteOpen(true);
+  };
+
+  const handleConfirmarEliminarParticipante = () => {
+    if (!participanteAEliminar?.id) return;
+
+    router.put(
+      route('dashboard.taller.actualizarPago', participanteAEliminar.id),
+      { nuevoEstado: 6, enviarCorreo: false },
+      {
+        preserveScroll: true,
+        onSuccess: () => {
+          setEliminarParticipanteOpen(false);
+          setParticipanteAEliminar(null);
+        },
+      }
+    );
+  };
+
   const handleConfirmarCambios = async () => {
     setGuardando(true);
     try {
@@ -406,13 +656,78 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
       setGuardando(false);
     }
   };
+  const startEditingRow = (row) => {
+    if (!row) return;
+    setEditingRow({
+      tipo: row.tipo,
+      rowId: row.id, // coincide con DataGrid row.id (tc-..., ac-...)
+      resourceId: row.tipo === 'cliente' ? row.realId : row.acompanianteId, // id real en BD
+      values: {
+        nombre: row.nombre || '',
+        apellido: row.apellido || '',
+        email: row.email || '',
+        telefono: row.telefono || '',
+      },
+    });
+  };
 
-  const handleConfirmarPagoParcial = () => {
+  const cancelEditingRow = () => {
+    setEditingRow(null);
+  };
+
+  const updateEditingField = (field, value) => {
+    setEditingRow((prev) =>
+      prev
+        ? {
+            ...prev,
+            values: {
+              ...prev.values,
+              [field]: value,
+            },
+          }
+        : prev
+    );
+  };
+
+  const saveEditingRow = () => {
+    if (!editingRow) return;
+    const { tipo, resourceId, values } = editingRow;
+
+    const onSuccess = () => setEditingRow(null);
+    const options = { preserveScroll: true, onSuccess };
+
+    if (tipo === 'cliente') {
+      router.put(
+        route('dashboard.tallerCliente.update', resourceId),
+        {
+          nombre_cliente: values.nombre,
+          apellido_cliente: values.apellido,
+          email_cliente: values.email,
+          telefono_cliente: values.telefono || '',
+        },
+        options
+      );
+    } else if (tipo === 'acompaniante') {
+      router.put(
+        route('dashboard.acompaniante.update', resourceId),
+        {
+          nombre: values.nombre,
+          apellido: values.apellido,
+          email: values.email || '',
+          telefono: values.telefono || '',
+        },
+        options
+      );
+    }
+  };
+
+
+  const handleConfirmarPagoParcial = (enviarCorreo = true) => {
     if (!participantePagoParcial) return;
 
     router.put(
       route('dashboard.taller.actualizarPago', participantePagoParcial.realId),
-      { nuevoEstado: 3 },
+      { nuevoEstado: 3, enviarCorreo },
       {
         preserveScroll: true,
         onSuccess: () => {
@@ -472,6 +787,7 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
           metodoPago: tc.metodo_pago?.nombre || 'No especificado',
           group: groupId,
           clienteId: tc.id,
+          acompanianteId: a.id,
         });
       });
     }
@@ -578,7 +894,7 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
       <Box sx={{ mb: 2 }}>
         <Typography sx={{ mb: 4 }} variant="h4" gutterBottom>{taller.nombre}</Typography>
         <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 2 }}>
-          <Card sx={{ minWidth: 180, flex: 1 }}>
+          <Card sx={{ minWidth: 180, flex: 1, ...(isMobile && { minWidth: '100%' }) }}>
             <CardContent>
               <Typography variant="subtitle">Fecha: {dayjs(taller.fecha).format('DD-MM-YYYY')}</Typography><br></br>
               
@@ -587,26 +903,27 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
         
             </CardContent>
           </Card>
-          <Card sx={{ minWidth: 180, flex: 1 }}>
+          <Card sx={{ minWidth: 180, flex: 1, ...(isMobile && { minWidth: '100%' }) }}>
             <CardContent>
               <Typography sx={{ fontSize: '1.3rem' }}>Inscriptos</Typography>
               <Typography>{cantidadConfirmados} / {taller.cupoMaximo}</Typography>
               <LinearProgress variant="determinate" value={Math.min(100, (cantidadConfirmados / taller.cupoMaximo) * 100)} sx={{ height: 10, borderRadius: 5, mt: 1 }} />
             </CardContent>
           </Card>
-          <Card sx={{ minWidth: 180, flex: 1 }}>
+          <Card sx={{ minWidth: 180, flex: 1, ...(isMobile && { minWidth: '100%' }) }}>
             <CardContent>
               <Typography sx={{ fontSize: '1.3rem' }}>Total recaudado</Typography>
               <Typography sx={{ fontSize: '1.3rem' }}>${totalRecaudado.toLocaleString('es-AR')}</Typography>
             </CardContent>
           </Card>
         </Box>
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mb: 2 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mb: 2, flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : undefined }}>
           <Button
             variant="contained"
             color="primary"
             startIcon={<EmailIcon />}
             onClick={() => setEmailModalOpen(true)}
+            sx={isMobile ? { width: '100%' } : undefined}
           >
             Enviar Email a Participantes
           </Button>
@@ -615,12 +932,13 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
             color="primary"
             startIcon={<DownloadIcon />}
             onClick={() => window.open(route('talleres.descargar-lista', taller.id), '_blank')}
+            sx={isMobile ? { width: '100%' } : undefined}
           >
             Descargar Lista de Participantes
           </Button>
         </Box>
         <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 2 }}>
-          <Card sx={{ minWidth: 220, flex: 1 }}>
+          <Card sx={{ minWidth: 220, flex: 1, ...(isMobile && { minWidth: '100%' }) }}>
             <CardContent>
               <Typography variant="subtitle2">Mesas</Typography>
               <TableContainer component={Paper} sx={{ boxShadow:'none'}}>
@@ -672,7 +990,8 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
       </Box>
 
       <Typography variant="h5" gutterBottom> Confirmados</Typography>
-      <Paper sx={{ height: 400, width: '100%', mb: 4 }}>
+      <Box sx={{ width: '100%', mb: 4, ...(isMobile && { overflowX: 'auto', WebkitOverflowScrolling: 'touch', mx: -2, px: 2 }) }}>
+        <Paper sx={{ height: 400, width: isMobile ? 'max-content' : '100%', minWidth: isMobile ? 800 : undefined }}>
         <DataGrid
           rows={rowsPagados}
           columns={columnsPagados}
@@ -700,9 +1019,11 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
           }}
         />
       </Paper>
+      </Box>
 
       <Typography variant="h5" gutterBottom>Pendientes de Pago</Typography>
-      <Paper sx={{ height: 400, width: '100%', mb: 2 }}>
+      <Box sx={{ width: '100%', mb: 2, ...(isMobile && { overflowX: 'auto', WebkitOverflowScrolling: 'touch', mx: -2, px: 2 }) }}>
+        <Paper sx={{ height: 400, width: isMobile ? 'max-content' : '100%', minWidth: isMobile ? 800 : undefined }}>
         <DataGrid
           rows={rowsPendientes}
           columns={columnsPendientes}
@@ -730,6 +1051,7 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
           }}
         />
       </Paper>
+      </Box>
       <Button
         variant="contained"
         color="primary"
@@ -775,8 +1097,34 @@ export default function View({ taller, tallerClientesPagados, tallerClientesPend
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setConfirmarPagoParcialOpen(false)}>Cancelar</Button>
-          <Button onClick={handleConfirmarPagoParcial} color="primary" variant="contained">
+          <Button onClick={() => handleConfirmarPagoParcial(false)} color="inherit">
             Confirmar
+          </Button>
+          <Button onClick={() => handleConfirmarPagoParcial(true)} color="primary" variant="contained">
+            Confirmar y enviar correo
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Diálogo de confirmación para eliminación lógica */}
+      <Dialog open={eliminarParticipanteOpen} onClose={() => setEliminarParticipanteOpen(false)}>
+        <DialogTitle>Confirmar eliminación de participante</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            ¿Deseas marcar como eliminado al participante{' '}
+            <strong>
+              {participanteAEliminar?.nombre} {participanteAEliminar?.apellido}
+            </strong>{' '}
+            con correo <strong>{participanteAEliminar?.email}</strong>?
+          </DialogContentText>
+          <DialogContentText color="error" sx={{ mt: 2 }}>
+            Esta acción no tendrá vuelta atrás en el sistema (borrado lógico). No se enviará ningún correo.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEliminarParticipanteOpen(false)}>Cancelar</Button>
+          <Button onClick={handleConfirmarEliminarParticipante} color="error" variant="contained">
+            Confirmar eliminación
           </Button>
         </DialogActions>
       </Dialog>

@@ -26,7 +26,7 @@ export default function Index() {
             className="object-cover w-full h-full object-bottom"
           />
           <div className="absolute inset-0 bg-black/40 flex flex-col items-center  text-white text-center px-0 justify-center">
-            <h1 className="text-7xl pt-0 md:text-8xl font-bold">Yuna</h1>
+            <h1 className="text-7xl pt-0 md:text-9xl font-bold">Yuna</h1>
             <p className="mt-2 md:mt-2 text-2xl md:text-4xl max-w">
               Arte y diseño en cerámica
             </p>

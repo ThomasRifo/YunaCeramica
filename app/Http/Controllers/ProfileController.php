@@ -37,7 +37,7 @@ class ProfileController extends Controller
             ],
             'user' => $user,
             'talleres' => $user->talleres()->with('taller')->get(),
-            'compras' => $user->compras()->with('producto')->get(),
+            'compras' => $user->compras()->with(['detalles.producto', 'estado', 'estadoPago', 'metodoPago'])->get(),
         ]);
     }
 
@@ -99,7 +99,7 @@ class ProfileController extends Controller
     public function compras(Request $request): Response
     {
         $compras = $request->user()->compras()
-            ->with('producto')
+            ->with(['detalles.producto', 'estado', 'estadoPago', 'metodoPago'])
             ->latest()
             ->paginate(10);
 

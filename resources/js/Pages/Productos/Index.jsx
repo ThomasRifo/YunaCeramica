@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react";
 export default function ProductosIndex({ productos, subcategorias, filtros }) {
   const [busqueda, setBusqueda] = useState(filtros?.busqueda || '');
   const timeoutRef = useRef(null);
+  const inputRef = useRef(null);
+  const wasFocusedRef = useRef(false);
 
   // Búsqueda dinámica con debounce
   useEffect(() => {
@@ -38,8 +40,11 @@ export default function ProductosIndex({ productos, subcategorias, filtros }) {
       // Resetear a página 1 cuando cambia la búsqueda
       // (no preservar page cuando hay cambio de búsqueda)
       
+      // Guardar si el input tiene foco antes de navegar
+      wasFocusedRef.current = document.activeElement === inputRef.current;
+      
       router.get('/productos', params, {
-        preserveState: false,
+        preserveState: true,
         preserveScroll: false,
         replace: true,
       });
@@ -55,7 +60,26 @@ export default function ProductosIndex({ productos, subcategorias, filtros }) {
 
   const handleBusquedaChange = (e) => {
     setBusqueda(e.target.value);
+    // Guardar que el input tiene foco cuando el usuario está escribiendo
+    if (document.activeElement === e.target) {
+      wasFocusedRef.current = true;
+    }
   };
+
+  // Efecto para restaurar el foco después de que el componente se monte/actualice
+  useEffect(() => {
+    // Si el input tenía foco antes de la navegación, restaurarlo
+    if (wasFocusedRef.current && inputRef.current) {
+      const timer = setTimeout(() => {
+        inputRef.current?.focus();
+        // Restaurar la posición del cursor al final
+        const length = inputRef.current.value.length;
+        inputRef.current.setSelectionRange(length, length);
+        wasFocusedRef.current = false; // Resetear el flag
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [productos, filtros]); // Se ejecuta cuando cambian los productos o filtros (después de la navegación)
 
   const handleFiltro = (tipo, valor) => {
     const params = { ...filtros };
@@ -97,6 +121,7 @@ export default function ProductosIndex({ productos, subcategorias, filtros }) {
             {/* Búsqueda */}
             <div className="flex gap-2">
               <input
+                ref={inputRef}
                 type="text"
                 value={busqueda}
                 onChange={handleBusquedaChange}

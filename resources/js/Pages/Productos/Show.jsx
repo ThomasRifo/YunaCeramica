@@ -52,6 +52,14 @@ export default function ProductoShow({ producto, metodosPago }) {
 
       if (response.ok && data.success) {
         setMensaje({ tipo: 'success', texto: data.message || 'Producto agregado al carrito' });
+        const nuevaCantidad = data.carrito?.cantidadTotal;
+        if (typeof nuevaCantidad === 'number') {
+          window.dispatchEvent(
+            new CustomEvent('carrito:actualizado', {
+              detail: { cantidad: nuevaCantidad },
+            })
+          );
+        }
         // Limpiar mensaje después de 3 segundos
         setTimeout(() => setMensaje(null), 3000);
       } else {

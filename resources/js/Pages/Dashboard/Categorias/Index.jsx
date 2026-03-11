@@ -37,10 +37,10 @@ const Index = ({ subcategorias }) => {
                 }}
             >
                 <Box className="w-4/5 justify-end flex mx-auto pb-8">
-                <SearchBar
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
+                    <SearchBar
                         placeholder="Buscar por nombre o tipo..."
+                        debounceMs={0}
+                        onSearch={(term) => setSearch(term)}
                     />
                 </Box>
                 <Box className="w-1/6 flex mx-auto pb-8">

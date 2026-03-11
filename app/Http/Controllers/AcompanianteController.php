@@ -52,7 +52,16 @@ class AcompanianteController extends Controller
      */
     public function update(Request $request, Acompaniante $acompaniante)
     {
-        //
+        $data = $request->validate([
+            'nombre' => 'required|string|max:255',
+            'apellido' => 'required|string|max:255',
+            'email' => 'nullable|email|max:255',
+            'telefono' => 'nullable|string|max:255',
+        ]);
+
+        $acompaniante->update($data);
+
+        return redirect()->back()->with('success', 'Acompañante actualizado correctamente.');
     }
 
     /**

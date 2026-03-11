@@ -158,11 +158,17 @@ class CarritoController extends Controller
 
         Session::put('carrito', $carrito);
 
+        $cantidadTotal = 0;
+        foreach ($carrito as $item) {
+            $cantidadTotal += $item['cantidad'];
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Producto agregado al carrito',
             'carrito' => [
                 'cantidadItems' => count($carrito),
+                'cantidadTotal' => $cantidadTotal,
             ],
         ]);
     }
@@ -197,6 +203,9 @@ class CarritoController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Cantidad actualizada',
+                'carrito' => [
+                    'cantidadTotal' => collect($carrito)->sum(fn ($item) => $item['cantidad']),
+                ],
             ]);
         }
 
@@ -222,6 +231,9 @@ class CarritoController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Producto eliminado del carrito',
+                'carrito' => [
+                    'cantidadTotal' => collect($carrito)->sum(fn ($item) => $item['cantidad']),
+                ],
             ]);
         }
 
@@ -241,6 +253,9 @@ class CarritoController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Carrito vaciado',
+            'carrito' => [
+                'cantidadTotal' => 0,
+            ],
         ]);
     }
 

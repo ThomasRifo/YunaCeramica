@@ -13,6 +13,7 @@ use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\ReviewsController;
 use App\Http\Controllers\ContactoController;
+use App\Http\Controllers\AcompanianteController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -109,6 +110,8 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         Route::put('/talleres/{id}/eliminar', [TallerController::class, 'desactivar'])->name('talleres.eliminar');
         Route::get('/talleres/{id}', [TallerController::class, 'view'])->name('talleres.view');    
         Route::put('/taller-cliente/{id}/actualizar-pago', [TallerClienteController::class, 'actualizarPago'])->name('taller.actualizarPago');
+        Route::put('/taller-cliente/{tallerCliente}', [TallerClienteController::class, 'update'])->name('tallerCliente.update');
+        Route::put('/acompaniante/{acompaniante}', [AcompanianteController::class, 'update'])->name('acompaniante.update');
 
         // Rutas de Productos
         Route::get('/productos', [ProductoController::class, 'indexDashboard'])->name('productos.index');

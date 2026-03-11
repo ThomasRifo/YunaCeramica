@@ -54,7 +54,16 @@ class TallerClienteController extends Controller
      */
     public function update(Request $request, TallerCliente $tallerCliente)
     {
-        //
+        $data = $request->validate([
+            'nombre_cliente' => 'required|string|max:255',
+            'apellido_cliente' => 'required|string|max:255',
+            'email_cliente' => 'required|email|max:255',
+            'telefono_cliente' => 'nullable|string|max:255',
+        ]);
+
+        $tallerCliente->update($data);
+
+        return redirect()->back()->with('success', 'Participante actualizado correctamente.');
     }
 
     /**
@@ -78,8 +87,9 @@ class TallerClienteController extends Controller
     
         $tc->save();
     
-        // Si el nuevo estado es "Pagado" (id 3), enviamos el mail de confirmación
-        if ($tc->idEstadoPago == 3) {
+        $enviarCorreo = request()->boolean('enviarCorreo', true);
+
+        if ($tc->idEstadoPago == 3 && $enviarCorreo) {
             $taller = $tc->taller;
             Mail::to($tc->email_cliente)->send(
                 new ConfirmacionInscripcionTaller(

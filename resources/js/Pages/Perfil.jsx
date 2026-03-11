@@ -7,9 +7,11 @@ import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { cn } from "@/lib/utils";
 import { Transition } from '@headlessui/react';
+import { Menu, X } from 'lucide-react';
 
 export default function Perfil({ auth, user, talleres, compras }) {
     const [activeSection, setActiveSection] = useState('perfil');
+    const [sidebarOpen, setSidebarOpen] = useState(false);
     const { data, setData, patch, processing, errors, recentlySuccessful } = useForm({
         name: user.name,
         apellido: user.apellido,
@@ -63,21 +65,59 @@ export default function Perfil({ auth, user, talleres, compras }) {
     return (
         <AuthenticatedLayout
             user={auth.user}
-            header={<h2 className="pt-24 font-semibold text-xl text-gray-800 leading-tight">Mi Cuenta</h2>}
+            header={<h2 className="pt-12 md:pt-16 font-semibold text-3xl text-gray-800 leading-tight">Mi Cuenta</h2>}
         >
             <Head title="Mi Cuenta" />
 
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                    <div className="flex gap-6">
+                    {/* Botón para abrir sidebar en mobile */}
+                    <div className="md:hidden mb-4">
+                        <Button
+                            onClick={() => setSidebarOpen(true)}
+                            variant="outline"
+                            className="flex items-center gap-2"
+                        >
+                            <Menu className="w-5 h-5" />
+                            Menú
+                        </Button>
+                    </div>
+
+                    <div className="flex gap-6 relative">
+                        {/* Overlay para mobile cuando sidebar está abierto */}
+                        {sidebarOpen && (
+                            <div
+                                className="fixed inset-0 bg-black/50 z-40 md:hidden"
+                                onClick={() => setSidebarOpen(false)}
+                            />
+                        )}
+
                         {/* Sidebar */}
-                        <div className="w-64 flex-shrink-0">
-                            <Card className="p-4">
+                        <div className={cn(
+                            "fixed md:relative left-0 top-0 h-full md:h-auto z-50 md:z-auto",
+                            "w-64 flex-shrink-0 bg-white md:bg-transparent",
+                            "transition-transform duration-300 ease-in-out",
+                            sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+                        )}>
+                            <Card className="p-4 m-4 md:m-0 h-full md:h-auto overflow-y-auto md:overflow-visible">
+                                <div className="flex items-center justify-between mb-4 md:hidden">
+                                    <h3 className="font-semibold">Menú</h3>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setSidebarOpen(false)}
+                                    >
+                                        <X className="w-5 h-5" />
+                                    </Button>
+                                </div>
                                 <nav className="space-y-2">
                                     {sections.map((section) => (
                                         <button
                                             key={section.id}
-                                            onClick={() => setActiveSection(section.id)}
+                                            onClick={() => {
+                                                setActiveSection(section.id);
+                                                setSidebarOpen(false); // Cerrar sidebar en mobile al seleccionar
+                                            }}
                                             className={cn(
                                                 "w-full text-left px-4 py-2 rounded-lg transition-colors",
                                                 activeSection === section.id
@@ -97,7 +137,9 @@ export default function Perfil({ auth, user, talleres, compras }) {
                             <Card className="p-6">
                                 {activeSection === 'perfil' && (
                                     <form onSubmit={handleSubmit} className="space-y-6">
+                                        <h3 className="text-2xl md:text-3xl font-bold">Datos Personales</h3>
                                         <div className="grid grid-cols-2 gap-4">
+                                            
                                             <div className="space-y-2">
                                                 <Label htmlFor="name">Nombre</Label>
                                                 <Input
@@ -207,7 +249,7 @@ export default function Perfil({ auth, user, talleres, compras }) {
                                 {activeSection === 'seguridad' && (
                                     <form onSubmit={handlePasswordUpdate} className="space-y-6">
                                         <div>
-                                            <h3 className="text-lg font-medium">Cambiar Contraseña</h3>
+                                            <h3 className="text-2xl md:text-3xl font-bold">Cambiar Contraseña</h3>
                                             <p className="mt-1 text-sm text-gray-600">
                                                 Asegúrate de usar una contraseña larga y segura.
                                             </p>
@@ -274,12 +316,12 @@ export default function Perfil({ auth, user, talleres, compras }) {
 
                                 {activeSection === 'talleres' && (
                                     <div className="space-y-4">
-                                        <h3 className="text-lg font-medium">Mis Talleres</h3>
+                                        <h3 className="text-2xl md:text-3xl font-bold">Mis Talleres</h3>
                                         {talleres && talleres.length > 0 ? (
                                             <div className="grid gap-4">
                                                 {talleres.map((taller) => (
                                                     <Card key={taller.id} className="p-4">
-                                                        <h4 className="font-medium">{taller.taller.nombre}</h4>
+                                                        <h4 className="font-bold text-xl md:text-2xl">{taller.taller.nombre}</h4>
                                                         <p className="text-sm text-gray-500">
                                                             Fecha: {new Date(taller.fecha).toLocaleDateString()}
                                                         </p>
@@ -297,12 +339,12 @@ export default function Perfil({ auth, user, talleres, compras }) {
 
                                 {activeSection === 'compras' && (
                                     <div className="space-y-4">
-                                        <h3 className="text-lg font-medium">Mis Compras</h3>
+                                        <h3 className="text-2xl md:text-3xl font-bold">Mis Compras</h3>
                                         {compras && compras.length > 0 ? (
                                             <div className="grid gap-4">
                                                 {compras.map((compra) => (
                                                     <Card key={compra.id} className="p-4">
-                                                        <h4 className="font-medium">Compra #{compra.id}</h4>
+                                                        <h4 className="font-bold text-xl md:text-2xl">Compra #{compra.id}</h4>
                                                         <p className="text-sm text-gray-500">
                                                             Fecha: {new Date(compra.created_at).toLocaleDateString()}
                                                         </p>

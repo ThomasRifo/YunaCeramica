@@ -58,6 +58,14 @@ export default function Carrito({ items: itemsProp, total: totalProp, cantidadIt
       const data = await response.json();
 
       if (response.ok) {
+      const nuevaCantidadTotal = data.carrito?.cantidadTotal;
+      if (typeof nuevaCantidadTotal === 'number') {
+        window.dispatchEvent(
+          new CustomEvent('carrito:actualizado', {
+            detail: { cantidad: nuevaCantidadTotal },
+          })
+        );
+      }
         // Recargar la página para obtener datos actualizados
         router.reload({ only: ['items', 'total', 'cantidadItems'] });
       } else {
@@ -94,6 +102,14 @@ export default function Carrito({ items: itemsProp, total: totalProp, cantidadIt
 
       if (response.ok) {
         // Recargar la página para obtener datos actualizados
+        const nuevaCantidadTotal = data.carrito?.cantidadTotal;
+        if (typeof nuevaCantidadTotal === 'number') {
+          window.dispatchEvent(
+            new CustomEvent('carrito:actualizado', {
+              detail: { cantidad: nuevaCantidadTotal },
+            })
+          );
+        }
         router.reload({ only: ['items', 'total', 'cantidadItems'] });
       } else {
         setModalError({ isOpen: true, message: data.message || 'Error al eliminar el producto' });
@@ -123,6 +139,14 @@ export default function Carrito({ items: itemsProp, total: totalProp, cantidadIt
       const data = await response.json();
 
       if (response.ok) {
+        const nuevaCantidadTotal = data.carrito?.cantidadTotal;
+        if (typeof nuevaCantidadTotal === 'number') {
+          window.dispatchEvent(
+            new CustomEvent('carrito:actualizado', {
+              detail: { cantidad: nuevaCantidadTotal },
+            })
+          );
+        }
         router.reload({ only: ['items', 'total', 'cantidadItems'] });
       } else {
         setModalError({ isOpen: true, message: data.message || 'Error al vaciar el carrito' });

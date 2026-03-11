@@ -198,9 +198,10 @@ public function view($id)
         'tallerClientes.metodoPago'
     ])->findOrFail($id);
 
-    // Traer todos los tallerClientes con sus relaciones
+    // Traer todos los tallerClientes con sus relaciones, excluyendo los eliminados (idEstadoPago = 6)
     $tallerClientes = TallerCliente::with(['menu', 'estadoPago', 'acompaniantes.menu', 'metodoPago'])
         ->where('idTaller', $id)
+        ->where('idEstadoPago', '!=', 6)
         ->get();
 
     // Separar en pagados/parciales y pendientes

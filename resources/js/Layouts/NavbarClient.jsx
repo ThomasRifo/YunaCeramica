@@ -16,6 +16,7 @@ export default function NavbarClient({ children }) {
         url.startsWith("/eventos-privados") || route().current("eventosPrivados");
     const user = usePage().props.auth.user;
 
+//Selecciono las rutas que tienen el navbar inherit. Esto es para que el navbar se mantenga en el color original.
     const inherit = ["/talleres", "/productos", "/"].includes(url);
 
     useEffect(() => {
@@ -47,10 +48,28 @@ export default function NavbarClient({ children }) {
         obtenerCantidadCarrito();
 
         // Actualizar cada vez que cambie la URL (navegación)
-        const interval = setInterval(obtenerCantidadCarrito, 2000); // Actualizar cada 2 segundos
+        const interval = setInterval(obtenerCantidadCarrito, 20000); // Actualizar cada 30 segundos
 
         return () => clearInterval(interval);
     }, [url]);
+
+    useEffect(() => {
+        const handleCarritoActualizado = (event) => {
+            const nuevaCantidad = event?.detail?.cantidad;
+            if (typeof nuevaCantidad === "number") {
+                setCantidadCarrito(nuevaCantidad);
+            }
+        };
+
+        window.addEventListener("carrito:actualizado", handleCarritoActualizado);
+
+        return () => {
+            window.removeEventListener(
+                "carrito:actualizado",
+                handleCarritoActualizado
+            );
+        };
+    }, []);
 
     const isGray = scrolled || !inherit;
 
@@ -136,7 +155,7 @@ export default function NavbarClient({ children }) {
                           <>
                               <Dropdown>
                                <Dropdown.Trigger>
-                               <button className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-hiden hover:text-gray-300 focus:outline-none transition ease-in-out duration-150">
+                               <button className="inline-flex items-center px-3 py-2 border border-transparent text-xl md:text-2xl leading-4 font-medium rounded-md text-white bg-hiden hover:text-gray-300 focus:outline-none transition ease-in-out duration-150">
                                         {user.name}
                                         <svg
                                             className="ms-2 -me-0.5 h-4 w-4"
@@ -155,7 +174,7 @@ export default function NavbarClient({ children }) {
                             <Dropdown.Content>
                             <Dropdown.Link
                                 className={cn(
-                                    "relative transition-all duration-300 after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-full after:origin-center after:scale-x-0 after:bg-white after:transition-transform after:duration-300",
+                                    "relative transition-all duration-300 after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-full after:origin-center after:scale-x-0 after:bg-white after:transition-transform after:duration-300 md:text-xl font-bold",
                                     route().current("logout") && "after:scale-x-100"
                                 )}
                                 href={route("profile.show")}
@@ -167,7 +186,7 @@ export default function NavbarClient({ children }) {
                             method="post" 
                             as="button"
                             className={cn(
-                                "relative transition-all duration-300 after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-full after:origin-center after:scale-x-0 after:bg-white after:transition-transform after:duration-300",
+                                "relative transition-all duration-300 after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-full after:origin-center after:scale-x-0 after:bg-white after:transition-transform after:duration-300 md:text-xl font-bold",
                                 route().current("logout") && "after:scale-x-100"
                             )}
                             >
