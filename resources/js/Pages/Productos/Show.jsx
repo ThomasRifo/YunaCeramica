@@ -116,7 +116,10 @@ export default function ProductoShow({ producto, metodosPago }) {
             <p className="text-2xl text-blue-700 font-bold">${Number(precioFinal).toLocaleString('es-AR')}</p>
             
             <div className="bg-gray-100 p-4 rounded-lg">
-                <p className="text-gray-600">{producto.descripcion || 'Sin descripción disponible.'}</p>
+                <p className="text-gray-600 whitespace-pre-line">
+                  {(producto.descripcion || 'Sin descripción disponible.')
+                    .replace(/<br\s*\/?>/gi, '\n')}
+                </p>
             </div>
 
             <div className="flex items-center gap-4 mt-6">
