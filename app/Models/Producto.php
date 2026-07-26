@@ -16,6 +16,7 @@ class Producto extends Model
         'nombre',
         'descripcion',
         'stock',
+        'tiene_atributos',
         'precio',
         'activo',
         'descuento',
@@ -37,4 +38,9 @@ class Producto extends Model
     {
         return $this->hasMany(ImagenProducto::class, 'idProducto');
     }
+    
+public function atributos()
+{
+    return $this->belongsToMany(Atributo::class, 'atributo_producto', 'producto_id', 'atributo_id');
+}
 }

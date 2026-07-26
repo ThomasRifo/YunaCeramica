@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Atributo;
 use App\Models\Producto;
 use App\Models\Subcategoria;
 use App\Models\Categoria;
 use App\Models\ImagenProducto;
+use App\Models\TipoAtributo;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
@@ -62,7 +64,7 @@ class ProductoController extends Controller
      */
     public function show($slug)
     {
-        $producto = Producto::with(['imagenes', 'subcategoria'])
+        $producto = Producto::with(['imagenes', 'subcategoria', 'atributos'])
             ->where('slug', $slug)
             ->where('activo', true)
             ->firstOrFail();
@@ -79,6 +81,7 @@ class ProductoController extends Controller
                 'descripcion' => $producto->descripcion,
                 'precio' => $producto->precio,
                 'stock' => $producto->stock,
+                'tiene_atributos' => $producto->tiene_atributos,
                 'sku' => $producto->sku,
                 'descuento' => $producto->descuento,
                 'slug' => $producto->slug,
@@ -96,6 +99,11 @@ class ProductoController extends Controller
                     'id' => $producto->subcategoria->id,
                     'nombre' => $producto->subcategoria->nombre,
                 ] : null,
+                'atributos' => $producto->atributos->map(fn($attr) => [
+                'id' => $attr->id,
+                'nombre' => $attr->nombre,
+                'tipo_nombre' => $attr->tipoAtributo ? $attr->tipoAtributo->nombre : 'opción',
+            ]),
             ],
             'metodosPago' => $metodosPago,
         ]);
@@ -126,6 +134,8 @@ class ProductoController extends Controller
 
         return Inertia::render('Dashboard/Productos/Create', [
             'subcategorias' => $subcategorias,
+            'tipoAtributos' => TipoAtributo::all(),
+        'atributosDisponibles' => Atributo::all(),
         ]);
     }
 
@@ -140,6 +150,9 @@ class ProductoController extends Controller
             'idSubcategoria' => 'required|exists:subcategorias,id',
             'precio' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
+            'tiene_atributos' => 'required|boolean',
+            'atributos' => 'nullable|array',
+            'atributos.*' => 'required|exists:atributos,id',
             'sku' => 'required|string|unique:productos,sku',
             'peso' => 'required|numeric|min:0',
             'dimensiones' => 'required|string|max:255',
@@ -167,6 +180,7 @@ class ProductoController extends Controller
                 'idSubcategoria' => $validated['idSubcategoria'],
                 'precio' => $validated['precio'],
                 'stock' => $validated['stock'],
+                'tiene_atributos' => $validated['tiene_atributos'],
                 'sku' => $validated['sku'],
                 'peso' => $validated['peso'],
                 'dimensiones' => $validated['dimensiones'],
@@ -176,6 +190,10 @@ class ProductoController extends Controller
                 'cantVendida' => 0,
                 'activo' => true,
             ]);
+
+            if ($validated['tiene_atributos'] && !empty($request->atributos)) {
+                $producto->atributos()->sync($request->atributos);
+            }
 
             // Guardar imágenes (sin optimización por ahora, solo guardar original)
             $ordenArray = $request->input('orden', []);
@@ -235,6 +253,7 @@ class ProductoController extends Controller
             'idSubcategoria' => 'required|exists:subcategorias,id',
             'precio' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
+            'tiene_atributos' => 'required|boolean',
             'sku' => 'required|string|unique:productos,sku,' . $id,
             'peso' => 'required|numeric|min:0',
             'dimensiones' => 'required|string|max:255',
@@ -372,6 +391,7 @@ class ProductoController extends Controller
         $carrito[$producto->id] = [
             "nombre" => $producto->nombre,
             "cantidad" => $validated['cantidad'],
+            "tiene_atributos" => $producto->tiene_atributos,
             "precio" => $producto->precio,
             "imagen" => $producto->imagenes->first()->urlImagen ?? null
         ];

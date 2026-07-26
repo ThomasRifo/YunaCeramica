@@ -63,12 +63,12 @@
             
             <h3 style="margin-top: 20px;">Productos:</h3>
             @foreach($compra->detalles as $detalle)
-                <div class="product-item">
-                    <strong>{{ $detalle->nombreProducto }}</strong><br>
-                    Cantidad: {{ $detalle->cantidad }} x ${{ number_format($detalle->precioUnitario, 0, ',', '.') }} = 
-                    ${{ number_format($detalle->precioUnitario * $detalle->cantidad, 0, ',', '.') }}
-                </div>
-            @endforeach
+    <div class="product-item">
+        <strong>{{ $detalle->nombreProducto }}@if($detalle->nombreAtributo) ({{ $detalle->nombreAtributo }})@endif</strong><br>
+        Cantidad: {{ $detalle->cantidad }} x ${{ number_format($detalle->precioUnitario, 0, ',', '.') }} = 
+        ${{ number_format($detalle->precioUnitario * $detalle->cantidad, 0, ',', '.') }}
+    </div>
+@endforeach
 
             <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e0e0e0;">
                 @if($compra->costo_envio > 0)

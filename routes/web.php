@@ -38,8 +38,8 @@ Route::get('/eventos-privados', function() {
 Route::get('/carrito', [CarritoController::class, 'index'])->name('carrito');
 Route::get('/carrito/count', [CarritoController::class, 'count'])->name('carrito.count');
 Route::post('/carrito/agregar', [CarritoController::class, 'add'])->name('carrito.add');
-Route::put('/carrito/{idProducto}', [CarritoController::class, 'update'])->name('carrito.update');
-Route::delete('/carrito/{idProducto}', [CarritoController::class, 'remove'])->name('carrito.remove');
+Route::put('/carrito/{itemKey}', [CarritoController::class, 'update'])->name('carrito.update');
+Route::delete('/carrito/{itemKey}', [CarritoController::class, 'remove'])->name('carrito.remove');
 Route::delete('/carrito/vaciar', [CarritoController::class, 'clear'])->name('carrito.clear');
 
 // Rutas de Checkout y Compras

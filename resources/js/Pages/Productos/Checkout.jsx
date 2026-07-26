@@ -116,6 +116,7 @@ export default function Checkout({ items, subtotal, costoEnvio, total, tipoEntre
         idProducto: item.idProducto,
         cantidad: item.cantidad,
         precioUnitario: item.precio,
+        atributo_id: item.atributo_id || item.idAtributo || null,
       })),
       datos_cliente: datosCliente,
       direccion: tipoEntrega === 'envio' ? direccion : {
@@ -551,8 +552,9 @@ export default function Checkout({ items, subtotal, costoEnvio, total, tipoEntre
             </div>
 
             {/* Resumen */}
-            <div className="lg:col-span-1">
-              <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
+            <div className="lg:col-span-1 ">
+
+              <div className="bg-white rounded-lg shadow-md p-6 sticky top-32">
                 <h2 className="text-xl font-bold text-gray-900 mb-4">Resumen de Compra</h2>
                 
                 <div className="space-y-3 mb-6">
@@ -565,6 +567,12 @@ export default function Checkout({ items, subtotal, costoEnvio, total, tipoEntre
                       />
                       <div className="flex-1">
                         <div className="font-medium text-sm">{item.nombre}</div>
+                        {item.atributo_nombre && (
+                        <p className="text-xs font-medium text-black mb-1">
+    {item.tipo_atributo_nombre ? `${item.tipo_atributo_nombre}: ` : 'Opción: '}
+    <span className="font-semibold text-black">{item.atributo_nombre}</span>
+  </p>
+  )}
                         <div className="text-sm text-gray-600">
                           {item.cantidad} x ${item.precio.toLocaleString('es-AR')}
                         </div>

@@ -14,7 +14,12 @@ export default function ProductoShow({ producto, metodosPago }) {
   const [mensaje, setMensaje] = useState(null);
   const [metodosPagoAbierto, setMetodosPagoAbierto] = useState(false);
   const [formasEnvioAbierto, setFormasEnvioAbierto] = useState(false);
+  const [atributoSeleccionado, setAtributoSeleccionado] = useState('');
 
+  const nombreTipoAtributo = producto.atributos && producto.atributos.length > 0 
+  ? producto.atributos[0].tipo_nombre 
+  : 'opción';
+  
   // 2. Manejo de imágenes (evita errores si no hay imágenes)
   const imagenes = producto.imagenes && producto.imagenes.length > 0 
     ? producto.imagenes.map(img => `/storage/productos/${img.urlImagen}`)
@@ -30,7 +35,10 @@ export default function ProductoShow({ producto, metodosPago }) {
 
   const handleAgregarAlCarrito = async () => {
     if (!tieneStock || cantidad > stock) return;
-
+    if (producto.tiene_atributos && !atributoSeleccionado) {
+      setMensaje({ tipo: 'error', texto: `Por favor, selecciona tu ${nombreTipoAtributo.toLowerCase()} antes de agregar al carrito.` });
+      return;
+    }
     setAgregandoAlCarrito(true);
     setMensaje(null);
 
@@ -45,6 +53,7 @@ export default function ProductoShow({ producto, metodosPago }) {
         body: JSON.stringify({
           idProducto: producto.id,
           cantidad: cantidad,
+          atributo_id: atributoSeleccionado || null,
         }),
       });
 
@@ -52,14 +61,26 @@ export default function ProductoShow({ producto, metodosPago }) {
 
       if (response.ok && data.success) {
         setMensaje({ tipo: 'success', texto: data.message || 'Producto agregado al carrito' });
-        const nuevaCantidad = data.carrito?.cantidadTotal;
+        const nuevaCantidad = data.carrito?.cantidadTotal ?? data.carrito?.cantidadItems;
         if (typeof nuevaCantidad === 'number') {
           window.dispatchEvent(
             new CustomEvent('carrito:actualizado', {
               detail: { cantidad: nuevaCantidad },
             })
           );
+        } else {
+          // Si la respuesta no trajo el número directo, pedimos el count actualizado
+          fetch('/carrito/count')
+            .then(res => res.json())
+            .then(countData => {
+              window.dispatchEvent(
+                new CustomEvent('carrito:actualizado', {
+                  detail: { cantidad: countData.cantidad },
+                })
+              );
+            });
         }
+
         // Limpiar mensaje después de 3 segundos
         setTimeout(() => setMensaje(null), 3000);
       } else {
@@ -122,6 +143,26 @@ export default function ProductoShow({ producto, metodosPago }) {
                 </p>
             </div>
 
+            {producto.tiene_atributos && (
+              <div className="space-y-2 mt-2">
+                <label className="block text-sm font-semibold text-gray-700">
+                  Elegí tu {nombreTipoAtributo.toLowerCase()}:
+                </label>
+                <select
+                  value={atributoSeleccionado}
+                  onChange={(e) => setAtributoSeleccionado(e.target.value)}
+                  className="w-full p-3 border border-gray-300 rounded-lg bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-black transition"
+                >
+                  <option  value="">Seleccionar</option>
+                  {producto.atributos && producto.atributos.map((attr) => (
+                    <option key={attr.id} value={attr.id}>
+                      {attr.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             <div className="flex items-center gap-4 mt-6">
                 <div className="flex items-center border rounded-lg">
                     <button 
@@ -135,7 +176,7 @@ export default function ProductoShow({ producto, metodosPago }) {
                     <button 
                         onClick={() => setCantidad(Math.min(stock, cantidad + 1))} 
                         className="p-2 px-4 hover:bg-gray-100 transition"
-                        disabled={agregandoAlCarrito || cantidad >= stock}
+                        disabled={agregandoAlCarrito || cantidad >= stock || (producto.tiene_atributos && !atributoSeleccionado)}
                     >
                         +
                     </button>
@@ -229,7 +270,7 @@ export default function ProductoShow({ producto, metodosPago }) {
                     <div className="p-2 bg-white rounded border border-gray-200">
                       <div className="text-xs font-medium text-gray-900">Envío a domicilio</div>
                       <div className="text-xs text-gray-600 mt-0.5">
-                        $5.000 - Solo en Cipolletti, Neuquén y Fernández Oro
+                        $7.000 - Solo en Cipolletti, Neuquén y Fernández Oro
                       </div>
                     </div>
                     <div className="p-2 bg-white rounded border border-gray-200">

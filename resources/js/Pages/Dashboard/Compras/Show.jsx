@@ -332,7 +332,18 @@ export default function ComprasShow({ compra, estadosPago, estadosPedido }) {
                     <TableBody>
                       {compra.detalles?.map((detalle) => (
                         <TableRow key={detalle.id}>
-                          <TableCell>{detalle.nombreProducto}</TableCell>
+                          <TableCell>
+  {detalle.nombreProducto}
+  {detalle.nombreAtributo && (
+    <Typography
+      component="span"
+      variant="body2"
+      sx={{ color: 'text.secondary', fontWeight: 500, ml: 0.8 }}
+    >
+      ({detalle.nombreAtributo})
+    </Typography>
+  )}
+</TableCell>
                           <TableCell>{detalle.sku || '-'}</TableCell>
                           <TableCell align="right">{detalle.cantidad}</TableCell>
                           <TableCell align="right">

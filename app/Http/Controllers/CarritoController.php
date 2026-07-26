@@ -7,7 +7,7 @@ use App\Models\Producto;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
-
+use App\Models\Atributo;
 class CarritoController extends Controller
 {
     /**
@@ -28,7 +28,24 @@ class CarritoController extends Controller
             if ($producto) {
                 // Verificar stock disponible
                 $cantidadDisponible = min($item['cantidad'], $producto->stock);
+
+                $atributoNombre = null;
+                $tipoAtributoNombre = null;
                 
+                if (!empty($item['atributo_id'])) {
+                    $atributo = Atributo::with('tipoAtributo')->find($item['atributo_id']);
+                    if ($atributo) {
+                        $atributoNombre = $atributo->nombre;
+                        $tipoAtributoNombre = $atributo->tipoAtributo ? $atributo->tipoAtributo->nombre : 'Opción';
+                    }
+                }
+
+                $precioFinal = $producto->descuento 
+                    ? $producto->precio * (1 - $producto->descuento / 100)
+                    : $producto->precio;
+
+                $itemKey = $item['item_key'] ?? ($item['atributo_id'] ? "{$producto->id}_{$item['atributo_id']}" : (string)$producto->id);
+
                 $productos[] = [
                     'idProducto' => $producto->id,
                     'nombre' => $producto->nombre,
@@ -37,6 +54,9 @@ class CarritoController extends Controller
                     'stock' => $producto->stock,
                     'imagen' => $producto->imagenes->first()?->urlImagen ?? null,
                     'slug' => $producto->slug,
+                    'atributo_id' => $item['atributo_id'] ?? null,
+                    'atributo_nombre' => $atributoNombre,
+                    'tipo_atributo_nombre' => $tipoAtributoNombre,
                 ];
                 
                 $total += $producto->precio * $cantidadDisponible;
@@ -99,6 +119,7 @@ class CarritoController extends Controller
             'producto_id' => 'sometimes|exists:productos,id',
             'idProducto' => 'sometimes|exists:productos,id',
             'cantidad' => 'required|integer|min:1',
+            'atributo_id' => 'nullable|exists:atributos,id',
         ]);
 
         // Compatibilidad con ambos nombres de campo
@@ -131,8 +152,13 @@ class CarritoController extends Controller
 
         $carrito = Session::get('carrito', []);
 
+        $atributoId = $validated['atributo_id'] ?? null;
+        $itemKey = $atributoId ? "{$idProducto}_{$atributoId}" : (string)$idProducto;
+
+        // Buscar por la clave única en el carrito
+        $index = array_search($itemKey, array_column($carrito, 'item_key'));
         // Buscar si el producto ya está en el carrito
-        $index = array_search($idProducto, array_column($carrito, 'idProducto'));
+    
 
         if ($index !== false) {
             // Actualizar cantidad
@@ -151,24 +177,24 @@ class CarritoController extends Controller
         } else {
             // Agregar nuevo producto
             $carrito[] = [
+                'item_key' => $itemKey,
                 'idProducto' => $idProducto,
                 'cantidad' => $validated['cantidad'],
+                'atributo_id' => $atributoId,
             ];
         }
 
         Session::put('carrito', $carrito);
 
-        $cantidadTotal = 0;
-        foreach ($carrito as $item) {
-            $cantidadTotal += $item['cantidad'];
-        }
+        $carrito = Session::get('carrito', []);
+$cantidadUnidadesTotal = array_sum(array_column($carrito, 'cantidad'));
 
         return response()->json([
             'success' => true,
             'message' => 'Producto agregado al carrito',
             'carrito' => [
+                'cantidadTotal' => $cantidadUnidadesTotal,
                 'cantidadItems' => count($carrito),
-                'cantidadTotal' => $cantidadTotal,
             ],
         ]);
     }
@@ -176,36 +202,49 @@ class CarritoController extends Controller
     /**
      * Actualizar cantidad de un producto en el carrito
      */
-    public function update(Request $request, $idProducto)
+/**
+     * Actualizar cantidad de un producto/variante en el carrito
+     */
+    public function update(Request $request, $itemKey)
     {
         $validated = $request->validate([
             'cantidad' => 'required|integer|min:1',
         ]);
 
-        $producto = Producto::findOrFail($idProducto);
+        $carrito = Session::get('carrito', []);
 
-        // Validar stock disponible
-        if ($producto->stock < $validated['cantidad']) {
-            return response()->json([
-                'success' => false,
-                'message' => "No hay suficiente stock. Stock disponible: {$producto->stock}",
-                'stockDisponible' => $producto->stock,
-            ], 400);
+        // 1. Buscar coincidencia por item_key (ej: "15_4")
+        $index = array_search($itemKey, array_column($carrito, 'item_key'));
+
+        // 2. Si no lo encuentra por item_key, busca por idProducto (compatibilidad con ítems viejos o sin atributo)
+        if ($index === false) {
+            $index = array_search($itemKey, array_column($carrito, 'idProducto'));
         }
 
-        $carrito = Session::get('carrito', []);
-        $index = array_search($idProducto, array_column($carrito, 'idProducto'));
-
         if ($index !== false) {
+            $idProducto = $carrito[$index]['idProducto'];
+            $producto = Producto::findOrFail($idProducto);
+
+            // Validar stock disponible
+            if ($producto->stock < $validated['cantidad']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "No hay suficiente stock. Stock disponible: {$producto->stock}",
+                    'stockDisponible' => $producto->stock,
+                ], 400);
+            }
+
             $carrito[$index]['cantidad'] = $validated['cantidad'];
             Session::put('carrito', $carrito);
+
+            $cantidadTotal = array_sum(array_column($carrito, 'cantidad'));
 
             return response()->json([
                 'success' => true,
                 'message' => 'Cantidad actualizada',
                 'carrito' => [
-                    'cantidadTotal' => collect($carrito)->sum(fn ($item) => $item['cantidad']),
-                ],
+                    'cantidadTotal' => $cantidadTotal,
+                ]
             ]);
         }
 
@@ -216,24 +255,33 @@ class CarritoController extends Controller
     }
 
     /**
-     * Eliminar producto del carrito
+     * Eliminar producto/variante del carrito
      */
-    public function remove($idProducto)
+    public function remove($itemKey)
     {
         $carrito = Session::get('carrito', []);
-        $index = array_search($idProducto, array_column($carrito, 'idProducto'));
+
+        // 1. Buscar coincidencia por item_key
+        $index = array_search($itemKey, array_column($carrito, 'item_key'));
+
+        // 2. Si no lo encuentra por item_key, busca por idProducto
+        if ($index === false) {
+            $index = array_search($itemKey, array_column($carrito, 'idProducto'));
+        }
 
         if ($index !== false) {
             unset($carrito[$index]);
             $carrito = array_values($carrito); // Reindexar array
             Session::put('carrito', $carrito);
 
+            $cantidadTotal = array_sum(array_column($carrito, 'cantidad'));
+
             return response()->json([
                 'success' => true,
                 'message' => 'Producto eliminado del carrito',
                 'carrito' => [
-                    'cantidadTotal' => collect($carrito)->sum(fn ($item) => $item['cantidad']),
-                ],
+                    'cantidadTotal' => $cantidadTotal,
+                ]
             ]);
         }
 
@@ -253,9 +301,6 @@ class CarritoController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Carrito vaciado',
-            'carrito' => [
-                'cantidadTotal' => 0,
-            ],
         ]);
     }
 

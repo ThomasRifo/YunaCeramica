@@ -17,6 +17,7 @@ use Inertia\Inertia;
 use App\Mail\InstruccionesPagoCompra;
 use App\Mail\CompraEfectivo;
 use App\Mail\ConfirmacionCompra;
+use App\Models\Atributo;
 
 class CompraController extends Controller
 {
@@ -42,6 +43,17 @@ class CompraController extends Controller
 
             if ($producto) {
                 $cantidadDisponible = min($item['cantidad'], $producto->stock);
+
+                $atributoNombre = null;
+            $tipoAtributoNombre = null;
+            
+            if (!empty($item['atributo_id'])) {
+                $atributo = Atributo::with('tipoAtributo')->find($item['atributo_id']);
+                if ($atributo) {
+                    $atributoNombre = $atributo->nombre;
+                    $tipoAtributoNombre = $atributo->tipoAtributo ? $atributo->tipoAtributo->nombre : 'Opción';
+                }
+            }
                 
                 $productos[] = [
                     'idProducto' => $producto->id,
@@ -51,6 +63,9 @@ class CompraController extends Controller
                     'stock' => $producto->stock,
                     'imagen' => $producto->imagenes->first()?->urlImagen ?? null,
                     'slug' => $producto->slug,
+                    'atributo_id' => $item['atributo_id'] ?? null,
+                'atributo_nombre' => $atributoNombre,
+                'tipo_atributo_nombre' => $tipoAtributoNombre,
                 ];
                 
                 $subtotal += $producto->precio * $cantidadDisponible;
@@ -67,7 +82,7 @@ class CompraController extends Controller
 
         // Obtener tipo de entrega y costo de envío de sessionStorage (se pasará desde el frontend)
         $tipoEntrega = request()->get('tipo_entrega', 'retiro');
-        $costoEnvio = $tipoEntrega === 'envio' ? 5000 : 0; // TODO: Hacer configurable
+        $costoEnvio = $tipoEntrega === 'envio' ? 7000 : 0; // TODO: Hacer configurable
         $total = $subtotal + $costoEnvio;
 
         return Inertia::render('Productos/Checkout', [
@@ -217,6 +232,7 @@ class CompraController extends Controller
             'items.*.idProducto' => 'required|exists:productos,id',
             'items.*.cantidad' => 'required|integer|min:1',
             'items.*.precioUnitario' => 'required|numeric|min:0',
+            'items.*.atributo_id' => 'nullable|exists:atributos,id',
             'datos_cliente' => 'required|array',
             'datos_cliente.nombre' => 'required|string|max:100',
             'datos_cliente.apellido' => 'required|string|max:100',
@@ -276,6 +292,8 @@ class CompraController extends Controller
             $idEstadoPendiente = $estadoPagoPendiente->id;
             $idEstadoPedidoPendiente = $estadoPedidoPendiente->id;
 
+
+
             $compra = Compra::create([
                 'idCliente' => auth()->id(),
                 'idEstado' => $idEstadoPedidoPendiente,
@@ -302,10 +320,28 @@ class CompraController extends Controller
             foreach ($validated['items'] as $item) {
                 $producto = Producto::findOrFail($item['idProducto']);
                 
+                $idAtributo = $item['atributo_id'] ?? $item['idAtributo'] ?? null;
+                $nombreAtributo = null;
+                $tipoAtributo = null;
+
+                if ($idAtributo) {
+                    $atributo = Atributo::with('tipoAtributo')->find($idAtributo);
+                    if ($atributo) {
+                        $nombreAtributo = $atributo->nombre;
+                        $tipoAtributo = $atributo->tipoAtributo ? $atributo->tipoAtributo->nombre : 'Opción';
+                    }
+                }
+
+
+
+                
                 DetalleCompra::create([
                     'idCompra' => $compra->id,
                     'idProducto' => $producto->id,
+                    'idAtributo' => $idAtributo,
                     'nombreProducto' => $producto->nombre,
+                    'nombreAtributo' => $nombreAtributo,
+                    'tipoAtributo' => $tipoAtributo,
                     'sku' => $producto->sku,
                     'cantidad' => $item['cantidad'],
                     'precioUnitario' => $item['precioUnitario'],
@@ -663,6 +699,8 @@ class CompraController extends Controller
                 return [
                     'id' => $detalle->id,
                     'nombreProducto' => $detalle->nombreProducto,
+                    'nombreAtributo' => $detalle->nombreAtributo,
+                    'tipoAtributo' => $detalle->tipoAtributo,
                     'sku' => $detalle->sku,
                     'cantidad' => $detalle->cantidad,
                     'precioUnitario' => $detalle->precioUnitario,

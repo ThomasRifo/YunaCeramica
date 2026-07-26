@@ -20,9 +20,11 @@ export default function Carrito({ items: itemsProp, total: totalProp, cantidadIt
   const [modalError, setModalError] = useState({ isOpen: false, message: '' });
   const [modalConfirmarEliminar, setModalConfirmarEliminar] = useState({ isOpen: false, idProducto: null });
   const [modalConfirmarVaciar, setModalConfirmarVaciar] = useState({ isOpen: false });
+
+  
   
   // Costo de envío (puedes ajustar este valor)
-  const COSTO_ENVIO = 5000; // $5000 pesos argentinos
+  const COSTO_ENVIO = 7000; //
   
   const costoEnvio = tipoEntrega === 'envio' ? COSTO_ENVIO : 0;
   const total = subtotal + costoEnvio;
@@ -209,6 +211,8 @@ export default function Carrito({ items: itemsProp, total: totalProp, cantidadIt
                 const sinStock = item.stock === 0;
                 const cantidadMaxima = item.stock;
 
+                const itemKey = item.item_key || (item.atributo_id ? `${item.idProducto}_${item.atributo_id}` : String(item.idProducto));
+
                 return (
                   <div
                     key={item.idProducto}
@@ -238,6 +242,12 @@ export default function Carrito({ items: itemsProp, total: totalProp, cantidadIt
                           >
                             {item.nombre}
                           </Link>
+                          {item.atributo_nombre && (
+  <p className="text-sm font-medium text-black mb-2">
+    {item.tipo_atributo_nombre ? `${item.tipo_atributo_nombre}: ` : 'Opción: '}
+    <span className="font-semibold text-black">{item.atributo_nombre}</span>
+  </p>
+)}
                           <p className="text-lg font-bold text-blue-600 mb-2">
                             ${item.precio.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                           </p>
@@ -257,24 +267,24 @@ export default function Carrito({ items: itemsProp, total: totalProp, cantidadIt
                         <div className="flex flex-col sm:items-end gap-4">
                           {/* Cantidad */}
                           <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => actualizarCantidad(item.idProducto, item.cantidad - 1)}
-                              disabled={actualizando[item.idProducto] || item.cantidad <= 1}
-                              className="p-2 border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              <Minus className="w-4 h-4" />
-                            </button>
-                            <span className="w-12 text-center font-medium">
-                              {item.cantidad}
-                            </span>
-                            <button
-                              onClick={() => actualizarCantidad(item.idProducto, item.cantidad + 1)}
-                              disabled={actualizando[item.idProducto] || item.cantidad >= cantidadMaxima}
-                              className="p-2 border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              <Plus className="w-4 h-4" />
-                            </button>
-                          </div>
+        <button
+          onClick={() => actualizarCantidad(itemKey, item.cantidad - 1)}
+          disabled={actualizando[itemKey] || item.cantidad <= 1}
+          className="p-2 border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Minus className="w-4 h-4" />
+        </button>
+        <span className="w-12 text-center font-medium">
+          {item.cantidad}
+        </span>
+        <button
+          onClick={() => actualizarCantidad(itemKey, item.cantidad + 1)}
+          disabled={actualizando[itemKey] || item.cantidad >= cantidadMaxima}
+          className="p-2 border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Plus className="w-4 h-4" />
+        </button>
+      </div>
 
                           {/* Subtotal */}
                           <p className="text-lg font-bold text-gray-900">
@@ -283,10 +293,10 @@ export default function Carrito({ items: itemsProp, total: totalProp, cantidadIt
 
                           {/* Eliminar */}
                           <button
-                            onClick={() => eliminarProducto(item.idProducto)}
-                            disabled={eliminando[item.idProducto]}
-                            className="text-red-600 hover:text-red-700 disabled:opacity-50 flex items-center gap-1 text-sm"
-                          >
+        onClick={() => eliminarProducto(itemKey)}
+        disabled={eliminando[itemKey]}
+        className="text-red-600 hover:text-red-700 disabled:opacity-50 flex items-center gap-1 text-sm"
+      >
                             <Trash2 className="w-4 h-4" />
                             {eliminando[item.idProducto] ? 'Eliminando...' : 'Eliminar'}
                           </button>

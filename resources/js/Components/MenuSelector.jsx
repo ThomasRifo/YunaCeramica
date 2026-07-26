@@ -4,11 +4,12 @@ import Chip from '@mui/material/Chip';
 import TextField from '@mui/material/TextField';
 import Autocomplete from '@mui/material/Autocomplete';
 
-export default function MenuSelector({ menus, selectedMenus, onChange, fixedMenus = [] }) {
+export default function MenuSelector({ menus, selectedMenus, onChange, fixedMenus = [], label = "Menús disponibles" // Default por si no se pasa nada
+   }) {
   return (
     <Autocomplete
       sx={{
-        mt: 2,
+        mt: 0,
       }}
       multiple
       disableCloseOnSelect
@@ -40,7 +41,7 @@ export default function MenuSelector({ menus, selectedMenus, onChange, fixedMenu
         <TextField
           {...params}
           variant="outlined"
-          label="Menús disponibles"
+          label={label}
           placeholder="Elegí uno o más"
           fullWidth
         />
