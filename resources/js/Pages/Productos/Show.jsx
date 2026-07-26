@@ -143,7 +143,7 @@ export default function ProductoShow({ producto, metodosPago }) {
                 </p>
             </div>
 
-            {producto.tiene_atributos && (
+            {!!producto.tiene_atributos && (
               <div className="space-y-2 mt-2">
                 <label className="block text-sm font-semibold text-gray-700">
                   Elegí tu {nombreTipoAtributo.toLowerCase()}:
