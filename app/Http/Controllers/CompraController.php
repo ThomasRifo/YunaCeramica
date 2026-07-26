@@ -419,9 +419,9 @@ class CompraController extends Controller
             Log::error('Error al enviar email al cliente: ' . $e->getMessage());
         }
 
-        // Enviar email a yunaceramica@gmail.com
+        // Enviar email a anitads520@gmail.com
         try {
-            Mail::to('yunaceramica@gmail.com')->send(new CompraEfectivo($compra, 'admin'));
+            Mail::to('anitads520@gmail.com')->send(new CompraEfectivo($compra, 'admin'));
         } catch (\Exception $e) {
             Log::error('Error al enviar email a admin: ' . $e->getMessage());
         }
