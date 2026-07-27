@@ -18,6 +18,7 @@ use App\Mail\InstruccionesPagoCompra;
 use App\Mail\CompraEfectivo;
 use App\Mail\ConfirmacionCompra;
 use App\Models\Atributo;
+use Illuminate\Support\Str; 
 
 class CompraController extends Controller
 {
@@ -100,17 +101,22 @@ class CompraController extends Controller
     /**
      * Página de éxito de compra
      */
+    /**
+     * Página de éxito de compra
+     */
     public function success(Request $request)
     {
-        $compraId = $request->get('compra_id');
-        
-        if (!$compraId) {
+        $token = $request->get('token') ?? $request->get('compra_id');
+
+        if (!$token) {
             return redirect()->route('productos')->with('error', 'No se encontró la compra');
         }
 
         $compra = Compra::with(['detalles.producto.imagenes', 'estado', 'estadoPago', 'metodoPago'])
-            ->where('id', $compraId)
-            ->where('idCliente', auth()->id())
+            ->where(function ($query) use ($token) {
+                $query->where('token', $token)
+                      ->orWhere('id', $token);
+            })
             ->first();
 
         if (!$compra) {
@@ -121,6 +127,7 @@ class CompraController extends Controller
             'compra' => $compra,
         ]);
     }
+
 
     /**
      * Página de error de compra
@@ -292,9 +299,10 @@ class CompraController extends Controller
             $idEstadoPendiente = $estadoPagoPendiente->id;
             $idEstadoPedidoPendiente = $estadoPedidoPendiente->id;
 
-
+            $tokenCompra = (string) Str::uuid();
 
             $compra = Compra::create([
+                'token' => $tokenCompra,
                 'idCliente' => auth()->id(),
                 'idEstado' => $idEstadoPedidoPendiente,
                 'idEstadoPago' => $idEstadoPendiente,
@@ -356,6 +364,7 @@ class CompraController extends Controller
             return response()->json([
                 'success' => true,
                 'compra_id' => $compra->id,
+                'token' => $compra->token,
                 'message' => 'Compra creada correctamente',
             ]);
 
@@ -393,6 +402,7 @@ class CompraController extends Controller
         return response()->json([
             'success' => true,
             'compra_id' => $compra->id,
+            'token' => $compra->token,
             'message' => 'Compra creada. Revisa tu email para las instrucciones de pago.',
         ]);
     }
@@ -429,6 +439,7 @@ class CompraController extends Controller
         return response()->json([
             'success' => true,
             'compra_id' => $compra->id,
+            'token' => $compra->token,
             'message' => 'Compra creada. Te contactaremos pronto para coordinar el pago.',
         ]);
     }

@@ -204,7 +204,7 @@ export default function Checkout({ items, subtotal, costoEnvio, total, tipoEntre
           title: "¡Pedido realizado!",
           description: "Redirigiendo a la confirmación...",
         });
-        router.visit(`/productos/compra/success?compra_id=${data.compra_id}`);
+        router.visit(`/productos/compra/success?token=${data.token}`);
       } else {
         toast({
           title: "Error al procesar la compra",
@@ -249,7 +249,7 @@ export default function Checkout({ items, subtotal, costoEnvio, total, tipoEntre
           title: "¡Pedido realizado!",
           description: "Redirigiendo a la confirmación...",
         });
-        router.visit(`/productos/compra/success?compra_id=${data.compra_id}`);
+        router.visit(`/productos/compra/success?token=${data.token}`);
       } else {
         toast({
           title: "Error al procesar la compra",
