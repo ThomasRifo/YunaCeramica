@@ -134,7 +134,7 @@ export default function ProductoShow({ producto, metodosPago }) {
   return (
     <>
       <Head>
-        <title>{`${producto.nombre} | Yuna Cerámica`}</title>
+        <title>{`${producto.nombre}`}</title>
         
         
         <meta name="description" content={descripcionLimpia.substring(0, 160)} />
