@@ -1,13 +1,50 @@
 import { Head } from "@inertiajs/react";
 
 export default function Welcome() {
-    return (
-      <>
+  const schemaData = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Catálogo de Productos y Kits Creativos | Yuna Cerámica",
+    "description": "Explorá nuestro catálogo de piezas de cerámica artesanal y kits creativos para pintar en casa y hornear en tu horno convencional.",
+    "url": "https://yunaceramica.com/productos",
+    "publisher": {
+      "@type": "Organization",
+      "name": "Yuna Cerámica",
+      "logo": "https://yunaceramica.com/storage/uploads/yunalogowhite.webp"
+    }
+  };
+
+  return (
+    <>
       <Head>
         <title>Productos</title>
-        <meta name="description" content="Descubre nuestros productos de cerámica artesanal. Piezas únicas y personalizadas para tu hogar y regalo especial." />
-        <meta name="keywords" content="cerámica, piezas de cerámica, cerámica artesanal, cerámica personalizada, regalo especial, hogar, decoración, tazas, platos, vasos, figuras, esculturas, cerámica Río Negro, Yuna Cerámica, Yuna Cerámica Cipolletti, Yuna Cerámica Neuquén, Yuna Cerámica Río Negro, Yuna Cerámica Talleres, Yuna Cerámica Productos" />
         
+        <meta 
+          name="description" 
+          content="Catálogo de Yuna Cerámica: piezas artesanales hechas a mano y kits creativos para pintar en casa y hornear en tu horno convencional. Envíos y retiro en Cipolletti." 
+        />
+        <meta 
+          name="keywords" 
+          content="cerámica artesanal, kits para pintar cerámica, kit creativo cerámica, pintar cerámica en casa, tazas artesanales, vajilla de cerámica, regalos originales, cerámica Cipolletti, cerámica Neuquén" 
+        />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://yunaceramica.com/productos" />
+
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://yunaceramica.com/productos" />
+        <meta property="og:title" content="Productos y Kits Creativos | Yuna Cerámica" />
+        <meta property="og:description" content="Piezas únicas de cerámica artesanal y kits creativos listos para pintar en casa y hornear en tu horno." />
+        <meta property="og:image" content="https://yunaceramica.com/storage/uploads/productos.webp" />
+        <meta property="og:locale" content="es_AR" />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Productos y Kits Creativos | Yuna Cerámica" />
+        <meta name="twitter:description" content="Descubrí nuestras piezas artesanales y kits para pintar cerámica en casa. Envíos en Cipolletti y alrededores." />
+        <meta name="twitter:image" content="https://yunaceramica.com/storage/uploads/productos.webp" />
+
+        <script type="application/ld+json">
+          {JSON.stringify(schemaData)}
+        </script>
       </Head>
 <div className="relative">
       {/* Imagen de portada */}

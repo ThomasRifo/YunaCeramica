@@ -18,44 +18,51 @@ export default function TalleresIndex({ reviews, talleres, imagenesPiezas, subca
       toast({ title: '¡Gracias!', description: success, variant: 'success' });
     }
   }, [success]);
+
+  const schemaData = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Talleres y Experiencias de Cerámica | Yuna Cerámica",
+    "description": "Explorá nuestros talleres de cerámica artesanal en Cipolletti y Neuquén. Clases para principiantes, cerámica con café, gin y más.",
+    "url": "https://yunaceramica.com/talleres",
+    "publisher": {
+      "@type": "Organization",
+      "name": "Yuna Cerámica",
+      "logo": "https://yunaceramica.com/storage/uploads/yunalogowhite.webp"
+    }
+  };
+
   return (
     <>
-      <Head>
+     <Head>
         <title>Talleres</title>
-        <meta name="description" content="Descubre nuestros talleres de cerámica en Cipolletti. Experiencias únicas combinando cerámica con café y gin. Aprende técnicas artesanales y crea piezas únicas en un ambiente relajado y creativo." />
-        <meta name="keywords" content="talleres de cerámica Cipolletti, cerámica y café, cerámica y gin, clases de cerámica, taller de cerámica artesanal, cerámica para principiantes, cerámica Río Negro" />
-        
-        <meta property="og:title" content="Talleres de Cerámica en Cipolletti | Yuna Cerámica" />
-        <meta property="og:description" content="Experiencias únicas de cerámica combinadas con café y gin. Aprende técnicas artesanales y crea piezas únicas en Cipolletti." />
+
+        <meta 
+          name="description" 
+          content="Sumate a nuestros talleres de cerámica en Cipolletti y Neuquén. Clases para todos los niveles, no necesitas experiencia previa. Experiencias únicas con café, gin o cerveza. ¡Creá tus propias piezas!" 
+        />
+        <meta 
+          name="keywords" 
+          content="talleres de cerámica Cipolletti, talleres de cerámica Neuquén, cerámica y café, cerámica y gin, clases de cerámica, taller de cerámica artesanal, cerámica para principiantes, aprender cerámica Río Negro, Taller de cerámica." 
+        />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://yunaceramica.com/talleres" />
+
         <meta property="og:type" content="website" />
-        <meta property="og:url" content={window.location.href} />
+        <meta property="og:url" content="https://yunaceramica.com/talleres" />
+        <meta property="og:title" content="Talleres y Experiencias de Cerámica | Yuna Cerámica" />
+        <meta property="og:description" content="Aprende técnicas artesanales y crea piezas únicas. Clases regulares y jornadas especiales combinadas con café o gin en Cipolletti." />
+        <meta property="og:image" content="https://yunaceramica.com/storage/uploads/poster.webp" />
+        <meta property="og:locale" content="es_AR" />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Talleres de Cerámica | Yuna Cerámica" />
+        <meta name="twitter:description" content="Experiencias únicas creando cerámica con tus propias manos en Cipolletti y Neuquén." />
+        <meta name="twitter:image" content="https://yunaceramica.com/storage/uploads/poster.webp" />
         
-        {/* Schema.org markup */}
+        
         <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "Course",
-            "name": "Talleres de Cerámica Yuna",
-            "description": "Talleres de cerámica artesanal en Cipolletti, combinando técnicas tradicionales con experiencias modernas de café y gin.",
-            "provider": {
-              "@type": "Organization",
-              "name": "Yuna Cerámica",
-              "sameAs": "https://instagram.com/yunaceramica"
-            },
-            "offers": {
-              "@type": "Offer",
-              "availability": "https://schema.org/InStock"
-            },
-            "location": {
-              "@type": "Place",
-              "address": {
-                "@type": "PostalAddress",
-                "addressLocality": "Cipolletti",
-                "addressRegion": "Río Negro",
-                "addressCountry": "AR"
-              }
-            }
-          })}
+          {JSON.stringify(schemaData)}
         </script>
       </Head>
 

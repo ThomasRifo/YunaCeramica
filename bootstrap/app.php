@@ -4,6 +4,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Console\Scheduling\Schedule;
 use Symfony\Component\HttpFoundation\Response;
 use Inertia\Inertia;
 
@@ -29,6 +30,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->group('profile', [
             \App\Http\Middleware\EnsureUserOwnsProfile::class,
         ]);
+    })
+    ->withSchedule(function (Schedule $schedule) {
+        $schedule->command('sitemap:generate')->daily();
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

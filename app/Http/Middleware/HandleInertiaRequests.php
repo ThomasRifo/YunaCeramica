@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use Tighten\Ziggy\Ziggy;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -38,5 +39,19 @@ class HandleInertiaRequests extends Middleware
                 'success' => fn () => $request->session()->get('success'),
             ],
         ];
+    }
+
+    /**
+     * Determina si la petición actual debe renderizarse con SSR.
+     */
+    public function ssr(Request $request): bool
+    {
+        // Desactivar SSR para las rutas del Panel/Dashboard o Perfil
+        if ($request->is('dashboard*') || $request->is('perfil*')) {
+            return false;
+        }
+
+        // Permitir SSR para la tienda pública y Landing
+        return parent::ssr($request);
     }
 }

@@ -1,2 +1,23 @@
 User-agent: *
-Disallow:
+Allow: /
+
+# Bloquear panel de administración y rutas privadas
+Disallow: /dashboard/
+Disallow: /dashboard
+Disallow: /perfil
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /api/
+
+# Bloquear carrito y checkout (no aportan al SEO)
+Disallow: /carrito
+Disallow: /checkout
+
+# Evitar indexación de búsquedas internas o filtros temporales
+Disallow: /*?*busqueda=
+Disallow: /*?*subcategoria=
+
+# Indicar el mapa del sitio para Google
+Sitemap: https://yunaceramica.com/sitemap.xml

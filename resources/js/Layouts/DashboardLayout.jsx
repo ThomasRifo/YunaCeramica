@@ -25,6 +25,7 @@ import { usePage, Link as InertiaLink } from '@inertiajs/react';
 import BreadcrumbsNavigation from "@/Components/BreadcrumbsNavigation";
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { useEffect } from 'react';
+import { Head } from "@inertiajs/react";
 
 
 
@@ -147,6 +148,10 @@ export default function DashboardLayout({ children }) {
 
   return (
     <ThemeProvider theme={theme}>
+      <Head>
+        <meta name="robots" content="noindex, nofollow, noarchive" />
+        <title>Panel de Control - Yuna Cerámica</title>
+      </Head>
       <InnerLayout router={router} toggleColorMode={toggleColorMode}>
         {children}
       </InnerLayout>

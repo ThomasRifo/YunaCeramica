@@ -137,7 +137,7 @@ export default function PiecesCarousel({ images, title }) {
         </button>
       </div>
 
-      <style jsx global>{`
+      <style>{`
         .swiper-button-prev::after,
         .swiper-button-next::after {
           display: none;

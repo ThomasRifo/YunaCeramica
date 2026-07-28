@@ -1,8 +1,11 @@
 /.phpunit.cache
 /node_modules
+/bootstrap/ssr
 /public/build
 /public/hot
 /public/storage
+/storage/logs/inertia-ssr.log
+/public/sitemap.xml
 /storage/*.key
 /storage/pail
 /vendor

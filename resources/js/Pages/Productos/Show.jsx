@@ -19,11 +19,17 @@ export default function ProductoShow({ producto, metodosPago }) {
   const nombreTipoAtributo = producto.atributos && producto.atributos.length > 0 
   ? producto.atributos[0].tipo_nombre 
   : 'opción';
+
+  const descripcionLimpia = (producto?.descripcion || 'Pieza de cerámica artesanal de Yuna Cerámica.')
+  .replace(/<[^>]*>?/gm, '')
+  .trim();
   
   // 2. Manejo de imágenes (evita errores si no hay imágenes)
   const imagenes = producto.imagenes && producto.imagenes.length > 0 
     ? producto.imagenes.map(img => `/storage/productos/${img.urlImagen}`)
     : ['/storage/uploads/placeholder.jpg'];
+
+  const imagenDestacadaUrl = `https://yunaceramica.com${imagenes[0]}`;
 
   const precioFinal = producto.descuento 
     ? producto.precio * (1 - producto.descuento / 100)
@@ -32,6 +38,27 @@ export default function ProductoShow({ producto, metodosPago }) {
   // Asegurar que stock sea un número y manejar casos donde pueda ser null/undefined
   const stock = producto.stock !== null && producto.stock !== undefined ? Number(producto.stock) : 0;
   const tieneStock = stock > 0;
+
+
+  const schemaProductData = {
+    "@context": "https://schema.org/",
+    "@type": "Product",
+    "name": producto.nombre,
+    "image": imagenes.map(img => `https://yunaceramica.com${img}`),
+    "description": descripcionLimpia,
+    "brand": {
+      "@type": "Brand",
+      "name": "Yuna Cerámica"
+    },
+    "offers": {
+      "@type": "Offer",
+      "url": `https://yunaceramica.com/productos/${producto.slug}`,
+      "priceCurrency": "ARS",
+      "price": Number(precioFinal),
+      "availability": tieneStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      "itemCondition": "https://schema.org/NewCondition"
+    }
+  };
 
   const handleAgregarAlCarrito = async () => {
     if (!tieneStock || cantidad > stock) return;
@@ -106,7 +133,35 @@ export default function ProductoShow({ producto, metodosPago }) {
 
   return (
     <>
-      <Head title={`${producto.nombre} - Yuna Cerámica`} />
+      <Head>
+        <title>{`${producto.nombre} | Yuna Cerámica`}</title>
+        
+        
+        <meta name="description" content={descripcionLimpia.substring(0, 160)} />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href={`https://yunaceramica.com/productos/${producto.slug}`} />
+
+        
+        <meta property="og:type" content="og:product" />
+        <meta property="og:url" content={`https://yunaceramica.com/productos/${producto.slug}`} />
+        <meta property="og:title" content={`${producto.nombre} - $${Number(precioFinal).toLocaleString('es-AR')}`} />
+        <meta property="og:description" content={descripcionLimpia.substring(0, 160)} />
+        <meta property="og:image" content={imagenDestacadaUrl} />
+        <meta property="og:locale" content="es_AR" />
+        <meta property="product:price:amount" content={precioFinal} />
+        <meta property="product:price:currency" content="ARS" />
+
+        
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`${producto.nombre} | Yuna Cerámica`} />
+        <meta name="twitter:description" content={descripcionLimpia.substring(0, 160)} />
+        <meta name="twitter:image" content={imagenDestacadaUrl} />
+
+        
+        <script type="application/ld+json">
+          {JSON.stringify(schemaProductData)}
+        </script>
+      </Head>
       
       <div className="max-w-7xl mx-auto px-4 py-24 md:pt-28"> 
         <Breadcrumbs items={breadcrumbItems} />

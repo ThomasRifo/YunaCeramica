@@ -181,7 +181,71 @@ export default function TallerView({ imagenes, pagoAprobado: pagoAprobadoProp, i
 
   return (
     <>
-      <Head title={subcategoria?.nombre || 'Taller'} />
+      <Head>
+        <title>{`${subcategoria?.nombre || 'Taller'}`}</title>
+        
+        <meta 
+          name="description" 
+          content={`Inscribite al taller de ${subcategoria?.nombre || 'Cerámica'} en Yuna Cerámica. Experiencia guiada artesanal combinada con gastronomía en Cipolletti y Neuquén. ¡Reservá tu lugar!`} 
+        />
+        <meta 
+          name="keywords" 
+          content={`${subcategoria?.nombre}, taller de cerámica Cipolletti, taller de cerámica Neuquén, cerámica y café, cerámica y gin, experiencias creativas Cipolletti, cursos de cerámica`} 
+        />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href={`https://yunaceramica.com/talleres-${slug}`} />
+
+        <meta property="og:type" content="event" />
+        <meta property="og:url" content={`https://yunaceramica.com/talleres-${slug}`} />
+        <meta property="og:title" content={`Taller de ${subcategoria?.nombre || 'Cerámica'} | Yuna Cerámica`} />
+        <meta property="og:description" content={`Acompañanos en este taller especial de ${subcategoria?.nombre}. Creá tus propias piezas en una jornada única en Cipolletti.`} />
+        <meta property="og:image" content={`https://yunaceramica.com/storage/talleres/${imagenesFinales[0]?.urlImagen}`} />
+        <meta property="og:locale" content="es_AR" />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`Taller de ${subcategoria?.nombre || 'Cerámica'} | Yuna Cerámica`} />
+        <meta name="twitter:description" content={`Viví la experiencia de ${subcategoria?.nombre} en Cipolletti y Neuquén. Inscripciones abiertas.`} />
+        <meta name="twitter:image" content={`https://yunaceramica.com/storage/talleres/${imagenesFinales[0]?.urlImagen}`} />
+
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Event",
+            "name": `Taller de ${subcategoria?.nombre || 'Cerámica'} - Yuna Cerámica`,
+            "description": `Experiencia creativa de ${subcategoria?.nombre}. Disfrutá de un encuentro único y llevate una pieza única creada por vos.`,
+            "image": [
+              `https://yunaceramica.com/storage/talleres/${imagenesFinales[0]?.urlImagen}`
+            ],
+            "startDate": tallerReferencia.fecha ? `${dayjs(tallerReferencia.fecha).format('YYYY-MM-DD')}T${tallerReferencia.hora || '15:00'}:00-03:00` : undefined,
+            "eventStatus": eventoFinalizado ? "https://schema.org/EventCancelled" : "https://schema.org/EventScheduled",
+            "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+            "location": {
+              "@type": "Place",
+              "name": "Yuna Cerámica",
+              "address": {
+                "@type": "PostalAddress",
+                "streetAddress": tallerReferencia.ubicacion || "Cipolletti",
+                "addressLocality": "Cipolletti",
+                "addressRegion": "Río Negro",
+                "addressCountry": "AR"
+              }
+            },
+            "offers": {
+              "@type": "Offer",
+              "url": `https://yunaceramica.com/talleres-${slug}`,
+              "price": tallerReferencia.precio || 0,
+              "priceCurrency": "ARS",
+              "availability": cupoLleno || eventoFinalizado ? "https://schema.org/SoldOut" : "https://schema.org/InStock",
+              "validFrom": "2024-01-01"
+            },
+            "organizer": {
+              "@type": "Organization",
+              "name": "Yuna Cerámica",
+              "url": "https://yunaceramica.com"
+            }
+          })}
+        </script>
+      </Head>
       <div className="max-w-7xl mx-auto px-4 py-8 pt-24 md:pt-28">
       <Breadcrumbs items={breadcrumbItems} />
         {/* Floating Button */}
