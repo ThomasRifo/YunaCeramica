@@ -24,3 +24,7 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# Documentos de planificación locales (no se suben al repo)
+/docs/ENVIA_INTEGRACION.md
+/docs/safasf.md

@@ -1,0 +1,43 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: yunaceramica_app
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+      - "5173:5173"
+    volumes:
+      - .:/var/www/html
+    environment:
+      SERVICE_NAME: app
+      SERVICE_TAGS: dev
+    depends_on:
+      - db
+    networks:
+      - yunaceramica-network
+
+  db:
+    image: mysql:8.0
+    container_name: yunaceramica_db
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: yunaceramica
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_PASSWORD: root
+      MYSQL_USER: yuna
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - yunaceramica-network
+
+networks:
+  yunaceramica-network:
+    driver: bridge
+
+volumes:
+  db_data:
+    driver: local
