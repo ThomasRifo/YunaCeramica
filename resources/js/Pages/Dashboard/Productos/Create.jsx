@@ -38,6 +38,9 @@ export default function Create({
         precio: "",
         stock: "",
         tiene_atributos: false,
+        es_mayorista: false,
+        cant_minima_mayorista: "",
+        descuento_mayorista: "",
         sku: "",
         peso: "",
         dimensiones: "",
@@ -54,16 +57,22 @@ export default function Create({
         const files = Array.from(e.target.files);
         if (files.length === 0) return;
 
-        // Guardar solo los archivos, crear previews en el render
         const nuevasImagenes = files.map((file) => ({
             file,
+            preview: URL.createObjectURL(file),
         }));
 
         setImagenes((prev) => [...prev, ...nuevasImagenes]);
     };
 
     const handleRemoveImage = (index) => {
-        setImagenes((prev) => prev.filter((_, i) => i !== index));
+        setImagenes((prev) => {
+            const item = prev[index];
+            if (item?.preview) {
+                URL.revokeObjectURL(item.preview);
+            }
+            return prev.filter((_, i) => i !== index);
+        });
     };
 
     // Drag and Drop handlers
@@ -112,8 +121,8 @@ export default function Create({
         // Agregar datos del producto
         Object.keys(data).forEach((key) => {
             if (data[key] !== "" && data[key] !== null) {
-                // 🟢 FIX AQUÍ: Si es un boolean o 'tiene_atributos', enviar 1 o 0
-                if (key === "tiene_atributos") {
+                // Si es un boolean, enviar 1 o 0
+                if (key === "tiene_atributos" || key === "es_mayorista") {
                     formData.append(key, data[key] ? "1" : "0");
                 }
                 // Si es el array de atributos del MenuSelector, agregar cada elemento
@@ -145,13 +154,18 @@ export default function Create({
                     router.visit(route("dashboard.productos.index"));
                 }, 1500);
             },
-            onError: (errors) => {
+            onError: (errs) => {
+                const errorMsg =
+                    errs.error ||
+                    errs.imagenes ||
+                    Object.values(errs)[0] ||
+                    "Error al crear el producto. Verifica los campos.";
                 setSnackbar({
                     open: true,
-                    message: "Error al crear el producto. Verifica los campos.",
+                    message: errorMsg,
                     severity: "error",
                 });
-                console.error(errors);
+                console.error(errs);
             },
         });
     };
@@ -373,7 +387,7 @@ export default function Create({
                         >
                             <TextField
                                 fullWidth
-                                label="Precio"
+                                label="Precio Base"
                                 type="number"
                                 value={data.precio}
                                 onChange={(e) =>
@@ -393,16 +407,100 @@ export default function Create({
 
                             <TextField
                                 fullWidth
-                                label="Descuento (%)"
+                                label="Descuento Minorista (%)"
                                 type="number"
                                 value={data.descuento}
                                 onChange={(e) =>
                                     setData("descuento", e.target.value)
                                 }
                                 error={!!errors.descuento}
-                                helperText={errors.descuento}
+                                helperText={errors.descuento || "Opcional"}
                                 inputProps={{ min: 0, max: 100 }}
                             />
+                        </Box>
+
+                        {/* Sección Configuración Mayorista */}
+                        <Box
+                            sx={{
+                                border: "1px solid #ce93d8",
+                                borderRadius: 2,
+                                p: 2,
+                                bgcolor: data.es_mayorista ? "#f3e5f5" : "#fafafa",
+                                transition: "all 0.3s",
+                            }}
+                        >
+                            <FormControlLabel
+                                control={
+                                    <Checkbox
+                                        checked={Boolean(data.es_mayorista)}
+                                        onChange={(e) => {
+                                            const checked = e.target.checked;
+                                            setData((prev) => ({
+                                                ...prev,
+                                                es_mayorista: checked,
+                                                cant_minima_mayorista: checked ? (prev.cant_minima_mayorista || "10") : "",
+                                                descuento_mayorista: checked ? (prev.descuento_mayorista || "20") : "",
+                                            }));
+                                        }}
+                                        color="secondary"
+                                    />
+                                }
+                                label={
+                                    <Typography fontWeight="bold" color="secondary.main">
+                                        Habilitar Venta Mayorista
+                                    </Typography>
+                                }
+                            />
+                            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: data.es_mayorista ? 2 : 0 }}>
+                                Permite que este producto aparezca en el catálogo /mayorista y aplique precio por mayor en el carrito al alcanzar la cantidad mínima.
+                            </Typography>
+
+                            {data.es_mayorista && (
+                                <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
+                                    <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
+                                        <TextField
+                                            fullWidth
+                                            label="Cantidad Mínima Mayorista"
+                                            type="number"
+                                            value={data.cant_minima_mayorista}
+                                            onChange={(e) =>
+                                                setData("cant_minima_mayorista", e.target.value)
+                                            }
+                                            error={!!errors.cant_minima_mayorista}
+                                            helperText={errors.cant_minima_mayorista || "Ej: 10 unidades"}
+                                            inputProps={{ min: 1 }}
+                                            required={data.es_mayorista}
+                                        />
+
+                                        <TextField
+                                            fullWidth
+                                            label="Descuento Mayorista (%)"
+                                            type="number"
+                                            value={data.descuento_mayorista}
+                                            onChange={(e) =>
+                                                setData("descuento_mayorista", e.target.value)
+                                            }
+                                            error={!!errors.descuento_mayorista}
+                                            helperText={errors.descuento_mayorista || "Ej: 20%"}
+                                            inputProps={{ min: 0, max: 100 }}
+                                            required={data.es_mayorista}
+                                        />
+                                    </Box>
+
+                                    {/* Vista previa cálculo mayorista */}
+                                    {data.precio && data.descuento_mayorista && (
+                                        <Box sx={{ p: 1.5, bgcolor: "white", borderRadius: 1.5, border: "1px dashed #ab47bc" }}>
+                                            <Typography variant="body2" color="secondary.dark" fontWeight="bold">
+                                                Vista Previa Precio Mayorista:
+                                            </Typography>
+                                            <Typography variant="body2" color="text.primary">
+                                                Precio Final Mayorista: <strong>${Math.round(Number(data.precio) * (1 - Number(data.descuento_mayorista) / 100)).toLocaleString('es-AR')}</strong> / unidad
+                                                {" "}(Ahorro de ${Math.round(Number(data.precio) * (Number(data.descuento_mayorista) / 100)).toLocaleString('es-AR')} por unidad a partir de {data.cant_minima_mayorista || 1} u.)
+                                            </Typography>
+                                        </Box>
+                                    )}
+                                </Box>
+                            )}
                         </Box>
 
                         <Box
@@ -587,11 +685,12 @@ export default function Create({
                                         }}
                                     >
                                         {/* Preview de la imagen - Ocupa todo el contenedor */}
-                                        {img && img.file ? (
+                                        {img && (img.preview || img.file) ? (
                                             <img
-                                                src={URL.createObjectURL(
-                                                    img.file,
-                                                )}
+                                                src={
+                                                    img.preview ||
+                                                    URL.createObjectURL(img.file)
+                                                }
                                                 alt={`Preview ${index + 1}`}
                                                 style={{
                                                     width: "100%",

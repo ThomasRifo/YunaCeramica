@@ -15,7 +15,7 @@
         "laravel/tinker": "^2.10.1",
         "mercadopago/dx-php": "^3.3",
         "spatie/laravel-permission": "^6.16",
-        "spatie/laravel-sitemap": "^8.2",
+        "spatie/laravel-sitemap": "^8.0 || ^7.0",
         "tightenco/ziggy": "^2.0"
     },
     "require-dev": {
@@ -67,6 +67,9 @@
         }
     },
     "config": {
+        "platform": {
+            "php": "8.2.28"
+        },
         "optimize-autoloader": true,
         "preferred-install": "dist",
         "sort-packages": true,

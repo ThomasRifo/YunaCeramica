@@ -12,7 +12,7 @@ export default function ProductosIndex({ productos, subcategorias, filtros }) {
     // Solo ejecutar si la búsqueda realmente cambió (no en el mount inicial si ya hay filtros)
     const busquedaActual = busqueda.trim();
     const busquedaAnterior = filtros?.busqueda || '';
-    
+
     // Si la búsqueda no cambió, no hacer nada
     if (busquedaActual === busquedaAnterior) {
       return;
@@ -26,23 +26,23 @@ export default function ProductosIndex({ productos, subcategorias, filtros }) {
     // Crear nuevo timeout para ejecutar la búsqueda después de 500ms sin escribir
     timeoutRef.current = setTimeout(() => {
       const params = {};
-      
+
       // Preservar filtro de subcategoría si existe
       if (filtros?.subcategoria) {
         params.subcategoria = filtros.subcategoria;
       }
-      
+
       // Agregar búsqueda si hay texto
       if (busquedaActual) {
         params.busqueda = busquedaActual;
       }
-      
+
       // Resetear a página 1 cuando cambia la búsqueda
       // (no preservar page cuando hay cambio de búsqueda)
-      
+
       // Guardar si el input tiene foco antes de navegar
       wasFocusedRef.current = document.activeElement === inputRef.current;
-      
+
       router.get('/productos', params, {
         preserveState: true,
         preserveScroll: false,
@@ -111,15 +111,15 @@ export default function ProductosIndex({ productos, subcategorias, filtros }) {
     <>
       <Head>
         <title>Productos</title>
-        
+
         {/* Metas Básicas de SEO */}
-        <meta 
-          name="description" 
-          content="Explorá el catálogo de Yuna Cerámica: piezas artesanales hechas a mano y kits creativos para pintar en casa y hornear en tu horno convencional. Envíos y retiro en Cipolletti." 
+        <meta
+          name="description"
+          content="Explorá el catálogo de Yuna Cerámica: piezas artesanales hechas a mano y kits creativos para pintar en casa y hornear en tu horno convencional. Envíos y retiro en Cipolletti."
         />
-        <meta 
-          name="keywords" 
-          content="cerámica artesanal, kits para pintar cerámica, kit creativo cerámica, pintar cerámica en casa, tazas artesanales, vajilla de cerámica, regalos originales, cerámica Cipolletti, cerámica Neuquén, tazon, taza, mate, plato, bandeja, cazuela" 
+        <meta
+          name="keywords"
+          content="cerámica artesanal, kits para pintar cerámica, kit creativo cerámica, pintar cerámica en casa, tazas artesanales, vajilla de cerámica, regalos originales, cerámica Cipolletti, cerámica Neuquén, tazon, taza, mate, plato, bandeja, cazuela"
         />
         <meta name="robots" content="index, follow" />
         <link rel="canonical" href="https://yunaceramica.com/productos" />
@@ -147,10 +147,10 @@ export default function ProductosIndex({ productos, subcategorias, filtros }) {
       <div className="min-h-screen bg-gray-50">
         {/* Hero Section */}
         <div className="relative h-[50vh] w-full">
-          <img 
-            src="/storage/uploads/productos.webp" 
-            alt="Portada productos" 
-            className="object-cover w-full h-full object-[center_50%]" 
+          <img
+            src="/storage/uploads/productos.webp"
+            alt="Portada productos"
+            className="object-cover w-full h-full object-[center_50%]"
           />
           <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center text-white text-center px-4">
             <h1 className="mt-16 text-6xl md:text-7xl font-bold">Nuestros Productos</h1>
@@ -159,7 +159,7 @@ export default function ProductosIndex({ productos, subcategorias, filtros }) {
         </div>
 
         {/* Filtros y Búsqueda */}
-        <div className="max-w-7xl mx-auto px-4 py-16">
+        <div className="max-w-7xl mx-auto px-4 py-16 bg-[#f9f6f0]">
           <div className="mb-8 space-y-4">
             {/* Búsqueda */}
             <div className="flex gap-2">
@@ -178,11 +178,10 @@ export default function ProductosIndex({ productos, subcategorias, filtros }) {
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => handleFiltro('subcategoria', null)}
-                  className={`px-4 py-2 rounded-lg ${
-                    !filtros?.subcategoria 
-                      ? 'bg-blue-600 text-white' 
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
+                  className={`px-4 py-2 rounded-lg ${!filtros?.subcategoria
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
                 >
                   Todas
                 </button>
@@ -190,11 +189,10 @@ export default function ProductosIndex({ productos, subcategorias, filtros }) {
                   <button
                     key={subcategoria.id}
                     onClick={() => handleFiltro('subcategoria', subcategoria.id)}
-                    className={`px-4 py-2 rounded-lg ${
-                      filtros?.subcategoria == subcategoria.id
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    }`}
+                    className={`px-4 py-2 rounded-lg ${filtros?.subcategoria == subcategoria.id
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      }`}
                   >
                     {subcategoria.nombre}
                   </button>
@@ -207,11 +205,11 @@ export default function ProductosIndex({ productos, subcategorias, filtros }) {
           {productos && productos.data && productos.data.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {productos.data.map((producto) => {
-                const imagenPrincipal = producto.imagenes && producto.imagenes.length > 0 
+                const imagenPrincipal = producto.imagenes && producto.imagenes.length > 0
                   ? `/storage/productos/${producto.imagenes[0].urlImagen}`
                   : '/storage/uploads/placeholder.jpg';
-                
-                const precioFinal = producto.descuento 
+
+                const precioFinal = producto.descuento
                   ? producto.precio * (1 - producto.descuento / 100)
                   : producto.precio;
 
@@ -281,16 +279,15 @@ export default function ProductosIndex({ productos, subcategorias, filtros }) {
                   } else if (label.includes('&raquo;')) {
                     label = label.replace('&raquo;', '→');
                   }
-                  
+
                   return (
                     <button
                       key={index}
                       onClick={() => link.url && router.get(link.url)}
-                      className={`px-4 py-2 rounded border ${
-                        link.active
-                          ? 'bg-blue-600 text-white border-blue-600'
-                          : 'bg-white text-gray-700 hover:bg-gray-100 border-gray-300'
-                      } ${!link.url ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                      className={`px-4 py-2 rounded border ${link.active
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'bg-white text-gray-700 hover:bg-gray-100 border-gray-300'
+                        } ${!link.url ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                     >
                       {label}
                     </button>

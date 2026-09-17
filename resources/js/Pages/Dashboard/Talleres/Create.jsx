@@ -2,13 +2,19 @@
 
 import * as React from 'react';
 import { router, useForm } from '@inertiajs/react';
-import { Box, TextField, Button, Typography, InputAdornment, FormControl, FormHelperText, Select, MenuItem } from '@mui/material';
+import { Box, TextField, Button, Typography, InputAdornment, FormControl, FormHelperText, Select, MenuItem, Snackbar, Alert, CircularProgress } from '@mui/material';
 import InputLabel from '@/Components/InputLabel';
 import { useTheme } from "@mui/material/styles";
 import MenuSelector from '@/Components/MenuSelector';
 
 
 export default function Create({ subcategorias, menus }) {
+  const [snackbar, setSnackbar] = React.useState({
+    open: false,
+    message: '',
+    severity: 'success',
+  });
+
   const { data, setData, post, processing, errors } = useForm({
     nombre: '',
     descripcion: '',
@@ -26,9 +32,19 @@ export default function Create({ subcategorias, menus }) {
     
     // Asegúrate de que solo los IDs sean enviados, no los objetos completos
     const menuIds = data.menus.map(menu => menu.id);  // Extrae solo los IDs de los menús seleccionados
-    console.log(menuIds)
     post(route('dashboard.talleres.store'), {
-menuIds, 
+      menuIds,
+      onError: (errs) => {
+        const errorMsg =
+          errs.error ||
+          Object.values(errs)[0] ||
+          'Error al crear el taller. Verifica los campos requeridos.';
+        setSnackbar({
+          open: true,
+          message: errorMsg,
+          severity: 'error',
+        });
+      },
     });
   };
 
@@ -185,9 +201,27 @@ label="Tipo de taller"
             }
           }}
         >
-          Crear Taller
+          {processing && <CircularProgress size={18} color="inherit" sx={{ mr: 1 }} />}
+          {processing ? 'Creando taller...' : 'Crear Taller'}
         </Button>
       </Box>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <Alert
+          severity={snackbar.severity}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          sx={{ width: "100%" }}
+          elevation={6}
+          variant="filled"
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

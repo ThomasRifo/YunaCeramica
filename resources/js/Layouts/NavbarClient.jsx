@@ -17,7 +17,7 @@ export default function NavbarClient({ children }) {
     const user = usePage().props.auth.user;
 
 //Selecciono las rutas que tienen el navbar inherit. Esto es para que el navbar se mantenga en el color original.
-    const inherit = ["/talleres", "/productos", "/"].includes(url);
+    const inherit = ["/talleres", "/productos", "/mayorista", "/"].includes(url);
 
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 0);
@@ -110,6 +110,16 @@ export default function NavbarClient({ children }) {
                         >
                             Productos
                         </Link>
+                        {/* <Link
+                            className={cn(
+                                "relative transition-all duration-300 after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-full after:origin-center after:scale-x-0 after:bg-white after:transition-transform after:duration-300",
+                                (route().current("mayorista") || url.startsWith("/mayorista")) &&
+                                    "after:scale-x-100",
+                            )}
+                            href="/mayorista"
+                        >
+                            Mayorista
+                        </Link> */}
                         <Link
                             className={cn(
                                 "relative transition-all duration-300 after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-full after:origin-center after:scale-x-0 after:bg-white after:transition-transform after:duration-300",
@@ -217,6 +227,9 @@ export default function NavbarClient({ children }) {
                         <Link href="/productos" onClick={() => setMenuOpen(false)}>
                             Productos
                         </Link>
+                        {/* <Link href="/mayorista" onClick={() => setMenuOpen(false)}>
+                            Mayorista
+                        </Link> */}
                         <Link href="/talleres" onClick={() => setMenuOpen(false)}>
                             Talleres
                         </Link>

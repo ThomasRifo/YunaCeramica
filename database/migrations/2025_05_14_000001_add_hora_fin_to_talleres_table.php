@@ -12,7 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('talleres', function (Blueprint $table) {
-            $table->time('horaFin')->nullable()->after('hora');
+            if (!Schema::hasColumn('talleres', 'hora')) {
+                $table->time('hora')->nullable()->after('fecha');
+            }
+            if (!Schema::hasColumn('talleres', 'horaFin')) {
+                $table->time('horaFin')->nullable()->after('hora');
+            }
         });
     }
 
@@ -22,7 +27,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('talleres', function (Blueprint $table) {
-            $table->dropColumn('horaFin');
+            if (Schema::hasColumn('talleres', 'horaFin')) {
+                $table->dropColumn('horaFin');
+            }
         });
     }
 }; 

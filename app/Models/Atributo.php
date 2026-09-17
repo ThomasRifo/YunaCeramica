@@ -22,9 +22,9 @@ class Atributo extends Model
         return $this->belongsTo(TipoAtributo::class, 'tipo_atributo_id');
     }
 
-    // Relación Muchos a Muchos con Productos (Tabla pivote producto_atributos)
+    // Relación Muchos a Muchos con Productos (Tabla pivote atributo_producto)
     public function productos()
     {
-        return $this->belongsToMany(Producto::class, 'producto_atributos');
+        return $this->belongsToMany(Producto::class, 'atributo_producto', 'atributo_id', 'producto_id');
     }
 }

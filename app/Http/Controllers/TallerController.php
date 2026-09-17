@@ -93,11 +93,13 @@ class TallerController extends Controller
             'idSubcategoria' => $validated['idSubcategoria'],
         ]);
 
-        $taller->menus()->sync($validated['menus']);
-    
         // Sincronizar los menús con el taller, si es que se seleccionaron
-        if (isset($validated['menus']) && count($validated['menus']) > 0) {
-            $taller->menus()->sync($validated['menus']);
+        if (!empty($validated['menus'])) {
+            $syncData = [];
+            foreach ($validated['menus'] as $menuId) {
+                $syncData[$menuId] = ['html' => ''];
+            }
+            $taller->menus()->sync($syncData);
         }
     
         // Redirigir con un mensaje de éxito
@@ -145,14 +147,19 @@ class TallerController extends Controller
             'menus.*'        => 'exists:menus,id',
         ]);
     
-        // Generar y agregar el slug
-    
         // Actualizar taller
         $taller->update($validated);
     
-        // Sincronizar menús
+        // Sincronizar menús preservando el html existente
         if ($request->has('menus')) {
-            $taller->menus()->sync($validated['menus'] ?? []);
+            $existingPivots = $taller->menus()->get()->keyBy('id');
+            $syncData = [];
+            foreach ($validated['menus'] ?? [] as $menuId) {
+                $syncData[$menuId] = [
+                    'html' => $existingPivots->has($menuId) ? ($existingPivots[$menuId]->pivot->html ?? '') : ''
+                ];
+            }
+            $taller->menus()->sync($syncData);
         }
     
         return redirect()->route('dashboard.talleres.index')->with('success', 'Taller actualizado correctamente');
@@ -232,21 +239,22 @@ public function talleresClient()
         ->get();
 
     // Obtener todas las subcategorías de talleres (categoría 2 = Talleres)
-    $subcategoriasTalleres = Subcategoria::where('idCategoria', 2)
+    $subcategoriasTalleres = Subcategoria::with('imagenes')
+        ->where('idCategoria', 2)
         ->where('activo', true)
         ->get();
 
     $estadoTalleres = [];
 
-    // Procesar cada subcategoría de manera dinámica
-    foreach ($subcategoriasTalleres as $subcategoria) {
-        $slug = $subcategoria->url;
-        $idSubcategoria = $subcategoria->id;
+    $subcategorias = $subcategoriasTalleres->map(function($subcat) use (&$estadoTalleres) {
+        $slug = $subcat->url;
+        $idSubcategoria = $subcat->id;
         
         // Verificar si hay talleres futuros para esta subcategoría
         $talleresFuturos = Taller::where('activo', true)
             ->where('idSubcategoria', $idSubcategoria)
             ->where('fecha', '>=', now()->startOfDay())
+            ->orderBy('fecha', 'asc')
             ->get();
 
         $tieneTalleresFuturos = $talleresFuturos->isNotEmpty();
@@ -257,13 +265,52 @@ public function talleresClient()
                 return $taller->cantInscriptos >= $taller->cupoMaximo;
             });
 
-        // Crear las claves dinámicas basadas en el slug
-        $claveFuturos = $slug . 'Futuros';
-        $claveEstado = $slug;
-        
-        $estadoTalleres[$claveFuturos] = $tieneTalleresFuturos;
-        $estadoTalleres[$claveEstado] = $todosCompletos ? 'cupo_lleno' : 'disponible';
-    }
+        $tallerRelacionado = $talleresFuturos->first() ?? Taller::where('activo', true)
+            ->where('idSubcategoria', $idSubcategoria)
+            ->orderBy('fecha', 'desc')
+            ->first();
+
+        $estado = $todosCompletos ? 'cupo_lleno' : 'disponible';
+        $fecha = $tallerRelacionado ? $tallerRelacionado->fecha : null;
+
+        // Mantener compatibilidad con el array talleres
+        if (!isset($estadoTalleres[$slug . 'Futuros']) || $tieneTalleresFuturos) {
+            $estadoTalleres[$slug . 'Futuros'] = $tieneTalleresFuturos;
+            $estadoTalleres[$slug] = $estado;
+            $estadoTalleres[$slug . 'Fecha'] = $fecha;
+        }
+
+        // Resolver la imagen de la subcategoría independientemente del formato (webp, png, jpg, jpeg)
+        $imagenUrl = null;
+        $imgModel = $subcat->imagenes->first();
+        if ($imgModel && !empty($imgModel->urlImagen)) {
+            $imagenUrl = str_starts_with($imgModel->urlImagen, '/')
+                ? $imgModel->urlImagen
+                : '/storage/' . ltrim($imgModel->urlImagen, '/');
+        } else {
+            $possibleExtensions = ['webp', 'png', 'jpg', 'jpeg', 'JPG', 'PNG', 'WEBP'];
+            foreach ($possibleExtensions as $ext) {
+                if (Storage::disk('public')->exists('uploads/' . $subcat->url . '.' . $ext)) {
+                    $imagenUrl = '/storage/uploads/' . $subcat->url . '.' . $ext;
+                    break;
+                }
+            }
+            if (!$imagenUrl) {
+                $imagenUrl = '/storage/uploads/' . $subcat->url . '.webp';
+            }
+        }
+
+        return [
+            'id' => $subcat->id,
+            'slug' => $subcat->url,
+            'nombre' => $subcat->nombre,
+            'imagen' => $imagenUrl,
+            'link' => '/talleres-' . $subcat->url,
+            'tieneFuturos' => $tieneTalleresFuturos,
+            'estado' => $estado,
+            'fecha' => $fecha,
+        ];
+    });
 
     $archivos = Storage::disk('public')->files('piezas/realizadas');
     $imagenesPiezas = collect($archivos)
@@ -277,14 +324,7 @@ public function talleresClient()
         'talleres' => $estadoTalleres,
         'reviews' => $reviews,
         'imagenesPiezas' => $imagenesPiezas,
-        'subcategorias' => $subcategoriasTalleres->map(function($subcat) {
-            return [
-                'slug' => $subcat->url,
-                'nombre' => $subcat->nombre,
-                'imagen' => '/storage/uploads/' . $subcat->url . '.webp',
-                'link' => '/talleres-' . $subcat->url,
-            ];
-        }),
+        'subcategorias' => $subcategorias,
     ]);
 }
 

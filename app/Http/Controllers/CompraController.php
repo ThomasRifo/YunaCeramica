@@ -46,30 +46,52 @@ class CompraController extends Controller
                 $cantidadDisponible = min($item['cantidad'], $producto->stock);
 
                 $atributoNombre = null;
-            $tipoAtributoNombre = null;
-            
-            if (!empty($item['atributo_id'])) {
-                $atributo = Atributo::with('tipoAtributo')->find($item['atributo_id']);
-                if ($atributo) {
-                    $atributoNombre = $atributo->nombre;
-                    $tipoAtributoNombre = $atributo->tipoAtributo ? $atributo->tipoAtributo->nombre : 'Opción';
+                $tipoAtributoNombre = null;
+                
+                if (!empty($item['atributo_id'])) {
+                    $atributo = Atributo::with('tipoAtributo')->find($item['atributo_id']);
+                    if ($atributo) {
+                        $atributoNombre = $atributo->nombre;
+                        $tipoAtributoNombre = $atributo->tipoAtributo ? $atributo->tipoAtributo->nombre : 'Opción';
+                    }
                 }
-            }
+
+                $esMayoristaAplicado = false;
+                $precioUnitario = $producto->precio;
+                $descuentoAplicado = 0;
+
+                if ($producto->es_mayorista && $producto->cant_minima_mayorista && $cantidadDisponible >= $producto->cant_minima_mayorista) {
+                    $esMayoristaAplicado = true;
+                    $descuentoAplicado = $producto->descuento_mayorista ?? 0;
+                    $precioUnitario = $producto->descuento_mayorista
+                        ? round($producto->precio * (1 - $producto->descuento_mayorista / 100), 2)
+                        : $producto->precio;
+                } elseif ($producto->descuento && $producto->descuento > 0) {
+                    $descuentoAplicado = $producto->descuento;
+                    $precioUnitario = round($producto->precio * (1 - $producto->descuento / 100), 2);
+                }
                 
                 $productos[] = [
                     'idProducto' => $producto->id,
                     'nombre' => $producto->nombre,
                     'precio' => $producto->precio,
+                    'precio_unitario' => $precioUnitario,
                     'cantidad' => $cantidadDisponible,
                     'stock' => $producto->stock,
                     'imagen' => $producto->imagenes->first()?->urlImagen ?? null,
                     'slug' => $producto->slug,
                     'atributo_id' => $item['atributo_id'] ?? null,
-                'atributo_nombre' => $atributoNombre,
-                'tipo_atributo_nombre' => $tipoAtributoNombre,
+                    'atributo_nombre' => $atributoNombre,
+                    'tipo_atributo_nombre' => $tipoAtributoNombre,
+                    'es_mayorista' => (bool)$producto->es_mayorista,
+                    'es_precio_mayorista' => $esMayoristaAplicado,
+                    'cant_minima_mayorista' => $producto->cant_minima_mayorista,
+                    'descuento_mayorista' => $producto->descuento_mayorista,
+                    'descuento' => $producto->descuento,
+                    'descuento_aplicado' => $descuentoAplicado,
                 ];
                 
-                $subtotal += $producto->precio * $cantidadDisponible;
+                $subtotal += $precioUnitario * $cantidadDisponible;
             }
         }
 

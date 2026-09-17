@@ -40,9 +40,20 @@ class CarritoController extends Controller
                     }
                 }
 
-                $precioFinal = $producto->descuento 
-                    ? $producto->precio * (1 - $producto->descuento / 100)
-                    : $producto->precio;
+                $esMayoristaAplicado = false;
+                $precioUnitario = $producto->precio;
+                $descuentoAplicado = 0;
+
+                if ($producto->es_mayorista && $producto->cant_minima_mayorista && $cantidadDisponible >= $producto->cant_minima_mayorista) {
+                    $esMayoristaAplicado = true;
+                    $descuentoAplicado = $producto->descuento_mayorista ?? 0;
+                    $precioUnitario = $producto->descuento_mayorista
+                        ? round($producto->precio * (1 - $producto->descuento_mayorista / 100), 2)
+                        : $producto->precio;
+                } elseif ($producto->descuento && $producto->descuento > 0) {
+                    $descuentoAplicado = $producto->descuento;
+                    $precioUnitario = round($producto->precio * (1 - $producto->descuento / 100), 2);
+                }
 
                 $itemKey = $item['item_key'] ?? ($item['atributo_id'] ? "{$producto->id}_{$item['atributo_id']}" : (string)$producto->id);
 
@@ -50,6 +61,7 @@ class CarritoController extends Controller
                     'idProducto' => $producto->id,
                     'nombre' => $producto->nombre,
                     'precio' => $producto->precio,
+                    'precio_unitario' => $precioUnitario,
                     'cantidad' => $cantidadDisponible,
                     'stock' => $producto->stock,
                     'imagen' => $producto->imagenes->first()?->urlImagen ?? null,
@@ -57,9 +69,16 @@ class CarritoController extends Controller
                     'atributo_id' => $item['atributo_id'] ?? null,
                     'atributo_nombre' => $atributoNombre,
                     'tipo_atributo_nombre' => $tipoAtributoNombre,
+                    'item_key' => $itemKey,
+                    'es_mayorista' => (bool)$producto->es_mayorista,
+                    'es_precio_mayorista' => $esMayoristaAplicado,
+                    'cant_minima_mayorista' => $producto->cant_minima_mayorista,
+                    'descuento_mayorista' => $producto->descuento_mayorista,
+                    'descuento' => $producto->descuento,
+                    'descuento_aplicado' => $descuentoAplicado,
                 ];
                 
-                $total += $producto->precio * $cantidadDisponible;
+                $total += $precioUnitario * $cantidadDisponible;
             }
         }
 
@@ -88,18 +107,35 @@ class CarritoController extends Controller
             if ($producto) {
                 // Verificar stock disponible
                 $cantidadDisponible = min($item['cantidad'], $producto->stock);
+
+                $esMayoristaAplicado = false;
+                $precioUnitario = $producto->precio;
+
+                if ($producto->es_mayorista && $producto->cant_minima_mayorista && $cantidadDisponible >= $producto->cant_minima_mayorista) {
+                    $esMayoristaAplicado = true;
+                    $precioUnitario = $producto->descuento_mayorista
+                        ? round($producto->precio * (1 - $producto->descuento_mayorista / 100), 2)
+                        : $producto->precio;
+                } elseif ($producto->descuento && $producto->descuento > 0) {
+                    $precioUnitario = round($producto->precio * (1 - $producto->descuento / 100), 2);
+                }
                 
                 $productos[] = [
                     'idProducto' => $producto->id,
                     'nombre' => $producto->nombre,
                     'precio' => $producto->precio,
+                    'precio_unitario' => $precioUnitario,
                     'cantidad' => $cantidadDisponible,
                     'stock' => $producto->stock,
                     'imagen' => $producto->imagenes->first()?->urlImagen ?? null,
                     'slug' => $producto->slug,
+                    'es_mayorista' => (bool)$producto->es_mayorista,
+                    'es_precio_mayorista' => $esMayoristaAplicado,
+                    'cant_minima_mayorista' => $producto->cant_minima_mayorista,
+                    'descuento_mayorista' => $producto->descuento_mayorista,
                 ];
                 
-                $total += $producto->precio * $cantidadDisponible;
+                $total += $precioUnitario * $cantidadDisponible;
             }
         }
 

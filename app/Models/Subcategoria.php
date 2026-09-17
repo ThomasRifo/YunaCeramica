@@ -37,4 +37,8 @@ class Subcategoria extends Model
     {
         return $this->hasMany(Taller::class, 'idSubcategoria');
     }
+    public function productos()
+    {
+        return $this->hasMany(Producto::class, 'idSubcategoria');
+    }
 }

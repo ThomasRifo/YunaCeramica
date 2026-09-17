@@ -14,6 +14,8 @@ use App\Http\Controllers\ImageController;
 use App\Http\Controllers\ReviewsController;
 use App\Http\Controllers\ContactoController;
 use App\Http\Controllers\AcompanianteController;
+use App\Http\Controllers\SubcategoriaController;
+use App\Http\Controllers\MenuController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -28,6 +30,7 @@ Route::get('/', function () {
 });
 
 Route::get('/productos', [ProductoController::class, 'index'])->name('productos');
+Route::get('/mayorista', [ProductoController::class, 'mayoristaIndex'])->name('mayorista');
 Route::get('/productos/{slug}', [ProductoController::class, 'show'])->name('productos.show');
 
 Route::get('/eventos-privados', function() {
@@ -138,8 +141,23 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         // Ruta legacy para compatibilidad
         Route::put('/reviews/{id}/approve', [ReviewsController::class, 'approve'])->name('reviews.approve');
         
+        // Rutas de Páginas: Menús de Talleres
+        Route::prefix('/paginas/menu')
+            ->name('paginas.menu.')
+            ->group(function () {
+                Route::get('/', [MenuController::class, 'index'])->name('index');
+                Route::post('/', [MenuController::class, 'store'])->name('store');
+                Route::put('/{id}', [MenuController::class, 'update'])->name('update');
+                Route::delete('/{id}', [MenuController::class, 'destroy'])->name('destroy');
+            });
+
         // Rutas de Subcategorías
-        Route::get('/subcategorias', [\App\Http\Controllers\SubcategoriaController::class, 'index'])->name('subcategorias.index');
+        Route::get('/subcategorias', [SubcategoriaController::class, 'index'])->name('subcategorias.index');
+        Route::post('/subcategorias', [SubcategoriaController::class, 'store'])->name('subcategorias.store');
+        Route::post('/subcategorias/{id}', [SubcategoriaController::class, 'update'])->name('subcategorias.update');
+        Route::put('/subcategorias/{id}', [SubcategoriaController::class, 'update']);
+        Route::delete('/subcategorias/{id}', [SubcategoriaController::class, 'destroy'])->name('subcategorias.destroy');
+        Route::put('/subcategorias/{id}/toggle-active', [SubcategoriaController::class, 'toggleActive'])->name('subcategorias.toggle-active');
     });
 
 Route::post('/dashboard/talleres/actualizar-estados-pago', [TallerController::class, 'actualizarEstadosPagoMasivo'])->name('dashboard.talleres.actualizarEstadosPagoMasivo');

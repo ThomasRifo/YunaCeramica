@@ -189,7 +189,32 @@ export default function ProductoShow({ producto, metodosPago }) {
           {/* Info */}
           <div className="flex flex-col gap-4">
             <h1 className="text-3xl font-bold">{producto.nombre}</h1>
-            <p className="text-2xl text-blue-700 font-bold">${Number(precioFinal).toLocaleString('es-AR')}</p>
+
+            {/* Precios Minorista y Mayorista */}
+            {producto.es_mayorista ? (
+              <div className="flex items-start gap-8 py-2">
+                <div>
+                  <span className="text-xs text-gray-500 font-medium block mb-1">Precio por unidad</span>
+                  <p className="text-2xl font-bold text-gray-900">
+                    ${Number(precioFinal).toLocaleString('es-AR')}
+                  </p>
+                </div>
+                <div className="self-stretch w-px bg-gray-200"></div>
+                <div>
+                  <span className="text-xs text-gray-500 font-medium block mb-1">Precio mayorista</span>
+                  <p className="text-2xl font-bold text-gray-900">
+                    ${Number(producto.precio_mayorista_final || (producto.precio * (1 - (producto.descuento_mayorista || 0) / 100))).toLocaleString('es-AR')}
+                  </p>
+                  {producto.cant_minima_mayorista && (
+                    <span className="text-xs text-gray-500 block mt-1">
+                      Mínimo {producto.cant_minima_mayorista} unidades
+                    </span>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <p className="text-2xl text-blue-700 font-bold">${Number(precioFinal).toLocaleString('es-AR')}</p>
+            )}
             
             <div className="bg-gray-100 p-4 rounded-lg">
                 <p className="text-gray-600 whitespace-pre-line">
@@ -218,7 +243,17 @@ export default function ProductoShow({ producto, metodosPago }) {
               </div>
             )}
 
-            <div className="flex items-center gap-4 mt-6">
+            <div className="mt-6">
+              {producto.es_mayorista && producto.cant_minima_mayorista && (
+                <div className="text-xs text-gray-500 mb-2 font-medium">
+                  {cantidad >= producto.cant_minima_mayorista ? (
+                    <span className="text-green-700">✓ ¡Precio mayorista activo!</span>
+                  ) : (
+                    <span>(Faltan {producto.cant_minima_mayorista - cantidad} para mayorista)</span>
+                  )}
+                </div>
+              )}
+              <div className="flex items-center gap-4">
                 <div className="flex items-center border rounded-lg">
                     <button 
                         onClick={() => setCantidad(Math.max(1, cantidad - 1))} 
@@ -252,12 +287,13 @@ export default function ProductoShow({ producto, metodosPago }) {
                     ) : tieneStock ? (
                         <>
                             <ShoppingCart className="w-5 h-5" />
-                            Agregar al carrito
+                            Agregar al carrito {producto.es_mayorista && cantidad >= (producto.cant_minima_mayorista || 1) ? '(Mayorista)' : ''}
                         </>
                     ) : (
                         'Sin Stock'
                     )}
                 </button>
+              </div>
             </div>
 
             {/* Mensaje de éxito/error */}

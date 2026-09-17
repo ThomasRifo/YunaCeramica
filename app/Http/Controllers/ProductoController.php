@@ -60,6 +60,51 @@ class ProductoController extends Controller
     }
 
     /**
+     * Listar productos mayoristas para el cliente (catálogo mayorista)
+     */
+    public function mayoristaIndex(Request $request)
+    {
+        $query = Producto::with(['imagenes', 'subcategoria.categoria'])
+            ->where('activo', true)
+            ->where('es_mayorista', true);
+
+        // Filtro por categoría
+        if ($request->has('categoria')) {
+            $query->whereHas('subcategoria.categoria', function($q) use ($request) {
+                $q->where('id', $request->categoria);
+            });
+        }
+
+        // Filtro por subcategoría
+        if ($request->has('subcategoria')) {
+            $query->where('idSubcategoria', $request->subcategoria);
+        }
+
+        // Búsqueda por nombre
+        if ($request->has('busqueda')) {
+            $query->where('nombre', 'like', '%' . $request->busqueda . '%');
+        }
+
+        $productos = $query->orderBy('created_at', 'desc')->paginate(12);
+
+        // Subcategorías de productos que tienen ítems mayoristas
+        $subcategorias = Subcategoria::where('idCategoria', 1)
+            ->where('activo', true)
+            ->whereHas('productos', function($q) {
+                $q->where('activo', true)->where('es_mayorista', true);
+            })
+            ->orderBy('orden')
+            ->orderBy('nombre')
+            ->get(['id', 'nombre', 'idCategoria']);
+        
+        return Inertia::render('Mayorista/Index', [
+            'productos' => $productos,
+            'subcategorias' => $subcategorias,
+            'filtros' => $request->only(['subcategoria', 'busqueda']),
+        ]);
+    }
+
+    /**
      * Ver detalle de un producto (por slug)
      */
     public function show($slug)
@@ -82,6 +127,11 @@ class ProductoController extends Controller
                 'precio' => $producto->precio,
                 'stock' => $producto->stock,
                 'tiene_atributos' => $producto->tiene_atributos,
+                'es_mayorista' => (bool)$producto->es_mayorista,
+                'cant_minima_mayorista' => $producto->cant_minima_mayorista,
+                'descuento_mayorista' => $producto->descuento_mayorista,
+                'precio_minorista_final' => $producto->precio_minorista_final,
+                'precio_mayorista_final' => $producto->precio_mayorista_final,
                 'sku' => $producto->sku,
                 'descuento' => $producto->descuento,
                 'slug' => $producto->slug,
@@ -100,10 +150,10 @@ class ProductoController extends Controller
                     'nombre' => $producto->subcategoria->nombre,
                 ] : null,
                 'atributos' => $producto->atributos->map(fn($attr) => [
-                'id' => $attr->id,
-                'nombre' => $attr->nombre,
-                'tipo_nombre' => $attr->tipoAtributo ? $attr->tipoAtributo->nombre : 'opción',
-            ]),
+                    'id' => $attr->id,
+                    'nombre' => $attr->nombre,
+                    'tipo_nombre' => $attr->tipoAtributo ? $attr->tipoAtributo->nombre : 'opción',
+                ]),
             ],
             'metodosPago' => $metodosPago,
         ]);
@@ -151,6 +201,9 @@ class ProductoController extends Controller
             'precio' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
             'tiene_atributos' => 'required|boolean',
+            'es_mayorista' => 'nullable|boolean',
+            'cant_minima_mayorista' => 'nullable|integer|min:1',
+            'descuento_mayorista' => 'nullable|numeric|min:0|max:100',
             'atributos' => 'nullable|array',
             'atributos.*' => 'required|exists:atributos,id',
             'sku' => 'required|string|unique:productos,sku',
@@ -159,7 +212,7 @@ class ProductoController extends Controller
             'tags' => 'nullable|string',
             'descuento' => 'nullable|integer|min:0|max:100',
             'imagenes' => 'required|array|min:1',
-            'imagenes.*' => 'required|file|image|max:5120', // 5MB por imagen
+            'imagenes.*' => 'required|file|image|max:20480', // 20MB por imagen
             'orden' => 'nullable|array',
         ]);
 
@@ -174,6 +227,8 @@ class ProductoController extends Controller
                 $contador++;
             }
 
+            $esMayorista = !empty($validated['es_mayorista']);
+
             $producto = Producto::create([
                 'nombre' => $validated['nombre'],
                 'descripcion' => $validated['descripcion'],
@@ -181,6 +236,9 @@ class ProductoController extends Controller
                 'precio' => $validated['precio'],
                 'stock' => $validated['stock'],
                 'tiene_atributos' => $validated['tiene_atributos'],
+                'es_mayorista' => $esMayorista,
+                'cant_minima_mayorista' => $esMayorista ? ($validated['cant_minima_mayorista'] ?? null) : null,
+                'descuento_mayorista' => $esMayorista ? ($validated['descuento_mayorista'] ?? null) : null,
                 'sku' => $validated['sku'],
                 'peso' => $validated['peso'],
                 'dimensiones' => $validated['dimensiones'],
@@ -229,7 +287,14 @@ class ProductoController extends Controller
      */
     public function edit($id)
     {
-        $producto = Producto::with(['imagenes', 'subcategoria'])->findOrFail($id);
+        $producto = Producto::with([
+            'imagenes' => function($q) {
+                $q->orderBy('orden', 'asc');
+            },
+            'subcategoria',
+            'atributos.tipoAtributo'
+        ])->findOrFail($id);
+
         $subcategorias = Subcategoria::where('activo', true)
             ->orderBy('nombre')
             ->get(['id', 'nombre', 'idCategoria']);
@@ -237,6 +302,8 @@ class ProductoController extends Controller
         return Inertia::render('Dashboard/Productos/Edit', [
             'producto' => $producto,
             'subcategorias' => $subcategorias,
+            'tipoAtributos' => TipoAtributo::all(),
+            'atributosDisponibles' => Atributo::with('tipoAtributo')->get(),
         ]);
     }
 
@@ -254,14 +321,19 @@ class ProductoController extends Controller
             'precio' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
             'tiene_atributos' => 'required|boolean',
+            'es_mayorista' => 'nullable|boolean',
+            'cant_minima_mayorista' => 'nullable|integer|min:1',
+            'descuento_mayorista' => 'nullable|numeric|min:0|max:100',
+            'atributos' => 'nullable|array',
+            'atributos.*' => 'required|exists:atributos,id',
             'sku' => 'required|string|unique:productos,sku,' . $id,
             'peso' => 'required|numeric|min:0',
             'dimensiones' => 'required|string|max:255',
             'tags' => 'nullable|string',
             'descuento' => 'nullable|integer|min:0|max:100',
-            'activo' => 'boolean',
+            'activo' => 'nullable|boolean',
             'imagenes_nuevas' => 'nullable|array',
-            'imagenes_nuevas.*' => 'file|image|max:5120',
+            'imagenes_nuevas.*' => 'file|image|max:20480',
             'imagenes_eliminar' => 'nullable|array',
             'imagenes_eliminar.*' => 'exists:imagenes_producto,id',
         ]);
@@ -280,12 +352,38 @@ class ProductoController extends Controller
                 $validated['slug'] = $slug;
             }
 
-            $producto->update($validated);
+            $esMayorista = !empty($validated['es_mayorista']);
+
+            $producto->update([
+                'nombre' => $validated['nombre'],
+                'descripcion' => $validated['descripcion'],
+                'idSubcategoria' => $validated['idSubcategoria'],
+                'precio' => $validated['precio'],
+                'stock' => $validated['stock'],
+                'tiene_atributos' => $validated['tiene_atributos'],
+                'es_mayorista' => $esMayorista,
+                'cant_minima_mayorista' => $esMayorista ? ($validated['cant_minima_mayorista'] ?? null) : null,
+                'descuento_mayorista' => $esMayorista ? ($validated['descuento_mayorista'] ?? null) : null,
+                'sku' => $validated['sku'],
+                'peso' => $validated['peso'],
+                'dimensiones' => $validated['dimensiones'],
+                'tags' => $validated['tags'] ?? '',
+                'descuento' => $validated['descuento'] ?? null,
+                'slug' => $validated['slug'] ?? $producto->slug,
+                'activo' => $request->has('activo') ? (bool)$request->activo : $producto->activo,
+            ]);
+
+            // Sincronizar atributos
+            if ($validated['tiene_atributos'] && !empty($request->atributos)) {
+                $producto->atributos()->sync($request->atributos);
+            } else {
+                $producto->atributos()->detach();
+            }
 
             // Eliminar imágenes marcadas para eliminar
-            if ($request->has('imagenes_eliminar')) {
+            if ($request->has('imagenes_eliminar') && is_array($request->imagenes_eliminar)) {
                 foreach ($request->imagenes_eliminar as $imagenId) {
-                    $imagen = ImagenProducto::find($imagenId);
+                    $imagen = ImagenProducto::where('idProducto', $producto->id)->find($imagenId);
                     if ($imagen) {
                         Storage::disk('public')->delete('productos/' . $imagen->urlImagen);
                         $imagen->delete();
@@ -299,7 +397,7 @@ class ProductoController extends Controller
                 
                 foreach ($request->file('imagenes_nuevas') as $imagen) {
                     $ultimoOrden++;
-                    $filename = 'producto-' . $producto->id . '-' . $ultimoOrden . '.' . $imagen->getClientOriginalExtension();
+                    $filename = 'producto-' . $producto->id . '-' . time() . '-' . Str::random(5) . '.' . $imagen->getClientOriginalExtension();
                     $path = $imagen->storeAs('productos', $filename, 'public');
 
                     ImagenProducto::create([
@@ -308,6 +406,12 @@ class ProductoController extends Controller
                         'orden' => $ultimoOrden,
                     ]);
                 }
+            }
+
+            // Validar que el producto tenga al menos una imagen
+            if ($producto->imagenes()->count() === 0) {
+                DB::rollBack();
+                return back()->withErrors(['error' => 'El producto debe tener al menos una imagen.']);
             }
 
             DB::commit();

@@ -207,7 +207,8 @@ export default function Carrito({ items: itemsProp, total: totalProp, cantidadIt
                   ? `/storage/productos/${item.imagen}`
                   : '/storage/uploads/placeholder.jpg';
                 
-                const subtotal = item.precio * item.cantidad;
+                const precioUnitarioAplicado = item.precio_unitario ?? item.precio;
+                const itemSubtotal = precioUnitarioAplicado * item.cantidad;
                 const sinStock = item.stock === 0;
                 const cantidadMaxima = item.stock;
 
@@ -215,7 +216,7 @@ export default function Carrito({ items: itemsProp, total: totalProp, cantidadIt
 
                 return (
                   <div
-                    key={item.idProducto}
+                    key={itemKey}
                     className={`bg-white rounded-lg shadow-md p-6 ${
                       sinStock ? 'opacity-60' : ''
                     }`}
@@ -238,19 +239,60 @@ export default function Carrito({ items: itemsProp, total: totalProp, cantidadIt
                         <div className="flex-1">
                           <Link
                             href={`/productos/${item.slug}`}
-                            className="text-xl font-semibold text-gray-900 hover:text-blue-600 mb-2 block"
+                            className="text-xl font-semibold text-gray-900 hover:text-blue-600 mb-1 block"
                           >
                             {item.nombre}
                           </Link>
+
                           {item.atributo_nombre && (
-  <p className="text-sm font-medium text-black mb-2">
-    {item.tipo_atributo_nombre ? `${item.tipo_atributo_nombre}: ` : 'Opción: '}
-    <span className="font-semibold text-black">{item.atributo_nombre}</span>
-  </p>
-)}
-                          <p className="text-lg font-bold text-blue-600 mb-2">
-                            ${item.precio.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                          </p>
+                            <p className="text-sm font-medium text-black mb-1">
+                              {item.tipo_atributo_nombre ? `${item.tipo_atributo_nombre}: ` : 'Opción: '}
+                              <span className="font-semibold text-black">{item.atributo_nombre}</span>
+                            </p>
+                          )}
+
+                          {/* Precios y Badges Mayorista / Minorista */}
+                          <div className="my-2">
+                            {item.es_precio_mayorista ? (
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-gray-400 line-through text-sm">
+                                    ${item.precio.toLocaleString('es-AR')}
+                                  </span>
+                                  <span className="text-lg font-bold text-gray-900">
+                                    ${precioUnitarioAplicado.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                                  </span>
+                                  <span className="bg-black text-white text-xs font-semibold px-2 py-0.5 rounded">
+                                    Precio Mayorista (-{item.descuento_mayorista}%)
+                                  </span>
+                                </div>
+                              </div>
+                            ) : item.descuento ? (
+                              <div className="flex items-center gap-2">
+                                <span className="text-gray-400 line-through text-sm">
+                                  ${item.precio.toLocaleString('es-AR')}
+                                </span>
+                                <span className="text-lg font-bold text-blue-600">
+                                  ${precioUnitarioAplicado.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                                </span>
+                                <span className="bg-red-100 text-red-700 text-xs font-bold px-2 py-0.5 rounded">
+                                  -{item.descuento}%
+                                </span>
+                              </div>
+                            ) : (
+                              <p className="text-lg font-bold text-blue-600">
+                                ${precioUnitarioAplicado.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                              </p>
+                            )}
+
+                            {/* Sugerencia mayorista si no alcanzó el cupo */}
+                            {item.es_mayorista && !item.es_precio_mayorista && item.cant_minima_mayorista && (
+                              <p className="text-xs text-gray-700 bg-gray-100 p-1.5 rounded mt-1.5 font-medium inline-block border border-gray-200">
+                                💡 Agregá {item.cant_minima_mayorista - item.cantidad} {item.cant_minima_mayorista - item.cantidad === 1 ? 'unidad más' : 'unidades más'} para acceder a precio mayorista (-{item.descuento_mayorista}%)
+                              </p>
+                            )}
+                          </div>
+
                           {sinStock && (
                             <p className="text-red-600 text-sm font-medium mb-2">
                               Sin stock disponible
@@ -267,38 +309,38 @@ export default function Carrito({ items: itemsProp, total: totalProp, cantidadIt
                         <div className="flex flex-col sm:items-end gap-4">
                           {/* Cantidad */}
                           <div className="flex items-center gap-2">
-        <button
-          onClick={() => actualizarCantidad(itemKey, item.cantidad - 1)}
-          disabled={actualizando[itemKey] || item.cantidad <= 1}
-          className="p-2 border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Minus className="w-4 h-4" />
-        </button>
-        <span className="w-12 text-center font-medium">
-          {item.cantidad}
-        </span>
-        <button
-          onClick={() => actualizarCantidad(itemKey, item.cantidad + 1)}
-          disabled={actualizando[itemKey] || item.cantidad >= cantidadMaxima}
-          className="p-2 border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Plus className="w-4 h-4" />
-        </button>
-      </div>
+                            <button
+                              onClick={() => actualizarCantidad(itemKey, item.cantidad - 1)}
+                              disabled={actualizando[itemKey] || item.cantidad <= 1}
+                              className="p-2 border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              <Minus className="w-4 h-4" />
+                            </button>
+                            <span className="w-12 text-center font-medium">
+                              {item.cantidad}
+                            </span>
+                            <button
+                              onClick={() => actualizarCantidad(itemKey, item.cantidad + 1)}
+                              disabled={actualizando[itemKey] || item.cantidad >= cantidadMaxima}
+                              className="p-2 border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              <Plus className="w-4 h-4" />
+                            </button>
+                          </div>
 
-                          {/* Subtotal */}
+                          {/* Subtotal del Item */}
                           <p className="text-lg font-bold text-gray-900">
-                            ${subtotal.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                            ${itemSubtotal.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                           </p>
 
                           {/* Eliminar */}
                           <button
-        onClick={() => eliminarProducto(itemKey)}
-        disabled={eliminando[itemKey]}
-        className="text-red-600 hover:text-red-700 disabled:opacity-50 flex items-center gap-1 text-sm"
-      >
+                            onClick={() => eliminarProducto(itemKey)}
+                            disabled={eliminando[itemKey]}
+                            className="text-red-600 hover:text-red-700 disabled:opacity-50 flex items-center gap-1 text-sm"
+                          >
                             <Trash2 className="w-4 h-4" />
-                            {eliminando[item.idProducto] ? 'Eliminando...' : 'Eliminar'}
+                            {eliminando[itemKey] ? 'Eliminando...' : 'Eliminar'}
                           </button>
                         </div>
                       </div>

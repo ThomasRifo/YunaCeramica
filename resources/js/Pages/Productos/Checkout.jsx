@@ -115,7 +115,7 @@ export default function Checkout({ items, subtotal, costoEnvio, total, tipoEntre
       items: items.map(item => ({
         idProducto: item.idProducto,
         cantidad: item.cantidad,
-        precioUnitario: item.precio,
+        precioUnitario: item.precio_unitario ?? item.precio,
         atributo_id: item.atributo_id || item.idAtributo || null,
       })),
       datos_cliente: datosCliente,
@@ -558,30 +558,38 @@ export default function Checkout({ items, subtotal, costoEnvio, total, tipoEntre
                 <h2 className="text-xl font-bold text-gray-900 mb-4">Resumen de Compra</h2>
                 
                 <div className="space-y-3 mb-6">
-                  {items.map((item) => (
-                    <div key={item.idProducto} className="flex gap-3">
-                      <img
-                        src={item.imagen ? `/storage/productos/${item.imagen}` : '/storage/uploads/placeholder.jpg'}
-                        alt={item.nombre}
-                        className="w-16 h-16 object-cover rounded"
-                      />
-                      <div className="flex-1">
-                        <div className="font-medium text-sm">{item.nombre}</div>
-                        {item.atributo_nombre && (
-                        <p className="text-xs font-medium text-black mb-1">
-    {item.tipo_atributo_nombre ? `${item.tipo_atributo_nombre}: ` : 'Opción: '}
-    <span className="font-semibold text-black">{item.atributo_nombre}</span>
-  </p>
-  )}
-                        <div className="text-sm text-gray-600">
-                          {item.cantidad} x ${item.precio.toLocaleString('es-AR')}
+                  {items.map((item) => {
+                    const precioUnitario = item.precio_unitario ?? item.precio;
+                    return (
+                      <div key={item.item_key || (item.atributo_id ? `${item.idProducto}_${item.atributo_id}` : item.idProducto)} className="flex gap-3">
+                        <img
+                          src={item.imagen ? `/storage/productos/${item.imagen}` : '/storage/uploads/placeholder.jpg'}
+                          alt={item.nombre}
+                          className="w-16 h-16 object-cover rounded"
+                        />
+                        <div className="flex-1">
+                          <div className="font-medium text-sm">{item.nombre}</div>
+                          {item.atributo_nombre && (
+                            <p className="text-xs font-medium text-black mb-1">
+                              {item.tipo_atributo_nombre ? `${item.tipo_atributo_nombre}: ` : 'Opción: '}
+                              <span className="font-semibold text-black">{item.atributo_nombre}</span>
+                            </p>
+                          )}
+                          {item.es_precio_mayorista && (
+                            <span className="inline-block bg-black text-white text-[10px] font-semibold px-1.5 py-0.5 rounded mb-1">
+                              Precio Mayorista (-{item.descuento_mayorista}%)
+                            </span>
+                          )}
+                          <div className="text-sm text-gray-600">
+                            {item.cantidad} x ${precioUnitario.toLocaleString('es-AR')}
+                          </div>
+                        </div>
+                        <div className="font-medium">
+                          ${(precioUnitario * item.cantidad).toLocaleString('es-AR')}
                         </div>
                       </div>
-                      <div className="font-medium">
-                        ${(item.precio * item.cantidad).toLocaleString('es-AR')}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 <div className="border-t pt-4 space-y-2">

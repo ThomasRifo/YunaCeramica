@@ -7,6 +7,7 @@ import { AspectRatio } from "@/Components/ui/aspect-ratio"
 import { cn } from '@/lib/utils';
 import ReviewsSection from '@/Components/ReviewsSection';
 import PiecesCarousel from '@/Components/Taller/PiecesCarousel';
+import dayjs from 'dayjs';
 
 export default function TalleresIndex({ reviews, talleres, imagenesPiezas, subcategorias }) {
   const { toast } = useToast();
@@ -18,6 +19,13 @@ export default function TalleresIndex({ reviews, talleres, imagenesPiezas, subca
       toast({ title: '¡Gracias!', description: success, variant: 'success' });
     }
   }, [success]);
+
+  const formatFecha = (fecha) => {
+    if (!fecha) return null;
+    const d = dayjs(fecha);
+    if (!d.isValid()) return null;
+    return d.format('DD/MM');
+  };
 
   const schemaData = {
     "@context": "https://schema.org",
@@ -34,16 +42,16 @@ export default function TalleresIndex({ reviews, talleres, imagenesPiezas, subca
 
   return (
     <>
-     <Head>
+      <Head>
         <title>Talleres</title>
 
-        <meta 
-          name="description" 
-          content="Sumate a nuestros talleres de cerámica en Cipolletti y Neuquén. Clases para todos los niveles, no necesitas experiencia previa. Experiencias únicas con café, gin o cerveza. ¡Creá tus propias piezas!" 
+        <meta
+          name="description"
+          content="Sumate a nuestros talleres de cerámica en Cipolletti y Neuquén. Clases para todos los niveles, no necesitas experiencia previa. Experiencias únicas con café, gin o cerveza. ¡Creá tus propias piezas!"
         />
-        <meta 
-          name="keywords" 
-          content="talleres de cerámica Cipolletti, talleres de cerámica Neuquén, cerámica y café, cerámica y gin, clases de cerámica, taller de cerámica artesanal, cerámica para principiantes, aprender cerámica Río Negro, Taller de cerámica." 
+        <meta
+          name="keywords"
+          content="talleres de cerámica Cipolletti, talleres de cerámica Neuquén, cerámica y café, cerámica y gin, clases de cerámica, taller de cerámica artesanal, cerámica para principiantes, aprender cerámica Río Negro, Taller de cerámica."
         />
         <meta name="robots" content="index, follow" />
         <link rel="canonical" href="https://yunaceramica.com/talleres" />
@@ -59,8 +67,8 @@ export default function TalleresIndex({ reviews, talleres, imagenesPiezas, subca
         <meta name="twitter:title" content="Talleres de Cerámica | Yuna Cerámica" />
         <meta name="twitter:description" content="Experiencias únicas creando cerámica con tus propias manos en Cipolletti y Neuquén." />
         <meta name="twitter:image" content="https://yunaceramica.com/storage/uploads/poster.webp" />
-        
-        
+
+
         <script type="application/ld+json">
           {JSON.stringify(schemaData)}
         </script>
@@ -69,13 +77,13 @@ export default function TalleresIndex({ reviews, talleres, imagenesPiezas, subca
       <main className="min-h-screen">
         {/* Hero Section */}
         <section className="relative h-[65.5vh] w-full" aria-label="Portada de talleres">
-          <video 
-            autoPlay="autoplay" 
-            loop 
-            muted 
+          <video
+            autoPlay="autoplay"
+            loop
+            muted
             playsInline
-            poster="/storage/uploads/poster.webp" 
-            className="object-cover object-[63%_1%] w-full h-full" 
+            poster="/storage/uploads/poster.webp"
+            className="object-cover object-[63%_1%] w-full h-full"
             alt="Video de portada de talleres de cerámica"
           >
             <source src="/storage/uploads/Portada.webm" type="video/webm" />
@@ -97,10 +105,12 @@ export default function TalleresIndex({ reviews, talleres, imagenesPiezas, subca
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 px-4 sm:px-16 py-8">
             {subcategorias.map((subcat) => {
-              const tieneFuturos = talleres?.[subcat.slug + 'Futuros'];
-              const estado = talleres?.[subcat.slug];
+              const tieneFuturos = subcat.tieneFuturos !== undefined ? subcat.tieneFuturos : talleres?.[subcat.slug + 'Futuros'];
+              const estado = subcat.estado || talleres?.[subcat.slug];
+              const fecha = subcat.fecha || talleres?.[subcat.slug + 'Fecha'];
+              const cardKey = subcat.id ? `subcat-${subcat.id}` : subcat.slug;
               return tieneFuturos ? (
-                <Link key={subcat.slug} href={subcat.link} className="group relative" aria-label={subcat.nombre}>
+                <Link key={cardKey} href={subcat.link} className="group relative" aria-label={subcat.nombre}>
                   <AspectRatio ratio={2 / 1.8} className="relative rounded-xl overflow-hidden shadow-lg">
                     <img
                       src={subcat.imagen}
@@ -108,10 +118,17 @@ export default function TalleresIndex({ reviews, talleres, imagenesPiezas, subca
                       className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
                       loading="lazy"
                     />
-                    <div className="absolute inset-0 bg-black/30 flex p-10 justify-center items-center">
-                      <p className="text-white text-end text-4xl md:text-6xl font-semibold whitespace-pre-line">
-                        {subcat.nombre.toUpperCase()}
-                      </p>
+                    <div className="absolute inset-0 bg-black/30 flex p-6 md:p-10 justify-center items-center">
+                      <div className="w-full text-end">
+                        <p className="text-white text-4xl md:text-6xl font-semibold whitespace-pre-line leading-tight">
+                          {subcat.nombre.toUpperCase()}
+                        </p>
+                        {fecha && (
+                          <p className="text-white/95 text-3xl md:text-5xl font-medium mt-1 md:mt-2 tracking-wider">
+                            {formatFecha(fecha)}
+                          </p>
+                        )}
+                      </div>
                     </div>
                     {estado === 'cupo_lleno' && (
                       <div className="absolute inset-0 bg-white/50 flex p-8 items-end justify-center">
@@ -123,7 +140,7 @@ export default function TalleresIndex({ reviews, talleres, imagenesPiezas, subca
                   </AspectRatio>
                 </Link>
               ) : (
-                <div key={subcat.slug} className="group relative" aria-label={`Taller de ${subcat.nombre} - Próximamente`}>
+                <div key={cardKey} className="group relative" aria-label={`Taller de ${subcat.nombre} - Próximamente`}>
                   <Link href={subcat.link} className="group relative" aria-label={subcat.nombre}>
                     <AspectRatio ratio={2 / 1.8} className="relative rounded-xl overflow-hidden shadow-lg">
                       <img
@@ -132,10 +149,17 @@ export default function TalleresIndex({ reviews, talleres, imagenesPiezas, subca
                         className="object-cover w-full h-full"
                         loading="lazy"
                       />
-                      <div className="absolute inset-0 bg-black/30 flex p-10 justify-center items-center">
-                        <p className="text-white text-end text-4xl md:text-6xl font-semibold whitespace-pre-line">
-                          {subcat.nombre.toUpperCase()}
-                        </p>
+                      <div className="absolute inset-0 bg-black/30 flex p-6 md:p-10 justify-center items-center">
+                        <div className="w-full text-end">
+                          <p className="text-white text-4xl md:text-6xl font-semibold whitespace-pre-line leading-tight">
+                            {subcat.nombre.toUpperCase()}
+                          </p>
+                          {fecha && (
+                            <p className="text-white/95 text-3xl md:text-5xl font-medium mt-1 md:mt-2 tracking-wider">
+                              {formatFecha(fecha)}
+                            </p>
+                          )}
+                        </div>
                       </div>
                       <div className="absolute inset-0 bg-white/50 flex p-8 items-end justify-center">
                         <div className="text-center bg-black/70 rounded-xl md:p-4 p-3 md:mb-20 mb-6 w-full">
