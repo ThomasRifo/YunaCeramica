@@ -9,7 +9,7 @@
 /storage/*.key
 /storage/pail
 /vendor
-/docs
+/docs/*.md
 .env
 .env.backup
 .env.production
@@ -29,3 +29,4 @@ yarn-error.log
 # Documentos de planificación locales (no se suben al repo)
 /docs/ENVIA_INTEGRACION.md
 /docs/safasf.md
+

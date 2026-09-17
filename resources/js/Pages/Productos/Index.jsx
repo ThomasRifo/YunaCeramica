@@ -159,7 +159,7 @@ export default function ProductosIndex({ productos, subcategorias, filtros }) {
         </div>
 
         {/* Filtros y Búsqueda */}
-        <div className="max-w-7xl mx-auto px-4 py-16 bg-[#f9f6f0]">
+        <div className="max-w-7xl mx-auto px-4 py-16">
           <div className="mb-8 space-y-4">
             {/* Búsqueda */}
             <div className="flex gap-2">
@@ -179,8 +179,8 @@ export default function ProductosIndex({ productos, subcategorias, filtros }) {
                 <button
                   onClick={() => handleFiltro('subcategoria', null)}
                   className={`px-4 py-2 rounded-lg ${!filtros?.subcategoria
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                     }`}
                 >
                   Todas
@@ -190,8 +190,8 @@ export default function ProductosIndex({ productos, subcategorias, filtros }) {
                     key={subcategoria.id}
                     onClick={() => handleFiltro('subcategoria', subcategoria.id)}
                     className={`px-4 py-2 rounded-lg ${filtros?.subcategoria == subcategoria.id
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                       }`}
                   >
                     {subcategoria.nombre}
@@ -285,8 +285,8 @@ export default function ProductosIndex({ productos, subcategorias, filtros }) {
                       key={index}
                       onClick={() => link.url && router.get(link.url)}
                       className={`px-4 py-2 rounded border ${link.active
-                        ? 'bg-blue-600 text-white border-blue-600'
-                        : 'bg-white text-gray-700 hover:bg-gray-100 border-gray-300'
+                          ? 'bg-blue-600 text-white border-blue-600'
+                          : 'bg-white text-gray-700 hover:bg-gray-100 border-gray-300'
                         } ${!link.url ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                     >
                       {label}
