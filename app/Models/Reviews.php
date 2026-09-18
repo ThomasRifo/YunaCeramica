@@ -31,7 +31,6 @@ class Reviews extends Model
     protected $hidden = [
         'apellido',
         'valoracion',
-        'id',
         'email',
         'idTallerCliente',
         'created_at',
